@@ -1,0 +1,105 @@
+.login-form-container {
+  padding: 10px;
+}
+
+.login-form-logo-img {
+  width: 125px;
+  height: 120px;
+  margin-top: 25px;
+  display: none;
+}
+
+.login-form-logo-img-content {
+  font-weight: 700;
+  font-size: 14px;
+  font-family: "IBM Plex Sans";
+  display: none;
+}
+
+.login-form-title {
+  color: #03008b;
+  font-size: 24px;
+  font-weight: 700;
+  font-family: "IBM Plex Sans";
+  margin-bottom: 20px;
+  width: -webkit-fill-available;
+}
+
+.login-form-flag-item {
+  width: 100%;
+  display: none;
+}
+
+.login-form-title-2 {
+  font-family: "IBM Plex Sans";
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 24px;
+  text-align: center;
+  vertical-align: middle;
+  margin: 10px 0 50px 0;
+  display: none;
+}
+
+.login-form-text-field {
+  margin-bottom: 25px;
+}
+
+.login-form-text-field-warning {
+  color: red;
+  font-size: 13px;
+  font-family: "IBM Plex Sans";
+  margin-top: 5px;
+}
+
+.login-form-login-btn {
+  margin-top: 10px !important;
+  font-family: "IBM Plex Sans" !important;
+}
+
+.login-form-forgot-password-btn {
+  margin-top: 10px;
+  text-decoration: underline;
+  cursor: pointer;
+  font-family: "IBM Plex Sans";
+  color: #2196f3;
+}
+
+.login-form-padding-bottom {
+  display: none;
+}
+
+@media screen and (max-width: 600px) {
+  .login-form-flag-item {
+    display: block;
+  }
+
+  .login-form-logo-img {
+    display: block;
+  }
+
+  .login-form-logo-img-content {
+    display: block;
+  }
+
+  .login-form-title {
+    font-size: 20px;
+    margin-bottom: 15px;
+  }
+
+  .login-form-title-2 {
+    display: block;
+    font-size: 20px;
+    line-height: 20px;
+    margin: 10px 0 40px 0;
+  }
+
+  .login-form-text-field {
+    margin-bottom: 10px;
+  }
+
+  .login-form-padding-bottom {
+    display: block;
+    height: 80px;
+  }
+}
