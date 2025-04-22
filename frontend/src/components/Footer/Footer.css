@@ -1,0 +1,30 @@
+.footer-container-0 {
+  background-color: #074e9f;
+  height: 40px;
+  width: 100%;
+  padding: 10px 5px;
+  display: flex;
+  justify-content: center;
+  position: fixed;
+  bottom: 0;
+  z-index: 1250;
+}
+
+.footer-container-1 {
+  text-align: center;
+  vertical-align: middle;
+  color: white;
+  font-family: "IBM Plex Sans";
+  font-weight: 400;
+  font-size: 16px;
+}
+
+@media screen and (max-width: 600px) {
+  .footer-container-0 {
+    height: auto;
+  }
+
+  .footer-container-1 {
+    text-wrap: balance;
+  }
+}
