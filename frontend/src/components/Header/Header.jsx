@@ -78,11 +78,6 @@ const Header = (props) => {
   return (
     <div className="header-container-0" style={{ display: displayHeader }}>
       <div className="d-flex flex-row align-items-center justify-items-start">
-        <div className="header-menu-tab-mobile-btn">
-          <IconButton onClick={handleClickMenuTabMobile}>
-            <MenuIcon />
-          </IconButton>
-        </div>
         <img
           src={logoIcon}
           alt="logo icon"

@@ -1,21 +1,14 @@
-import { useState, createContext } from "react";
+// AppContext.jsx
+import React, { createContext, useState } from "react";
 
-const AppContext = createContext();
+export const AppContext = createContext();
 
-const AppProvider = ({ children }) => {
-  const [openMenuTabMobile, setOpenMenuTabMobile] = useState(false);
-  const [showButtonAbousUs, setShowButtonAboutUs] = useState(
-    window.innerWidth <= 600 ? false : true
+export const AppProvider = ({ children }) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  return (
+    <AppContext.Provider value={{ isMenuOpen, setIsMenuOpen }}>
+      {children}
+    </AppContext.Provider>
   );
-
-  const value = {
-    openMenuTabMobile,
-    setOpenMenuTabMobile,
-    showButtonAbousUs,
-    setShowButtonAboutUs,
-  };
-
-  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
-
-export { AppContext, AppProvider };
