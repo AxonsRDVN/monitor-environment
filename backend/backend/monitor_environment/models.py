@@ -139,7 +139,7 @@ class Transaction(models.Model):
     lux = models.FloatField(blank=True, null=True)
     rain = models.FloatField(blank=True, null=True)
     radiation = models.FloatField(blank=True, null=True)
-    time = models.DateTimeField(auto_now_add=True)
+    time = models.DateTimeField(blank=True, null=True)
 
     def save(self, *args, **kwargs):
         if self.station:
