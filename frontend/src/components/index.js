@@ -4,3 +4,5 @@ export { default as Sidebar } from "./Sidebar/Sidebar.jsx";
 export { default as LoginForm } from "./LoginForm/LoginForm.jsx";
 export { default as Home } from "./Home/Home.jsx";
 export { default as StationStatus } from "./StationStatus/StationStatus.jsx";
+export { default as StationDetailIndex } from "./StationDetailIndex/StationDetailIndex.jsx";
+export { default as ParameterDetail } from "./ParameterDetail/ParameterDetail.jsx";

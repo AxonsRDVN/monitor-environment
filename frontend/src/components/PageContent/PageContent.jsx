@@ -6,7 +6,7 @@ const PageContent = ({ children, sx = {} }) => {
     <Box
       sx={{
         padding: {
-          xs: "0",
+          xs: "16px",
           sm: "32px",
         },
         backgroundColor: "#ffffff",

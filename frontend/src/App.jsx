@@ -1,7 +1,13 @@
 import "./App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ROUTE_PATH } from "./config/router.config";
-import { HomePage, LoginPage, StationStatusPage } from "./page";
+import {
+  HomePage,
+  LoginPage,
+  ParameterDetailPage,
+  StationDetailIndexPage,
+  StationStatusPage,
+} from "./page";
 import "@fontsource/ibm-plex-sans";
 
 function App() {
@@ -13,6 +19,14 @@ function App() {
         <Route
           path={`${ROUTE_PATH.HOME}/plant/:plantId/stations`}
           element={<StationStatusPage />}
+        />
+        <Route
+          path={`${ROUTE_PATH.HOME}/plant/:plantId/stations/:stationId/detail-index-lastest`}
+          element={<StationDetailIndexPage />}
+        />
+        <Route
+          path={`${ROUTE_PATH.HOME}/plant/:plantId/stations/:stationId/detail-index-lastest/:parameterKey`}
+          element={<ParameterDetailPage />}
         />
       </Routes>
     </BrowserRouter>

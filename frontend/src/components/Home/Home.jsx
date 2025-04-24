@@ -173,7 +173,7 @@ export default function Home() {
     <PageContainer>
       <Breadcrumb
         items={[
-          { label: t("dashboard_title"), path: "/dashboard" },
+          { label: t("dashboard_title"), path: "/home" },
           { label: t("monitoring_station"), path: "/monitoring-station" },
         ]}
       />

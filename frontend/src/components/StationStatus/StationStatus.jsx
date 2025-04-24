@@ -19,6 +19,8 @@ import SearchIcon from "@mui/icons-material/Search";
 import { PictureAsPdf, Route, Router, Sensors } from "@mui/icons-material";
 import PieChartWithNeedle from "../Chart/PieChartWithNeedle";
 import LineChartHorizontal from "../Chart/LineChartHorizontal";
+import StatusIcon from "../Icon/StatusIcon";
+import ExportChartButton from "../Button/ExportChartButton";
 
 export default function StationStatus() {
   const { plantId } = useParams();
@@ -70,16 +72,27 @@ export default function StationStatus() {
       return null;
     })
     .filter(Boolean); // loại bỏ null
+  console.log("filteredStations", filteredStations);
+  console.log("stations", stations);
+  console.log("plantName", plantName);
+
   return (
     <PageContainer>
       <Breadcrumb
         items={[
-          { label: t("dashboard_title"), path: "/dashboard" },
+          { label: t("dashboard_title"), path: "/home" },
           { label: t("monitoring_station"), path: "/monitoring-station" },
         ]}
       />
       <PageTitle title={plantName} />
-      <PageContent>
+      <PageContent
+        sx={{
+          marginBottom: {
+            xs: "100px",
+            sm: "0",
+          },
+        }}
+      >
         <TextField
           label={t("search")}
           variant="outlined"
@@ -143,7 +156,7 @@ export default function StationStatus() {
                       <Box
                         onClick={() =>
                           navigate(
-                            `/dashboard/plant/${plantId}/stations/${master.id}`
+                            `/home/plant/${plantId}/stations/${master.id}/detail-index-lastest`
                           )
                         }
                         sx={{
@@ -159,7 +172,8 @@ export default function StationStatus() {
                           boxShadow: "0 2px 4px rgba(0,0,0,0.06)",
                           transition: "0.2s",
                           "&:hover": {
-                            backgroundColor: "#EEF6FE",
+                            boxShadow: "0px 4px 12px rgba(7, 78, 159, 0.3)",
+                            transform: "translateY(-2px)", // tạo cảm giác nổi lên
                           },
                         }}
                       >
@@ -201,7 +215,7 @@ export default function StationStatus() {
                         <Box
                           onClick={() =>
                             navigate(
-                              `/dashboard/plant/${plantId}/stations/${station.id}`
+                              `/home/plant/${plantId}/stations/${station.id}/detail-index-lastest`
                             )
                           }
                           sx={{
@@ -216,7 +230,8 @@ export default function StationStatus() {
                             boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
                             transition: "0.2s",
                             "&:hover": {
-                              backgroundColor: "#F0F4F8",
+                              boxShadow: "0px 4px 12px rgba(7, 78, 159, 0.3)",
+                              transform: "translateY(-2px)", // tạo cảm giác nổi lên
                             },
                           }}
                         >
@@ -288,7 +303,7 @@ export default function StationStatus() {
                 </svg>
                 <Typography>Biểu đồ trạng thái</Typography>
               </Box>
-              <PictureAsPdf />
+              <ExportChartButton />
             </Box>
             <Box sx={{ display: "flex", justifyContent: "center" }}>
               <PieChartWithNeedle status="Normal" />
@@ -298,7 +313,10 @@ export default function StationStatus() {
                 titleLineChart={t("admin_page_sub_table_status")}
               />
             </Box>
-            <Typography variant="body2" color="text.secondary"></Typography>
+            <Box sx={{ textAlign: "center", marginBottom: "32px" }}>
+              24 giờ qua
+            </Box>
+            <StatusIcon />
           </Box>
         </Box>
       </PageContent>
