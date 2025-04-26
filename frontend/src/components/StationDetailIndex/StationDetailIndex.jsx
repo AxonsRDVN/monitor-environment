@@ -1,32 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getAllStationsByPlant } from "../../api/stationApi";
-import {
-  Box,
-  List,
-  ListItem,
-  ListItemText,
-  TextField,
-  Typography,
-  InputAdornment,
-  Grid,
-} from "@mui/material";
+import { Box, Grid } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import PageContainer from "../PageContainer/PageContainer";
 import Breadcrumb from "../Breadcrumb/Breadcrumb";
-import PageTitle from "../PageTitle/PageTitle";
 import PageContent from "../PageContent/PageContent";
-import SearchIcon from "@mui/icons-material/Search";
-import {
-  AccessTime,
-  PictureAsPdf,
-  Route,
-  Router,
-  Sensors,
-} from "@mui/icons-material";
-import PieChartWithNeedle from "../Chart/PieChartWithNeedle";
-import LineChartHorizontal from "../Chart/LineChartHorizontal";
-import StatusIcon from "../Icon/StatusIcon";
+import { AccessTime, Router, Sensors } from "@mui/icons-material";
 import ExportChartButton from "../Button/ExportChartButton";
 import { getDetailIndexLastest } from "../../api/detailIndexApi";
 import FormattedTime from "../FormatTime/FormatDateTime";
@@ -58,6 +37,7 @@ export default function StationDetailIndex() {
 
     loadStations();
   }, [plantId, stationId]);
+  console.log("detailIndex", detailIndex);
 
   return (
     <PageContainer>
@@ -180,7 +160,7 @@ export default function StationDetailIndex() {
                 mb: 4,
               }}
             >
-              {detailIndex.groups[selectedGroup] &&
+              {detailIndex?.groups?.[selectedGroup] &&
               Object.keys(detailIndex.groups[selectedGroup]).length > 0 ? (
                 <Grid
                   container

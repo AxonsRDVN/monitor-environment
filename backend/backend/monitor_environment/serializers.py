@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from collections import defaultdict
 from .models import *
 
 GROUP_MAP = {
@@ -17,26 +18,6 @@ GROUP_MAP = {
     "Light": ["lux", "radiation"],
     "Energy": [],
     "Other": ["wiFi_signal"],
-}
-
-UNIT_MAP = {
-    "temperature": "°C",
-    "humidity": "%",
-    "windspeed": "m/s",
-    "wind_direction": "°",
-    "airpressure": "hPa",
-    "rain": "mm",
-    "noise": "dB",
-    "radiation": "W/m²",
-    "lux": "lux",
-    "co2": "ppm",
-    "nh3": "ppm",
-    "so2": "ppm",
-    "h2s": "ppm",
-    "ch4": "ppm",
-    "pm10": "µg/m³",
-    "pm25": "µg/m³",
-    "wiFi_signal": "dBm",
 }
 
 
@@ -103,16 +84,22 @@ class TransactionSerializer(serializers.ModelSerializer):
         fields = ["id", "station", "plant", "device_code", "time", "groups"]
 
     def get_groups(self, obj):
-        result = {group: {} for group in GROUP_MAP}
+        result = defaultdict(dict)
 
-        for group, fields in GROUP_MAP.items():
-            for field in fields:
-                if hasattr(obj, field):
-                    value = getattr(obj, field)
-                    if value is not None:
+        # 🔍 Lấy danh sách Parameter có ở station
+        parameters = Parameter.objects.filter(station=obj.station)
+        param_map = {p.name.lower(): p for p in parameters}
+
+        for group, field_list in GROUP_MAP.items():
+            for field in field_list:
+                # Kiểm tra field có tồn tại và có giá trị trong Transaction
+                value = getattr(obj, field, None)
+                if value is not None:
+                    param = param_map.get(field)
+                    if param:
                         result[group][field] = {
                             "value": value,
-                            "unit": UNIT_MAP.get(field, ""),
+                            "unit": param.unit or "",
                         }
 
         return result

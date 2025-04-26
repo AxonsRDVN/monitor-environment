@@ -22,6 +22,92 @@ import LineChartHorizontal from "../Chart/LineChartHorizontal";
 import StatusIcon from "../Icon/StatusIcon";
 import ExportChartButton from "../Button/ExportChartButton";
 
+const statusColors = {
+  normal: {
+    bg: "#DEEDFE",
+    text: "#0A6EE1",
+    iconColor: "#0078B4",
+    icon: (
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <circle cx="12" cy="12" r="11.6667" fill="#70DF00" />
+
+        <circle cx="8.5" cy="9.1" r="1.5" fill="#4E3C0C" />
+
+        <circle cx="15.5" cy="9.1" r="1.5" fill="#4E3C0C" />
+
+        <path
+          d="M7 14.3C8.1 15.8 9.9 16.7 12 16.7C14.1 16.7 15.9 15.8 17 14.3"
+          stroke="#4E3C0C"
+          stroke-width="1.8"
+          stroke-linecap="round"
+        />
+      </svg>
+    ),
+  },
+  caution: {
+    bg: "#FDEDE4",
+    text: "#D37E0E",
+    iconColor: "#DD8108",
+    icon: (
+      <svg
+        width="27"
+        height="28"
+        viewBox="0 0 27 28"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <circle cx="13.5" cy="14" r="13.333" fill="#F8BD26" />
+
+        <circle cx="9.5" cy="11.333" r="1.666" fill="#4E3C0C" />
+
+        <circle cx="17.5" cy="11.333" r="1.666" fill="#4E3C0C" />
+
+        <rect
+          x="8.16675"
+          y="17.3332"
+          width="10.6667"
+          height="2"
+          rx="1"
+          fill="#4E3C0C"
+        />
+      </svg>
+    ),
+  },
+  danger: {
+    bg: "#F8E5E5",
+    text: "#C2281D",
+    iconColor: "#C2281D",
+    icon: (
+      <svg
+        width="28"
+        height="28"
+        viewBox="0 0 28 28"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <circle cx="13.8333" cy="14" r="13.3333" fill="#EE3D4A" />
+
+        <circle cx="9.8333" cy="10.6665" r="1.5" fill="#4E3C0C" />
+
+        <circle cx="17.8333" cy="10.6665" r="1.5" fill="#4E3C0C" />
+
+        <path
+          d="M7.5 18.5C9.1 16.5 11.3 15.3 13.8333 15.3C16.3667 15.3 18.5667 16.5 20.1667 18.5"
+          stroke="#4E3C0C"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+      </svg>
+    ),
+  },
+};
+
 export default function StationStatus() {
   const { plantId } = useParams();
   const [stations, setStations] = useState([]);
@@ -72,9 +158,24 @@ export default function StationStatus() {
       return null;
     })
     .filter(Boolean); // loại bỏ null
-  console.log("filteredStations", filteredStations);
-  console.log("stations", stations);
-  console.log("plantName", plantName);
+
+  const flatStations = stations.flatMap((master) => [
+    { ...master, stations: undefined }, // loại bỏ "stations" để tránh lặp
+    ...(master.stations || []),
+  ]);
+  console.log("flatStation", flatStations);
+
+  const getOverallStatus = (stations) => {
+    const priority = ["danger", "caution", "normal"];
+
+    return (
+      priority.find((status) =>
+        flatStations.some((station) => station.status === status)
+      ) || "normal"
+    );
+  };
+
+  const overallStatus = getOverallStatus(stations);
 
   return (
     <PageContainer>
@@ -179,8 +280,8 @@ export default function StationStatus() {
                       >
                         <Box
                           sx={{
-                            backgroundColor: "#DEEDFE",
-                            color: "#0A6EE1",
+                            backgroundColor: statusColors[master.status]?.bg,
+                            color: statusColors[master.status]?.text,
                             p: 1,
                             borderRadius: "8px",
                             display: "flex",
@@ -190,7 +291,12 @@ export default function StationStatus() {
                             height: 40,
                           }}
                         >
-                          <Router sx={{ fontSize: 24 }} />
+                          <Router
+                            sx={{
+                              fontSize: 24,
+                              color: statusColors[master.status]?.text,
+                            }}
+                          />
                         </Box>
 
                         <ListItemText
@@ -206,6 +312,23 @@ export default function StationStatus() {
                           primary={master.name}
                           secondary={`node : ${master.stations?.length || 0}`}
                         />
+                        <Box sx={{ display: "flex", gap: "6px" }}>
+                          <Box
+                            sx={{
+                              color: statusColors[master.status]?.text,
+                              borderRadius: "10px",
+                              fontWeight: 500,
+                              background:
+                                master.status === "normal"
+                                  ? "transparent"
+                                  : statusColors[master.status]?.bg,
+                              p: "5px",
+                            }}
+                          >
+                            {master.count > 0 && `${master.count}`}
+                          </Box>
+                          <Box>{statusColors[master.status]?.icon}</Box>
+                        </Box>
                       </Box>
                     </ListItem>
 
@@ -237,8 +360,7 @@ export default function StationStatus() {
                         >
                           <Box
                             sx={{
-                              backgroundColor: "#DEEDFE",
-                              color: "#0A6EE1",
+                              backgroundColor: statusColors[station.status]?.bg,
                               p: 1,
                               borderRadius: "5px",
                               display: "flex",
@@ -248,7 +370,13 @@ export default function StationStatus() {
                               height: 32,
                             }}
                           >
-                            <Sensors sx={{ fontSize: 20 }} />
+                            <Sensors
+                              sx={{
+                                fontSize: 20,
+                                color: statusColors[station.status]?.text,
+                              }}
+                            />
+                            {statusColors[station.status]?.icon}
                           </Box>
 
                           <ListItemText
@@ -259,6 +387,23 @@ export default function StationStatus() {
                             }}
                             primary={station.name}
                           />
+                          <Box sx={{ display: "flex", gap: "6px" }}>
+                            <Box
+                              sx={{
+                                color: statusColors[station.status]?.text,
+                                borderRadius: "10px",
+                                fontWeight: 500,
+                                background:
+                                  station.status === "normal"
+                                    ? "transparent"
+                                    : statusColors[station.status]?.bg,
+                                p: "5px",
+                              }}
+                            >
+                              {station.count > 0 && `${station.count}`}
+                            </Box>
+                            <Box>{statusColors[station.status]?.icon}</Box>
+                          </Box>
                         </Box>
                       </ListItem>
                     ))}
@@ -306,7 +451,7 @@ export default function StationStatus() {
               <ExportChartButton />
             </Box>
             <Box sx={{ display: "flex", justifyContent: "center" }}>
-              <PieChartWithNeedle status="Normal" />
+              <PieChartWithNeedle status={overallStatus} />
             </Box>
             <Box>
               <LineChartHorizontal

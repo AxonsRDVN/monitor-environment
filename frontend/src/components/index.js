@@ -6,3 +6,5 @@ export { default as Home } from "./Home/Home.jsx";
 export { default as StationStatus } from "./StationStatus/StationStatus.jsx";
 export { default as StationDetailIndex } from "./StationDetailIndex/StationDetailIndex.jsx";
 export { default as ParameterDetail } from "./ParameterDetail/ParameterDetail.jsx";
+export { default as WarningThreshold } from "./WarningThreshold/WarningThreshold.jsx";
+export { default as CleaningDay } from "./CleaningDay/CleaningDay.jsx";

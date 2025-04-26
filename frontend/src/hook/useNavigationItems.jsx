@@ -24,8 +24,11 @@ const useNavigationItems = () => {
       path: ROUTE_PATH.SETTINGS,
       icon: <SettingsOutlined />,
       subItems: [
-        { text: t("warning_threshold"), path: ROUTE_PATH.WARNING_THRESHOLD },
-        { text: t("cleaning_days"), path: ROUTE_PATH.CLEANING_DAYS },
+        {
+          text: t("warning_threshold"),
+          path: ROUTE_PATH.SETTING_WARNING_THRESHOLD,
+        },
+        { text: t("cleaning_days"), path: ROUTE_PATH.SETTING_CLEANING_DAY },
       ],
     },
     {
@@ -50,11 +53,11 @@ const useNavigationItems = () => {
       subItems: [
         {
           text: t("reports_device_status"),
-          path: ROUTE_PATH.REPORTS_DEVICE_STATUS,
+          path: ROUTE_PATH.REPORT_DEVICE_STATUS,
         },
         {
           text: t("reports_warning_indicator"),
-          path: ROUTE_PATH.REPORTS_WARNING_INDICATOR,
+          path: ROUTE_PATH.REPORT_WARNING_INDICATOR,
         },
       ],
     },

@@ -14,10 +14,9 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import CloseIcon from "@mui/icons-material/Close";
-import MenuIcon from "@mui/icons-material/Menu";
 import { useTranslation } from "react-i18next";
 import useNavigationItems from "../../hook/useNavigationItems";
-import { FileCopyOutlined, Menu } from "@mui/icons-material";
+import { Menu } from "@mui/icons-material";
 
 const Sidebar = () => {
   const menuItems = useNavigationItems();

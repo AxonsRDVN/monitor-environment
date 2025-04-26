@@ -42,43 +42,42 @@ export default function ParameterChartSection() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Sử dụng useCallback để tránh tạo lại hàm fetchData mỗi lần render
-  const fetchData = useCallback(async () => {
-    if (!plantId || !stationId || !parameterKey) return;
-
-    // Kiểm tra fromDate và toDate hợp lệ
-    if (fromDate.isAfter(toDate)) {
-      setError("Ngày bắt đầu không được lớn hơn ngày kết thúc");
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const res = await getParameterByFilter(
-        plantId,
-        stationId,
-        parameterKey,
-        selectedTime,
-        fromDate.format("YYYY-MM-DD"),
-        toDate.format("YYYY-MM-DD")
-      );
-      setSummary(res.summary || { avg: 0, max: 0, min: 0 });
-      setChartData(res.data || []);
-    } catch (err) {
-      console.error("Lỗi lấy dữ liệu biểu đồ:", err);
-      setError("Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [plantId, stationId, parameterKey, selectedTime, fromDate, toDate]);
-
-  // Sử dụng useEffect với các dependencies đã được useCallback bao bọc
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    const fetchData = async () => {
+      if (!plantId || !stationId || !parameterKey) return;
 
+      if (fromDate.isAfter(toDate)) {
+        setError("Ngày bắt đầu không được lớn hơn ngày kết thúc");
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const res = await getParameterByFilter(
+          plantId,
+          stationId,
+          parameterKey,
+          selectedTime,
+          fromDate.format("YYYY-MM-DD"),
+          toDate.format("YYYY-MM-DD")
+        );
+        console.log("Dữ liệu từ API:", res); // 👈 check dữ liệu trả về
+
+        setSummary(res.summary || { avg: 0, max: 0, min: 0 });
+        setChartData(res.data || []);
+      } catch (err) {
+        console.error("Lỗi lấy dữ liệu biểu đồ:", err);
+        setError("Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [plantId, stationId, parameterKey, selectedTime, fromDate, toDate]);
+  console.log(summary);
   // Các hàm xử lý thay đổi ngày
   const handleFromDateChange = (newValue) => {
     if (newValue && dayjs(newValue).isValid()) {

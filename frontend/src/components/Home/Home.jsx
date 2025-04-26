@@ -6,15 +6,12 @@ import { useTranslation } from "react-i18next";
 import PageContent from "../PageContent/PageContent";
 import { Box, Grid, Paper, Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import SentimentSatisfiedOutlinedIcon from "@mui/icons-material/SentimentSatisfiedOutlined";
-import SentimentDissatisfiedOutlinedIcon from "@mui/icons-material/SentimentDissatisfiedOutlined";
-import SentimentNeutralOutlinedIcon from "@mui/icons-material/SentimentNeutralOutlined";
 import HomeWorkOutlinedIcon from "@mui/icons-material/HomeWorkOutlined";
 import { getAllPlants } from "../../api/plantApi";
 import { useNavigate } from "react-router-dom";
 
 const statusColors = {
-  Normal: {
+  normal: {
     bg: "#ECF2F8",
     text: "#22AB67",
     iconColor: "#0078B4",
@@ -41,37 +38,10 @@ const statusColors = {
       </svg>
     ),
   },
-  Caution: {
+  caution: {
     bg: "#FDEDE4",
     text: "#D37E0E",
     iconColor: "#DD8108",
-    icon: (
-      <svg
-        width="28"
-        height="28"
-        viewBox="0 0 28 28"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <circle cx="13.8333" cy="14" r="13.3333" fill="#EE3D4A" />
-
-        <circle cx="9.8333" cy="10.6665" r="1.5" fill="#4E3C0C" />
-
-        <circle cx="17.8333" cy="10.6665" r="1.5" fill="#4E3C0C" />
-
-        <path
-          d="M7.5 18.5C9.1 16.5 11.3 15.3 13.8333 15.3C16.3667 15.3 18.5667 16.5 20.1667 18.5"
-          stroke="#4E3C0C"
-          stroke-width="2"
-          stroke-linecap="round"
-        />
-      </svg>
-    ),
-  },
-  Danger: {
-    bg: "#F8E5E5",
-    text: "#C2281D",
-    iconColor: "#C2281D",
     icon: (
       <svg
         width="27"
@@ -97,6 +67,33 @@ const statusColors = {
       </svg>
     ),
   },
+  danger: {
+    bg: "#F8E5E5",
+    text: "#C2281D",
+    iconColor: "#C2281D",
+    icon: (
+      <svg
+        width="28"
+        height="28"
+        viewBox="0 0 28 28"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <circle cx="13.8333" cy="14" r="13.3333" fill="#EE3D4A" />
+
+        <circle cx="9.8333" cy="10.6665" r="1.5" fill="#4E3C0C" />
+
+        <circle cx="17.8333" cy="10.6665" r="1.5" fill="#4E3C0C" />
+
+        <path
+          d="M7.5 18.5C9.1 16.5 11.3 15.3 13.8333 15.3C16.3667 15.3 18.5667 16.5 20.1667 18.5"
+          stroke="#4E3C0C"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+      </svg>
+    ),
+  },
 };
 
 const Item = styled(Paper)(({ status }) => ({
@@ -111,41 +108,6 @@ const Item = styled(Paper)(({ status }) => ({
     boxShadow: "0px 4px 14px rgba(0, 0, 0, 0.2)",
   },
 }));
-
-const factories = [
-  {
-    id: 1,
-    name: "CPV Phu Nghia Further",
-    icon: <HomeWorkOutlinedIcon sx={{ fontSize: "48px" }} />,
-    status: "Normal",
-    station: 13,
-    planCode: "0121",
-  },
-  {
-    id: 2,
-    name: "CPV Phu Nghia Meat",
-    icon: <HomeWorkOutlinedIcon sx={{ fontSize: "48px" }} />,
-    status: "Danger",
-    station: 15,
-    planCode: "0122",
-  },
-  {
-    id: 3,
-    name: "CPV Xuan Mai Medicine",
-    icon: <HomeWorkOutlinedIcon sx={{ fontSize: "48px" }} />,
-    status: "Caution",
-    station: 12,
-    planCode: "0123",
-  },
-  {
-    id: 4,
-    name: "CPV Dong Nai Meat",
-    icon: <HomeWorkOutlinedIcon sx={{ fontSize: "48px" }} />,
-    status: "Normal",
-    station: 14,
-    planCode: "0124",
-  },
-];
 
 export default function Home() {
   const { t } = useTranslation("translation");
@@ -203,23 +165,7 @@ export default function Home() {
                       color: statusColors[plant.status]?.text,
                     }}
                   >
-                    <svg
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <circle cx="12" cy="12" r="11.6667" fill="#70DF00" />
-                      <circle cx="8.5" cy="9.1" r="1.5" fill="#4E3C0C" />
-                      <circle cx="15.5" cy="9.1" r="1.5" fill="#4E3C0C" />
-                      <path
-                        d="M7 14.3C8.1 15.8 9.9 16.7 12 16.7C14.1 16.7 15.9 15.8 17 14.3"
-                        stroke="#4E3C0C"
-                        strokeWidth="1.8"
-                        strokeLinecap="round"
-                      />
-                    </svg>
+                    {statusColors[plant.status]?.icon}
                   </Box>
 
                   {/* Dòng ngang chứa icon nhà máy + nội dung */}
@@ -235,10 +181,10 @@ export default function Home() {
                     {/* Icon nhà máy */}
                     <Box
                       sx={{
-                        color: statusColors.Normal.iconColor,
+                        color: statusColors[plant.status]?.iconColor,
                         display: "flex",
                         alignItems: "center",
-                        backgroundColor: statusColors.Normal.bg,
+                        backgroundColor: statusColors[plant.status]?.bg,
                         p: 1,
                         borderRadius: "10px",
                       }}
@@ -271,9 +217,10 @@ export default function Home() {
                         </Box>
                         <Typography
                           fontSize="16px"
-                          sx={{ color: statusColors.Normal.text }}
+                          sx={{ color: statusColors[plant.status]?.text }}
                         >
-                          Normal
+                          {plant.status}
+                          {plant.count > 0 && ` (${plant.count})`}
                         </Typography>
                       </Box>
                     </Box>
