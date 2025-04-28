@@ -24,6 +24,7 @@ urlpatterns = [
         PlantParameterWarningView.as_view(),
         name="plant-warning-stats"
     ),
-     path("plant/<int:plant_id>/warning-detail/", WarningDetailByPlantView.as_view(), name="plant-warning-detail"),
+    path("plant/<int:plant_id>/warning-detail/", WarningDetailByPlantView.as_view(), name="plant-warning-detail"),
     path("plant/<int:plant_id>/maintenance-reminders/", MaintenanceReminderAPIView.as_view(), name="maintenance-reminders-by-plant"),
+    path("plant/<int:plant_id>/24h-average/", Plant24hOverallStatusView.as_view(), name="24h-status-by-plant"),
 ]

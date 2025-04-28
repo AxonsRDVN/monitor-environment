@@ -24,6 +24,9 @@ import ExportChartButton from "../Button/ButtonSave";
 import { statusColors } from "../Icon/ParameterIcon";
 import { useError } from "../../context/ErrorContext";
 import ExportButton from "../Button/ExportButton";
+import axios from "axios";
+
+const API_BASE = process.env.REACT_APP_API_URL;
 
 export default function StationStatus() {
   const { plantId } = useParams();
@@ -35,6 +38,7 @@ export default function StationStatus() {
   const navigate = useNavigate();
   const [searchText, setSearchText] = useState("");
   const [plantName, setPlantName] = useState("");
+  const [lineData, setLineData] = useState([]);
 
   useEffect(() => {
     const loadStations = async () => {
@@ -53,6 +57,31 @@ export default function StationStatus() {
 
     loadStations();
   }, [plantId]);
+
+  useEffect(() => {
+    async function fetch24hAverage() {
+      try {
+        const res = await axios.get(
+          `${API_BASE}/monitor-environment/plant/${plantId}/24h-average/`
+        );
+        const rawObject = res.data || {}; // 👈 object
+
+        // Convert object thành array
+        const formattedData = Object.entries(rawObject).map(
+          ([hour, level]) => ({
+            time: `${hour}h`,
+            level: level,
+          })
+        );
+
+        setLineData(formattedData);
+      } catch (error) {
+        console.error("Lỗi khi load 24h trung bình:", error);
+      }
+    }
+    fetch24hAverage();
+  }, []);
+
   const filteredStations = stations
     .map((master) => {
       const lowerSearch = searchText.toLowerCase();
@@ -95,7 +124,7 @@ export default function StationStatus() {
   };
 
   const overallStatus = getOverallStatus(stations);
-
+  console.log(lineData);
   return (
     <PageContainer>
       <Breadcrumb
@@ -374,6 +403,7 @@ export default function StationStatus() {
             </Box>
             <Box>
               <LineChartHorizontal
+                data={lineData}
                 titleLineChart={t("admin_page_sub_table_status")}
               />
             </Box>

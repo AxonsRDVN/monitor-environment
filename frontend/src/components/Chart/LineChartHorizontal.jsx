@@ -1,4 +1,4 @@
-import { Box, Typography } from "@mui/material";
+import { Box } from "@mui/material";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -6,27 +6,20 @@ import {
   Line,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
   ResponsiveContainer,
   ReferenceLine,
 } from "recharts";
 
-const levels = ["danger", "caution", "normal"];
-
-const chartData = Array.from({ length: 24 }).map((_, i) => ({
-  time: `${i.toString().padStart(2, "0")}h`,
-  level: levels[Math.floor(Math.random() * 3)],
-}));
-
-// Chuyển level thành số để vẽ line
-const mappedData = chartData.map((item) => ({
-  ...item,
-  levelValue: item.level === "normal" ? 2 : item.level === "caution" ? 1 : 0,
-}));
-
-export default function LineChartHorizontal() {
+export default function LineChartHorizontal({ data = [] }) {
   const { t } = useTranslation();
+
+  // Chuyển dữ liệu từ level ("danger", "caution", "normal") thành levelValue (0, 1, 2)
+  const mappedData = data.map((item) => ({
+    ...item,
+    levelValue: item.level === "danger" ? 0 : item.level === "caution" ? 1 : 2,
+  }));
+
   return (
     <Box sx={{ ml: "-40px" }}>
       <Box sx={{ ml: "30px", color: "#667085" }}>Trạng thái</Box>
@@ -35,25 +28,25 @@ export default function LineChartHorizontal() {
           data={mappedData}
           margin={{ top: 20, right: 0, left: 0, bottom: 10 }}
         >
-          {/* Các đường ngang tương ứng với mức độ */}
           <ReferenceLine y={0} stroke="#D0D0D0" strokeWidth={1} />
           <ReferenceLine y={1} stroke="#D0D0D0" strokeWidth={1} />
           <ReferenceLine y={2} stroke="#D0D0D0" strokeWidth={1} />
           <XAxis dataKey="time" tick={{ fontSize: 12 }} />
           <YAxis
             type="number"
-            domain={[0, 2]}
-            ticks={[0, 1, 2]}
+            reversed
+            domain={[0, 2]} // 🔥 Đảo domain: normal ở dưới, danger ở trên
+            ticks={[0, 1, 2]} // 🔥 ticks cũng phải theo thứ tự từ trên xuống
             width={80}
             tick={({ x, y, payload }) => {
               const value = payload.value;
               let color = "#000";
-              if (value === 0) color = "#70DF00"; // normal
+              if (value === 0) color = "#EE3D4A"; // danger
               else if (value === 1) color = "#F8BD26"; // caution
-              else if (value === 2) color = "#EE3D4A"; // danger
+              else if (value === 2) color = "#70DF00"; // normal
 
               const label =
-                value === 0
+                value === 2
                   ? t("normal")
                   : value === 1
                   ? t("caution")
@@ -73,20 +66,21 @@ export default function LineChartHorizontal() {
               );
             }}
           />
+
           <Tooltip
             formatter={(value, name) => {
               if (name === "levelValue") {
                 const statusLabel =
-                  value === 0
+                  value === 2
                     ? t("normal")
                     : value === 1
                     ? t("caution")
                     : t("danger");
-                return [statusLabel, t("status")]; // value, name
+                return [statusLabel, t("status")];
               }
               return [value, name];
             }}
-            labelFormatter={(label) => `${t("hour")}: ${label}`} // ví dụ dịch "Giờ: 13h"
+            labelFormatter={(label) => `${t("hour")}: ${label}`}
           />
           <Line
             type="monotone"
