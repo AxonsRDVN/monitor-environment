@@ -8,3 +8,11 @@ export { default as StationDetailIndex } from "./StationDetailIndex/StationDetai
 export { default as ParameterDetail } from "./ParameterDetail/ParameterDetail.jsx";
 export { default as WarningThreshold } from "./WarningThreshold/WarningThreshold.jsx";
 export { default as CleaningDay } from "./CleaningDay/CleaningDay.jsx";
+export { default as MonitoringStation } from "./MonitoringStation/MonitoringStation.jsx";
+export { default as DeviceManagement } from "./DeviceManagement/DeviceManagement.jsx";
+export { default as SensorHistory } from "./DeviceManagement/SensorHistory.jsx";
+export { default as SensorMaintenance } from "./DeviceManagement/SensorMaintenance.jsx";
+export { default as MaintenanceApproval } from "./MaintenanceApproval/MaintenanceApproval.jsx";
+export { default as DeviceStatus } from "./DeviceStatus/DeviceStatus.jsx";
+export { default as WarningIndicator } from "./WarningIndicator/WarningIndicator.jsx";
+export { default as UserManagement } from "./UserManagement/UserManagement.jsx";

@@ -89,3 +89,35 @@ class TransactionAdmin(admin.ModelAdmin):
         }),
     )
 
+@admin.register(Maintenance)
+class MaintenanceAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'sensor',
+        'action',
+        'status',
+        'user_name',
+        'moderator',
+        'role',
+        'update_at',
+    )
+    list_filter = ('status', 'action', 'role')
+    search_fields = ('sensor__model_sensor', 'user_name', 'moderator')
+    ordering = ('-update_at',)
+    readonly_fields = ('update_at',)
+
+    # Hiển thị thêm ảnh trước và sau bảo trì trong Admin
+    def image_before_tag(self, obj):
+        if obj.image_before:
+            return mark_safe(f'<img src="{obj.image_before.url}" width="100" />')
+        return "-"
+    
+    def image_after_tag(self, obj):
+        if obj.image_after:
+            return mark_safe(f'<img src="{obj.image_after.url}" width="100" />')
+
+        return "-"
+
+    image_before_tag.short_description = "Ảnh trước bảo trì"
+    image_after_tag.short_description = "Ảnh sau bảo trì"
+

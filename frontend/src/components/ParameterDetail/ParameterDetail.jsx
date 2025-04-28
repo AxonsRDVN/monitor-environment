@@ -1,26 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import PageContainer from "../PageContainer/PageContainer";
-import Breadcrumb from "../Breadcrumb/Breadcrumb";
-import PageTitle from "../PageTitle/PageTitle";
+import Breadcrumb from "../BreadCrumb/Breadcrumb";
 import PageContent from "../PageContent/PageContent";
-import { Box, TextField, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { getDetailIndexLastest } from "../../api/detailIndexApi";
-import FormattedTime from "../FormatTime/FormatDateTime";
-import ParameterCard, { ICON_MAP } from "../Icon/ParameterIcon"; // Đảm bảo đúng đường dẫn
-import { DatePicker } from "@mui/x-date-pickers";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import dayjs from "dayjs";
+import { ICON_MAP } from "../Icon/ParameterIcon"; // Đảm bảo đúng đường dẫn
 import ParameterChartSection from "../Chart/ParameterChartSection";
+import { useError } from "../../context/ErrorContext";
 
 export default function ParameterDetail() {
   const { plantId, stationId, parameterKey } = useParams();
   const [detailIndex, setDetailIndex] = useState(null);
   const [station, setStation] = useState(null);
   const [error, setError] = useState("");
-  const [startDate, setStartDate] = useState(dayjs());
-  const [endDate, setEndDate] = useState(dayjs());
+  const { showError } = useError();
 
   useEffect(() => {
     const loadData = async () => {
@@ -31,6 +25,7 @@ export default function ParameterDetail() {
       } catch (err) {
         console.error(err);
         setError("Không thể tải dữ liệu chỉ số 😥");
+        showError("Không thể kết nối server!");
       }
     };
 
@@ -48,8 +43,8 @@ export default function ParameterDetail() {
     <PageContainer>
       <Breadcrumb
         items={[
-          { label: "Dashboard", path: "/home" },
-          { label: "Monitoring Station", path: "/monitoring-station" },
+          { label: "Trang chủ", path: "/home" },
+          { label: "Trạng thái", path: "/monitoring-station" },
           {
             label: station?.name || "",
             path: `/home/plant/${plantId}/stations/${stationId}/detail-index-lastest`,

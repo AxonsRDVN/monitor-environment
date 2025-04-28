@@ -7,3 +7,10 @@ export const getAllSensorsByStation = async (stationId) => {
   );
   return response.data;
 };
+
+export const getOneSensorByStation = async (stationId, sensorId) => {
+  const response = await axios.get(
+    `${API_BASE}/monitor-environment/sensors/${stationId}/sensor/${sensorId}`
+  );
+  return response.data;
+};

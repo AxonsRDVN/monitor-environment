@@ -1,7 +1,6 @@
 import React from "react";
 import { Box, Button } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
-import CloseIcon from "@mui/icons-material/Close";
 
 export default function ActionButtons({
   onSave,

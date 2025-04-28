@@ -8,61 +8,61 @@ import {
   RouterOutlined,
 } from "@mui/icons-material";
 import { ROUTE_PATH } from "../config/router.config";
-import { useTranslation } from "react-i18next";
 
 const useNavigationItems = () => {
-  const { t } = useTranslation("translation");
-
   return [
     {
-      text: t("dashboard_title"),
+      text: "Trang chủ",
       path: ROUTE_PATH.HOME,
       icon: <HomeOutlined />,
     },
     {
-      text: t("settings"),
+      text: "Cài đặt",
       path: ROUTE_PATH.SETTINGS,
       icon: <SettingsOutlined />,
       subItems: [
         {
-          text: t("warning_threshold"),
+          text: "Ngưỡng cảnh báo",
           path: ROUTE_PATH.SETTING_WARNING_THRESHOLD,
         },
-        { text: t("cleaning_days"), path: ROUTE_PATH.SETTING_CLEANING_DAY },
+        {
+          text: "Số ngày vệ sinh",
+          path: ROUTE_PATH.SETTING_CLEANING_DAY,
+        },
       ],
     },
     {
-      text: t("monitoring_station"),
+      text: "Trạm giám sát",
       path: ROUTE_PATH.MONITORING_STATION,
       icon: <SensorsOutlined />,
     },
     {
-      text: t("device_management"),
+      text: "Quản lý thiết bị",
       path: ROUTE_PATH.DEVICE_MANAGEMENT,
       icon: <RouterOutlined />,
     },
     {
-      text: t("maintenance_approval"),
+      text: "Duyệt bảo trì",
       path: ROUTE_PATH.MAINTENANCE_APPROVAL,
       icon: <TaskOutlined />,
     },
     {
-      text: t("reports"),
+      text: "Báo cáo",
       path: ROUTE_PATH.REPORTS,
       icon: <ReceiptLongOutlined />,
       subItems: [
         {
-          text: t("reports_device_status"),
+          text: "Báo cáo trạng thái thiết bị",
           path: ROUTE_PATH.REPORT_DEVICE_STATUS,
         },
         {
-          text: t("reports_warning_indicator"),
+          text: "Báo cáo chỉ số cảnh báo",
           path: ROUTE_PATH.REPORT_WARNING_INDICATOR,
         },
       ],
     },
     {
-      text: t("user_management"),
+      text: "Quản lý người dùng",
       path: ROUTE_PATH.USER_MANAGEMENT,
       icon: <GroupsOutlined />,
     },

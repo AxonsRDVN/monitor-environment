@@ -106,12 +106,86 @@ class TransactionSerializer(serializers.ModelSerializer):
 
 
 class SensorSerializer(serializers.ModelSerializer):
+    image = serializers.ImageField(use_url=True)  # 🛠️ Bắt buộc để trả ra URL
+
     class Meta:
         model = Sensor
-        fields = "__all__"  # hoặc liệt kê cụ thể các trường
+        fields = [
+            'id',
+            'plant',
+            'station',
+            'image',          # URL của ảnh
+            'model_sensor',
+            'expiry',
+            'expiry_date',
+            'manufacturer',
+            'day_clean',
+            'create_at',
+        ]
 
 
 class ParameterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Parameter
         fields = "__all__"  # hoặc liệt kê cụ thể các trường
+        
+
+class MaintenanceSerializer(serializers.ModelSerializer):
+    station_name = serializers.SerializerMethodField()
+    station_id = serializers.SerializerMethodField()
+    station_location = serializers.SerializerMethodField()  # ✅ thêm location
+    sensor_model = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Maintenance
+        fields = [
+            'id',
+            'sensor',
+            'sensor_model',
+            'image_before',
+            'image_after',
+            'action',
+            'update_at',
+            'user_name',
+            'status',
+            'moderator',
+            'role',
+            'latitude',
+            'longitude',
+            'station_id',
+            'station_name',
+            'station_location',  # ✅ thêm vào fields
+        ]
+
+    def create(self, validated_data):
+        validated_data['status'] = 'pending'
+        return super().create(validated_data)
+
+    def get_station_name(self, obj):
+        if obj.sensor and obj.sensor.station:
+            return obj.sensor.station.name
+        return None
+
+    def get_station_id(self, obj):
+        if obj.sensor and obj.sensor.station:
+            return obj.sensor.station.id
+        return None
+
+    def get_station_location(self, obj):
+        if obj.sensor and obj.sensor.station:
+            return obj.sensor.station.location
+        return None
+
+    def get_sensor_model(self, obj):
+        if obj.sensor:
+            return obj.sensor.model_sensor
+        return None
+    
+class TransactionWarningDetailSerializer(serializers.Serializer):
+    station_id = serializers.IntegerField()
+    station_name = serializers.CharField()
+    parameter_name = serializers.CharField()
+    value = serializers.FloatField()
+    unit = serializers.CharField()
+    status = serializers.CharField()
+    time = serializers.DateTimeField()

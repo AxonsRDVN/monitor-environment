@@ -91,6 +91,46 @@ export default function ParameterChartSection() {
     }
   };
 
+  const formatXAxis = (value) => {
+    switch (selectedTime) {
+      case "minute":
+      case "hour":
+        return dayjs(value).format("DD/MM HH:mm");
+      case "day":
+        return dayjs(value).format("DD/MM");
+      case "month":
+        return dayjs(value).format("MM/YYYY");
+      default:
+        return value;
+    }
+  };
+
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (!active || !payload || payload.length === 0) return null;
+
+    return (
+      <Box
+        sx={{
+          backgroundColor: "#fff",
+          border: "1px solid #ccc",
+          borderRadius: "8px",
+          padding: "12px",
+          boxShadow: "0px 2px 10px rgba(0,0,0,0.1)",
+        }}
+      >
+        <Typography sx={{ fontWeight: 600, mb: 1 }}>
+          {formatXAxis(label)}
+        </Typography>
+        <Typography sx={{ color: "#074E9F", fontSize: "14px" }}>
+          Giá trị trung bình:{" "}
+          {typeof payload[0].value === "number"
+            ? payload[0].value.toFixed(2)
+            : payload[0].value}
+        </Typography>
+      </Box>
+    );
+  };
+
   return (
     <Box sx={{ mt: 4 }}>
       {/* Hiển thị lỗi nếu có */}
@@ -211,9 +251,9 @@ export default function ParameterChartSection() {
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={chartData}>
               <CartesianGrid strokeDasharray="0" vertical={false} />
-              <XAxis dataKey="grouped_time" />
+              <XAxis dataKey="grouped_time" tickFormatter={formatXAxis} />
               <YAxis />
-              <Tooltip />
+              <Tooltip content={<CustomTooltip />} />
               <Area
                 type="monotone"
                 dataKey="avg_value"

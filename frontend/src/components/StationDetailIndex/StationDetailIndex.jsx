@@ -3,19 +3,22 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Box, Grid } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import PageContainer from "../PageContainer/PageContainer";
-import Breadcrumb from "../Breadcrumb/Breadcrumb";
+import Breadcrumb from "../BreadCrumb/Breadcrumb";
 import PageContent from "../PageContent/PageContent";
 import { AccessTime, Router, Sensors } from "@mui/icons-material";
-import ExportChartButton from "../Button/ExportChartButton";
+import ExportChartButton from "../Button/ButtonSave";
 import { getDetailIndexLastest } from "../../api/detailIndexApi";
 import FormattedTime from "../FormatTime/FormatDateTime";
 import ParameterCard from "../Icon/ParameterIcon";
+import { useError } from "../../context/ErrorContext";
+import ExportButton from "../Button/ExportButton";
 
 export default function StationDetailIndex() {
   const { plantId, stationId } = useParams();
   const [stations, setStations] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const { showError } = useError();
   const { t } = useTranslation("translation");
   const navigate = useNavigate();
   const [detailIndex, setDetailIndex] = useState(null);
@@ -30,6 +33,7 @@ export default function StationDetailIndex() {
       } catch (err) {
         console.error(err);
         setError("Không thể tải thông tin giá trị các chỉ số 😥");
+        showError("Không thể kết nối server!");
       } finally {
         setLoading(false);
       }
@@ -38,13 +42,14 @@ export default function StationDetailIndex() {
     loadStations();
   }, [plantId, stationId]);
   console.log("detailIndex", detailIndex);
+  console.log("stations", stations);
 
   return (
     <PageContainer>
       <Breadcrumb
         items={[
-          { label: t("dashboard_title"), path: "/home" },
-          { label: t("monitoring_station"), path: "/monitoring-station" },
+          { label: "Trang chủ", path: "/home" },
+          { label: "Trạng thái", path: "/monitoring-station" },
           {
             label: stations?.name,
             path: `/dashboard/plant/${plantId}/stations/${stationId}/detail-index-lastest`,
@@ -196,7 +201,7 @@ export default function StationDetailIndex() {
                 </Box>
               )}
             </Box>
-            <ExportChartButton />
+            <ExportButton />
           </Box>
         ) : (
           <Box sx={{ mt: 2 }}>{t("no_data_to_display")}</Box>

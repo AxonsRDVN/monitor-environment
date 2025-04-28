@@ -5,3 +5,7 @@ export { default as StationDetailIndexPage } from "./StationDetailIndexPage/Stat
 export { default as ParameterDetailPage } from "./ParameterDetailPage/ParameterDetailPage.jsx";
 export { default as WarningThresholdPage } from "./WarningThresholdPage/WarningThresholdPage.jsx";
 export { default as CleaningDayPage } from "./CleaningDayPage/CleaningDayPage.jsx";
+export { default as DeviceManagementPage } from "./DeviceManagementPage/DeviceManagementPage.jsx";
+export { default as MaintenanceApprovalPage } from "./MaintenanceApprovalPage/MaintenanceApprovalPage.jsx";
+export { default as DeviceStatusPage } from "./DeviceStatusPage/DeviceStatusPage.jsx";
+export { default as WarningIndicatorPage } from "./WarningIndicatorPage/WarningIndicatorPage.jsx";

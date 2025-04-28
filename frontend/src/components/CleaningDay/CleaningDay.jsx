@@ -1,10 +1,9 @@
 import { useTranslation } from "react-i18next";
-import Breadcrumb from "../Breadcrumb/Breadcrumb";
+import Breadcrumb from "../BreadCrumb/Breadcrumb";
 import PageContainer from "../PageContainer/PageContainer";
 import PageTitle from "../PageTitle/PageTitle";
 import PageContent from "../PageContent/PageContent";
 import { useEffect, useState } from "react";
-import axios from "axios";
 import {
   Box,
   Typography,
@@ -19,11 +18,13 @@ import {
   TextField,
   InputAdornment,
 } from "@mui/material";
-import dayjs from "dayjs";
 import { Sensors } from "@mui/icons-material";
 import ActionButtons from "../Button/ActionButtons";
+import axios from "axios";
+import dayjs from "dayjs";
+import { useError } from "../../context/ErrorContext";
 
-const API_BASE = process.env.REACT_APP_API_URL; // Đổi theo server của bạn
+const API_BASE = process.env.REACT_APP_API_URL;
 
 export default function CleaningDay() {
   const [plants, setPlants] = useState([]);
@@ -31,127 +32,110 @@ export default function CleaningDay() {
   const [sensors, setSensors] = useState([]);
   const [selectedPlant, setSelectedPlant] = useState("");
   const [selectedStation, setSelectedStation] = useState("");
-  const [loading, setLoading] = useState(false);
-  const { t } = useTranslation("translation");
   const [sensorDays, setSensorDays] = useState({});
   const [originalSensorDays, setOriginalSensorDays] = useState({});
+  const [loading, setLoading] = useState(false);
+  const { showError } = useError();
+  const { t } = useTranslation("translation");
 
-  // Lấy danh sách plant
   useEffect(() => {
-    axios.get(`${API_BASE}/monitor-environment/plants/`).then((res) => {
-      const plantList = res.data || [];
-      setPlants(plantList);
-
-      if (plantList.length > 0) {
-        setSelectedPlant(plantList[0].id); // Chọn plant đầu tiên
+    async function fetchPlants() {
+      try {
+        const res = await axios.get(`${API_BASE}/monitor-environment/plants/`);
+        setPlants(res.data || []);
+        if (res.data.length > 0) {
+          setSelectedPlant(res.data[0].id);
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy nhà máy:", error.message);
+        showError("Không thể tải danh sách nhà máy. Vui lòng thử lại!");
       }
-    });
+    }
+    fetchPlants();
   }, []);
 
-  // Lấy danh sách station theo plant
   useEffect(() => {
-    if (selectedPlant) {
-      axios
-        .get(`${API_BASE}/monitor-environment/plant/${selectedPlant}/stations`)
-        .then((res) => {
-          const rawMasters = res.data.stations || [];
-
-          const allStations = [];
-          rawMasters.forEach((master) => {
-            allStations.push({
-              ...master,
-              displayName: `(Master) ${master.name}`,
-            });
-
-            (master.stations || []).forEach((station) => {
-              allStations.push({
-                ...station,
-                displayName: `↳ ${station.name}`,
-              });
-            });
+    async function fetchStations() {
+      if (!selectedPlant) {
+        setStations([]);
+        return;
+      }
+      try {
+        const res = await axios.get(
+          `${API_BASE}/monitor-environment/plant/${selectedPlant}/stations`
+        );
+        const raw = res.data.stations || [];
+        const allStations = [];
+        raw.forEach((master) => {
+          allStations.push({
+            ...master,
+            displayName: `(Master) ${master.name}`,
           });
-
-          setStations(allStations);
-
-          if (allStations.length > 0) {
-            setSelectedStation(allStations[0].id); // Tự động chọn station đầu tiên
-          } else {
-            setSensors([]);
-            setSelectedStation("");
-          }
-        })
-        .catch(() => {
-          setStations([]);
-          setSensors([]);
-          setSelectedStation("");
+          (master.stations || []).forEach((child) =>
+            allStations.push({ ...child, displayName: `↳ ${child.name}` })
+          );
         });
-    } else {
-      setStations([]);
-      setSensors([]);
-      setSelectedStation("");
+        setStations(allStations);
+        if (allStations.length > 0) {
+          setSelectedStation(allStations[0].id);
+        } else {
+          setSelectedStation("");
+          setSensors([]);
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy trạm:", error.message);
+        showError("Không thể tải danh sách trạm. Vui lòng thử lại!");
+        setStations([]);
+        setSensors([]);
+        setSelectedStation("");
+      }
     }
+    fetchStations();
   }, [selectedPlant]);
 
-  // Lấy sensor khi chọn station
   useEffect(() => {
-    if (selectedStation) {
-      loadSensors();
-      setLoading(true);
-      axios
-        .get(`${API_BASE}/monitor-environment/sensors/${selectedStation}`)
-        .then((res) => {
-          setSensors(res.data.sensors || []);
-          const newSensorDays = {};
-          (res.data.sensors || []).forEach((sensor) => {
-            if (sensor.day_clean) {
-              const days = dayjs(sensor.day_clean).diff(dayjs(), "day");
-              newSensorDays[sensor.id] = days;
-            }
-          });
-          setSensorDays(newSensorDays);
-        })
-        .catch(() => setSensors([]))
-        .finally(() => setLoading(false));
-    } else {
-      setSensors([]);
-    }
-  }, [selectedStation]);
+    async function fetchSensors() {
+      if (!selectedStation) {
+        setSensors([]);
+        return;
+      }
+      try {
+        setLoading(true);
+        const res = await axios.get(
+          `${API_BASE}/monitor-environment/sensors/${selectedStation}`
+        );
+        const sensorList = res.data.sensors || [];
+        setSensors(sensorList);
 
-  const loadSensors = async () => {
-    setLoading(true);
-    try {
-      const res = await axios.get(
-        `${API_BASE}/monitor-environment/sensors/${selectedStation}`
-      );
-      setSensors(res.data.sensors || []);
-      const newSensorDays = {};
-      (res.data.sensors || []).forEach((sensor) => {
-        if (sensor.day_clean) {
-          const days = dayjs(sensor.day_clean).diff(dayjs(), "day");
-          newSensorDays[sensor.id] = days;
-        }
-      });
-      setSensorDays(newSensorDays);
-      setOriginalSensorDays(newSensorDays); // ✅ copy vào bản gốc
-    } catch {
-      setSensors([]);
-    } finally {
-      setLoading(false);
+        const daysData = {};
+        sensorList.forEach((sensor) => {
+          if (sensor.day_clean) {
+            const days = dayjs(sensor.day_clean).diff(dayjs(), "day");
+            daysData[sensor.id] = days;
+          }
+        });
+        setSensorDays(daysData);
+        setOriginalSensorDays(daysData);
+      } catch (error) {
+        console.error("Lỗi khi lấy sensor:", error.message);
+        showError("Không thể tải danh sách thiết bị. Vui lòng thử lại!");
+        setSensors([]);
+      } finally {
+        setLoading(false);
+      }
     }
-  };
+    fetchSensors();
+  }, [selectedStation]);
 
   const handleSave = async () => {
     const today = dayjs();
-
-    const updates = Object.entries(sensorDays).map(([sensorId, days]) => {
-      const day_clean = today.add(days, "day").format("YYYY-MM-DD");
-      return {
-        sensor_id: sensorId,
-        days,
-      };
-    });
+    const updates = Object.entries(sensorDays).map(([sensorId, days]) => ({
+      sensor_id: sensorId,
+      days,
+    }));
 
     try {
+      setLoading(true);
       await axios.post(
         `${API_BASE}/monitor-environment/sensors/update-day-clean`,
         {
@@ -159,47 +143,35 @@ export default function CleaningDay() {
         }
       );
       alert("Cập nhật ngày vệ sinh thành công!");
-    } catch (err) {
-      console.error(err);
-      alert("Cập nhật thất bại");
+    } catch (error) {
+      console.error("Lỗi khi lưu:", error.message);
+      showError("Không thể lưu số ngày vệ sinh. Vui lòng thử lại!");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleCancel = () => {
-    setSensorDays(originalSensorDays); // ✅ trả về giá trị gốc
+    setSensorDays(originalSensorDays);
   };
 
   return (
     <PageContainer>
       <Breadcrumb
         items={[
-          { label: t("setting"), path: "/setting/warning_threshold" },
-          { label: t("warning_threshold"), path: "/setting/warning_threshold" },
+          { label: "Cài đặt", path: "/setting/warning_threshold" },
+          { label: "Số ngày phải vệ sinh", path: "/setting/warning_threshold" },
         ]}
       />
       <PageTitle title={"Số ngày vệ sinh"} />
-      <PageContent
-        sx={{
-          marginBottom: {
-            xs: "100px",
-            sm: "0",
-          },
-        }}
-      >
+      <PageContent sx={{ marginBottom: { xs: "100px", sm: "0" } }}>
         <Box
           sx={{
             display: "flex",
             flexWrap: "wrap",
             gap: "24px",
             mt: 2,
-            flexDirection: {
-              xs: "column", // Màn nhỏ: dọc
-              sm: "row", // Từ sm trở lên: ngang
-            },
-            width: {
-              xs: "100%", // Màn nhỏ: dọc
-              sm: "50%", // Từ sm trở lên: ngang
-            },
+            flexDirection: { xs: "column", sm: "row" },
           }}
         >
           <FormControl fullWidth sx={{ minWidth: 250, flex: 1 }}>
@@ -216,6 +188,7 @@ export default function CleaningDay() {
               ))}
             </Select>
           </FormControl>
+
           <FormControl
             fullWidth
             sx={{ minWidth: 250, flex: 1 }}
@@ -242,60 +215,78 @@ export default function CleaningDay() {
           ) : sensors.length === 0 ? (
             <Typography variant="body2">Không có sensor nào.</Typography>
           ) : (
-            <>
-              <Box>
-                <List>
-                  {sensors.map((sensor) => {
-                    const expiryDate = sensor.day_clean;
-                    const daysLeft = expiryDate
-                      ? dayjs(expiryDate).diff(dayjs(), "day")
-                      : "—";
+            <Box>
+              <List>
+                {sensors.map((sensor) => (
+                  <ListItem
+                    key={sensor.id}
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 2,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    {/* Icon */}
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        height: "100%",
+                      }}
+                    >
+                      <Sensors color="primary" sx={{ fontSize: 40 }} />
+                    </Box>
 
-                    return (
-                      <ListItem
-                        key={sensor.id}
+                    {/* Tên sensor + hãng */}
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        flex: 1,
+                        minWidth: 200,
+                      }}
+                    >
+                      <Typography
+                        fontWeight={600}
                         sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "left",
-                          gap: 4,
+                          wordBreak: "break-word", // 🛠️ Nếu model sensor dài sẽ tự xuống dòng
+                          whiteSpace: "normal",
                         }}
                       >
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <Sensors color="primary" />
-                          <ListItemText
-                            primary={sensor.model_sensor}
-                            secondary={`Hãng: ${sensor.manufacturer}`}
-                          />
-                        </Box>
-                        <TextField
-                          variant="outlined"
-                          type="number"
-                          value={sensorDays[sensor.id] ?? ""}
-                          onChange={(e) =>
-                            setSensorDays({
-                              ...sensorDays,
-                              [sensor.id]: parseInt(e.target.value || 0),
-                            })
-                          }
-                          InputProps={{
-                            endAdornment: (
-                              <InputAdornment position="end">
-                                ngày
-                              </InputAdornment>
-                            ),
-                          }}
-                          sx={{ width: 300 }}
-                        />
-                      </ListItem>
-                    );
-                  })}
-                </List>
-                <ActionButtons onSave={handleSave} onCancel={handleCancel} />
-              </Box>
-            </>
+                        {sensor.model_sensor}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mt: 0.5 }}
+                      >
+                        Hãng: {sensor.manufacturer}
+                      </Typography>
+                    </Box>
+
+                    {/* Ô nhập số ngày */}
+                    <TextField
+                      type="number"
+                      value={sensorDays[sensor.id] ?? ""}
+                      onChange={(e) =>
+                        setSensorDays({
+                          ...sensorDays,
+                          [sensor.id]: parseInt(e.target.value || 0),
+                        })
+                      }
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">ngày</InputAdornment>
+                        ),
+                      }}
+                      sx={{ width: 220 }}
+                    />
+                  </ListItem>
+                ))}
+              </List>
+              <ActionButtons onSave={handleSave} onCancel={handleCancel} />
+            </Box>
           )}
         </Box>
       </PageContent>

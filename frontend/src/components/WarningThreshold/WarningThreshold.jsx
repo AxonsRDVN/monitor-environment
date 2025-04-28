@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import Breadcrumb from "../Breadcrumb/Breadcrumb";
+import Breadcrumb from "../BreadCrumb/Breadcrumb";
 import PageContainer from "../PageContainer/PageContainer";
 import PageTitle from "../PageTitle/PageTitle";
 import PageContent from "../PageContent/PageContent";
@@ -9,7 +9,6 @@ import {
   Typography,
   List,
   ListItem,
-  ListItemText,
   CircularProgress,
   Paper,
   FormControl,
@@ -18,11 +17,13 @@ import {
   MenuItem,
   TextField,
   InputAdornment,
+  Button,
 } from "@mui/material";
 import axios from "axios";
+import { useError } from "../../context/ErrorContext"; // ✅ Import useError
 import ActionButtons from "../Button/ActionButtons";
 
-const API_BASE = "http://192.168.1.22:8000"; // Đổi theo server thật nếu cần
+const API_BASE = process.env.REACT_APP_API_URL;
 
 export default function WarningThreshold() {
   const [plants, setPlants] = useState([]);
@@ -30,28 +31,36 @@ export default function WarningThreshold() {
   const [selectedPlant, setSelectedPlant] = useState("");
   const [selectedStation, setSelectedStation] = useState("");
   const [data, setData] = useState([]);
+  const [editableData, setEditableData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const { showError } = useError();
   const { t } = useTranslation("translation");
 
-  // Lấy danh sách nhà máy
   useEffect(() => {
-    axios.get(`${API_BASE}/monitor-environment/plants/`).then((res) => {
-      setPlants(res.data);
-      if (res.data.length > 0) {
-        setSelectedPlant(res.data[0].id); // chọn mặc định
+    async function fetchPlants() {
+      try {
+        const res = await axios.get(`${API_BASE}/monitor-environment/plants/`);
+        setPlants(res.data);
+        if (res.data.length > 0) {
+          setSelectedPlant(res.data[0].id);
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách plant:", error.message);
+        showError("Không thể tải danh sách nhà máy. Vui lòng thử lại sau!");
       }
-    });
+    }
+    fetchPlants();
   }, []);
 
-  // Khi chọn plant → lấy danh sách station
   useEffect(() => {
     if (!selectedPlant) return;
 
-    axios
-      .get(`${API_BASE}/monitor-environment/plant/${selectedPlant}/stations`)
-      .then((res) => {
+    async function fetchStations() {
+      try {
+        const res = await axios.get(
+          `${API_BASE}/monitor-environment/plant/${selectedPlant}/stations`
+        );
         const raw = res.data.stations || [];
-
         const allStations = [];
         raw.forEach((master) => {
           allStations.push({ id: master.id, name: `(Master) ${master.name}` });
@@ -59,48 +68,88 @@ export default function WarningThreshold() {
             allStations.push({ id: child.id, name: `↳ ${child.name}` })
           );
         });
-
         setStations(allStations);
         if (allStations.length > 0) {
-          setSelectedStation(allStations[0].id); // ✅ tự chọn station đầu tiên
+          setSelectedStation(allStations[0].id);
         } else {
           setSelectedStation("");
         }
         setData([]);
-      });
+        setEditableData([]);
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách station:", error.message);
+        showError("Không thể tải danh sách trạm. Vui lòng thử lại sau!");
+        setStations([]);
+        setData([]);
+        setEditableData([]);
+      }
+    }
+    fetchStations();
   }, [selectedPlant]);
 
-  // Gọi API dữ liệu khi có station được chọn
   useEffect(() => {
     if (!selectedPlant || !selectedStation) return;
 
-    setLoading(true);
-    let url = `${API_BASE}/monitor-environment/parameters/grouped/?plant_id=${selectedPlant}&station_id=${selectedStation}`;
-
-    axios
-      .get(url)
-      .then((res) => setData(res.data || []))
-      .catch(() => setData([]))
-      .finally(() => setLoading(false));
+    async function fetchThresholds() {
+      try {
+        setLoading(true);
+        const res = await axios.get(
+          `${API_BASE}/monitor-environment/parameters/grouped/?plant_id=${selectedPlant}&station_id=${selectedStation}`
+        );
+        setData(res.data || []);
+        setEditableData(JSON.parse(JSON.stringify(res.data || [])));
+      } catch (error) {
+        console.error("Lỗi khi lấy dữ liệu ngưỡng:", error.message);
+        showError("Không thể tải dữ liệu ngưỡng cảnh báo. Vui lòng thử lại!");
+        setData([]);
+        setEditableData([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchThresholds();
   }, [selectedPlant, selectedStation]);
+
+  const handleInputChange = (indexGroup, indexParam, field, value) => {
+    setEditableData((prev) => {
+      const newData = [...prev];
+      newData[indexGroup].parameters[indexParam][field] = value;
+      return newData;
+    });
+  };
+
+  const handleSave = async () => {
+    try {
+      setLoading(true);
+      await axios.post(
+        `${API_BASE}/monitor-environment/parameters/update-thresholds/`,
+        {
+          data: editableData,
+        }
+      );
+      alert("Cập nhật thành công!"); // 👉 Nếu muốn đẹp hơn dùng Snackbar hoặc Toast
+    } catch (error) {
+      console.error("Lỗi khi lưu ngưỡng:", error.message);
+      showError("Không thể lưu ngưỡng cảnh báo. Vui lòng thử lại!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setEditableData(JSON.parse(JSON.stringify(data)));
+  };
 
   return (
     <PageContainer>
       <Breadcrumb
         items={[
-          { label: t("setting"), path: "/setting/warning_threshold" },
-          { label: t("warning_threshold"), path: "/setting/warning_threshold" },
+          { label: "Cài đặt", path: "/setting/warning_threshold" },
+          { label: "Ngưỡng cảnh báo", path: "/setting/warning_threshold" },
         ]}
       />
       <PageTitle title={"Ngưỡng cảnh báo"} />
-      <PageContent
-        sx={{
-          marginBottom: {
-            xs: "100px",
-            sm: "0",
-          },
-        }}
-      >
+      <PageContent sx={{ marginBottom: { xs: "100px", sm: "0" } }}>
         <Box sx={{ mt: 3 }}>
           {/* Select Plant & Station */}
           <Box
@@ -147,16 +196,16 @@ export default function WarningThreshold() {
             </FormControl>
           </Box>
 
-          {/* Hiển thị kết quả */}
+          {/* Hiển thị dữ liệu */}
           {loading ? (
             <CircularProgress />
-          ) : data.length === 0 ? (
+          ) : editableData.length === 0 ? (
             <Typography>Không có thông số nào có ngưỡng cảnh báo.</Typography>
           ) : (
-            data.map((stationGroup) => (
+            editableData.map((stationGroup, indexGroup) => (
               <Paper key={stationGroup.station_id} sx={{ p: 2, mb: 3 }}>
                 <List dense>
-                  {stationGroup.parameters.map((param) => (
+                  {stationGroup.parameters.map((param, indexParam) => (
                     <ListItem
                       key={param.id}
                       divider
@@ -175,7 +224,6 @@ export default function WarningThreshold() {
                         {param.unit || "-"}
                       </Typography>
 
-                      {/* 3 ô Normal - Caution - Danger */}
                       <Box
                         sx={{
                           display: "flex",
@@ -184,39 +232,42 @@ export default function WarningThreshold() {
                           mb: 2,
                         }}
                       >
-                        {/* Ô Normal */}
-                        <Box
-                          sx={{
-                            flex: 1,
-                            border: "1px solid #ddd",
-                            borderRadius: "12px",
-                            p: 2,
-                            minWidth: 260,
-                            bgcolor: "#ffffff",
-                          }}
-                        >
-                          <Typography
-                            fontWeight={600}
-                            sx={{ color: "#344054", mb: 2 }}
+                        {["normal", "caution", "danger"].map((level) => (
+                          <Box
+                            key={level}
+                            sx={{
+                              flex: 1,
+                              border: "1px solid #ddd",
+                              borderRadius: "12px",
+                              p: 2,
+                              minWidth: 260,
+                              bgcolor: "#ffffff",
+                            }}
                           >
-                            Normal
-                          </Typography>
-                          <Box sx={{ display: "flex", gap: 2 }}>
-                            <Box sx={{ flex: 1 }}>
-                              <Typography
-                                variant="body2"
-                                fontWeight={500}
-                                sx={{ color: "#344054", mb: 1 }}
-                              >
-                                Min{" "}
-                                <Typography component="span" color="error">
-                                  *
-                                </Typography>
-                              </Typography>
+                            <Typography
+                              fontWeight={600}
+                              sx={{ color: "#344054", mb: 2 }}
+                            >
+                              {level.charAt(0).toUpperCase() + level.slice(1)}
+                            </Typography>
+                            <Box sx={{ display: "flex", gap: 2 }}>
                               <TextField
-                                value={param.normal_min}
+                                label="Min"
                                 size="small"
                                 fullWidth
+                                value={
+                                  editableData[indexGroup].parameters[
+                                    indexParam
+                                  ][`${level}_min`] ?? ""
+                                }
+                                onChange={(e) =>
+                                  handleInputChange(
+                                    indexGroup,
+                                    indexParam,
+                                    `${level}_min`,
+                                    e.target.value
+                                  )
+                                }
                                 InputProps={{
                                   endAdornment: (
                                     <InputAdornment position="end">
@@ -225,22 +276,23 @@ export default function WarningThreshold() {
                                   ),
                                 }}
                               />
-                            </Box>
-                            <Box sx={{ flex: 1 }}>
-                              <Typography
-                                variant="body2"
-                                fontWeight={500}
-                                sx={{ color: "#344054", mb: 1 }}
-                              >
-                                Max{" "}
-                                <Typography component="span" color="error">
-                                  *
-                                </Typography>
-                              </Typography>
                               <TextField
-                                value={param.normal_max}
+                                label="Max"
                                 size="small"
                                 fullWidth
+                                value={
+                                  editableData[indexGroup].parameters[
+                                    indexParam
+                                  ][`${level}_max`] ?? ""
+                                }
+                                onChange={(e) =>
+                                  handleInputChange(
+                                    indexGroup,
+                                    indexParam,
+                                    `${level}_max`,
+                                    e.target.value
+                                  )
+                                }
                                 InputProps={{
                                   endAdornment: (
                                     <InputAdornment position="end">
@@ -251,145 +303,7 @@ export default function WarningThreshold() {
                               />
                             </Box>
                           </Box>
-                        </Box>
-
-                        {/* Ô Caution */}
-                        <Box
-                          sx={{
-                            flex: 1,
-                            border: "1px solid #ddd",
-                            borderRadius: "12px",
-                            p: 2,
-                            minWidth: 260,
-                            bgcolor: "#ffffff",
-                          }}
-                        >
-                          <Typography
-                            fontWeight={600}
-                            sx={{ color: "#344054", mb: 2 }}
-                          >
-                            Caution
-                          </Typography>
-                          <Box sx={{ display: "flex", gap: 2 }}>
-                            <Box sx={{ flex: 1 }}>
-                              <Typography
-                                variant="body2"
-                                fontWeight={500}
-                                sx={{ color: "#344054", mb: 1 }}
-                              >
-                                Min{" "}
-                                <Typography component="span" color="error">
-                                  *
-                                </Typography>
-                              </Typography>
-                              <TextField
-                                value={param.caution_min}
-                                size="small"
-                                fullWidth
-                                InputProps={{
-                                  endAdornment: (
-                                    <InputAdornment position="end">
-                                      {param.unit}
-                                    </InputAdornment>
-                                  ),
-                                }}
-                              />
-                            </Box>
-                            <Box sx={{ flex: 1 }}>
-                              <Typography
-                                variant="body2"
-                                fontWeight={500}
-                                sx={{ color: "#344054", mb: 1 }}
-                              >
-                                Max{" "}
-                                <Typography component="span" color="error">
-                                  *
-                                </Typography>
-                              </Typography>
-                              <TextField
-                                value={param.caution_max}
-                                size="small"
-                                fullWidth
-                                InputProps={{
-                                  endAdornment: (
-                                    <InputAdornment position="end">
-                                      {param.unit}
-                                    </InputAdornment>
-                                  ),
-                                }}
-                              />
-                            </Box>
-                          </Box>
-                        </Box>
-
-                        {/* Ô Danger */}
-                        <Box
-                          sx={{
-                            flex: 1,
-                            border: "1px solid #ddd",
-                            borderRadius: "12px",
-                            p: 2,
-                            minWidth: 260,
-                            bgcolor: "#ffffff",
-                          }}
-                        >
-                          <Typography
-                            fontWeight={600}
-                            sx={{ color: "#344054", mb: 2 }}
-                          >
-                            Danger
-                          </Typography>
-                          <Box sx={{ display: "flex", gap: 2 }}>
-                            <Box sx={{ flex: 1 }}>
-                              <Typography
-                                variant="body2"
-                                fontWeight={500}
-                                sx={{ color: "#344054", mb: 1 }}
-                              >
-                                Min{" "}
-                                <Typography component="span" color="error">
-                                  *
-                                </Typography>
-                              </Typography>
-                              <TextField
-                                value={param.danger_min}
-                                size="small"
-                                fullWidth
-                                InputProps={{
-                                  endAdornment: (
-                                    <InputAdornment position="end">
-                                      {param.unit}
-                                    </InputAdornment>
-                                  ),
-                                }}
-                              />
-                            </Box>
-                            <Box sx={{ flex: 1 }}>
-                              <Typography
-                                variant="body2"
-                                fontWeight={500}
-                                sx={{ color: "#344054", mb: 1 }}
-                              >
-                                Max{" "}
-                                <Typography component="span" color="error">
-                                  *
-                                </Typography>
-                              </Typography>
-                              <TextField
-                                value={param.danger_max}
-                                size="small"
-                                fullWidth
-                                InputProps={{
-                                  endAdornment: (
-                                    <InputAdornment position="end">
-                                      {param.unit}
-                                    </InputAdornment>
-                                  ),
-                                }}
-                              />
-                            </Box>
-                          </Box>
-                        </Box>
+                        ))}
                       </Box>
                     </ListItem>
                   ))}
@@ -397,7 +311,8 @@ export default function WarningThreshold() {
               </Paper>
             ))
           )}
-          <ActionButtons />
+
+          <ActionButtons onSave={handleSave} onCancel={handleCancel} />
         </Box>
       </PageContent>
     </PageContainer>
