@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import { getAllPlants } from "../../api/plantApi";
 import { useError } from "../../context/ErrorContext";
 import PageContainer from "../PageContainer/PageContainer";
-import Breadcrumb from "../BreadCrumb/Breadcrumb";
+import Breadcrumb from "../Breadcrumb/Breadcrumb";
 import PageTitle from "../PageTitle/PageTitle";
 import PageContent from "../PageContent/PageContent";
 import { statusColors } from "../Icon/ParameterIcon";

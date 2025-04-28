@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import PageContainer from "../PageContainer/PageContainer";
-import Breadcrumb from "../BreadCrumb/Breadcrumb";
+import Breadcrumb from "../Breadcrumb/Breadcrumb";
 import PageTitle from "../PageTitle/PageTitle";
 import PageContent from "../PageContent/PageContent";
 import SearchIcon from "@mui/icons-material/Search";

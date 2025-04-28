@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import Breadcrumb from "../BreadCrumb/Breadcrumb";
+import Breadcrumb from "../Breadcrumb/Breadcrumb";
 import PageContainer from "../PageContainer/PageContainer";
 import PageTitle from "../PageTitle/PageTitle";
 import PageContent from "../PageContent/PageContent";

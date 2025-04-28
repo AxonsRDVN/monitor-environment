@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import PageContainer from "../PageContainer/PageContainer";
-import Breadcrumb from "../BreadCrumb/Breadcrumb";
+import Breadcrumb from "../Breadcrumb/Breadcrumb";
 import PageContent from "../PageContent/PageContent";
 import { Box, Typography } from "@mui/material";
 import { getDetailIndexLastest } from "../../api/detailIndexApi";

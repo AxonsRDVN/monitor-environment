@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Box, Grid } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import PageContainer from "../PageContainer/PageContainer";
-import Breadcrumb from "../BreadCrumb/Breadcrumb";
+import Breadcrumb from "../Breadcrumb/Breadcrumb";
 import PageContent from "../PageContent/PageContent";
 import { AccessTime, Router, Sensors } from "@mui/icons-material";
 import ExportChartButton from "../Button/ButtonSave";

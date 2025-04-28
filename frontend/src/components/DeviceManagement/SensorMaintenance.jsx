@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import axios from "axios";
 import PageContainer from "../PageContainer/PageContainer";
-import Breadcrumb from "../BreadCrumb/Breadcrumb";
+import Breadcrumb from "../Breadcrumb/Breadcrumb";
 import PageTitle from "../PageTitle/PageTitle";
 import PageContent from "../PageContent/PageContent";
 import { useTranslation } from "react-i18next";
@@ -133,8 +133,8 @@ export default function SensorMaintenance() {
     <PageContainer>
       <Breadcrumb
         items={[
-          { label: t("setting"), path: "/setting/warning_threshold" },
-          { label: t("warning_threshold"), path: "/setting/warning_threshold" },
+          { label: "Quản lí thiết bị", path: "/setting/warning_threshold" },
+          { label: "Bảo trì", path: "/setting/warning_threshold" },
         ]}
       />
       <PageTitle title={"Bảo trì"} />

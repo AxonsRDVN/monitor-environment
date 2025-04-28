@@ -19,7 +19,7 @@ const Breadcrumb = ({ items }) => {
   const navigate = useNavigate();
 
   return (
-    <Breadcrumbs separator="›" aria-label="breadcrumb">
+    <Breadcrumbs separator="›" aria-label="Breadcrumb">
       {items.map((item, index) =>
         index < items.length - 1 ? (
           <Link
