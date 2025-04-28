@@ -17,6 +17,7 @@ from datetime import date, timedelta
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.generics import ListAPIView
+from rest_framework import status as http_status
 
 
 class PlantListAPIView(APIView):
@@ -316,11 +317,42 @@ class StationDetailIndexLastestView(APIView):
                         "status": status_
                     }
                     added_names.add(norm_field)
+        
+        # === Tính status trước ===
+        danger_count = 0
+        caution_count = 0
+
+        for group_fields in groups.values():
+            for field_data in group_fields.values():
+                status_ = field_data.get("status")
+                if status_ == "danger":
+                    danger_count += 1
+                elif status_ == "caution":
+                    caution_count += 1
+                # normal hoặc unknown thì bỏ qua
+
+        # Chọn status theo ưu tiên
+        if danger_count > 0:
+            overall_status = "danger"
+            count = danger_count
+        elif caution_count > 0:
+            overall_status = "caution"
+            count = caution_count
+        else:
+            overall_status = "normal"
+            count = None  # normal thì không đếm
+
+        status_summary = {
+            "status": overall_status,
+            "count": count
+        }
+
+
 
         return Response(
             {
                 "station": StationSerializer(station).data,
-                "latest_transaction": {"time": transaction.time, "groups": groups},
+                "latest_transaction": {"time": transaction.time, "status_summary": status_summary, "groups": groups},
             },
             status=status.HTTP_200_OK,
         )
@@ -937,3 +969,94 @@ class MaintenanceReminderAPIView(APIView):
             })
 
         return Response(result, status=status.HTTP_200_OK)
+
+class Plant24hOverallStatusView(APIView):
+    """
+    API lấy trạng thái cao nhất mỗi giờ (danger > warning > normal) cho toàn nhà máy trong hôm nay
+    """
+
+    def get(self, request, plant_id):
+        today = timezone.now().date()
+
+        try:
+            plant = Plant.objects.get(id=plant_id)
+        except Plant.DoesNotExist:
+            return Response({"error": "Không tìm thấy nhà máy"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Lấy toàn bộ station thuộc plant
+        stations = Station.objects.filter(plant_id=plant.id)
+        station_ids = stations.values_list('id', flat=True)
+
+        if not station_ids:
+            return Response({"error": "Nhà máy này không có trạm nào."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Lấy threshold cho các station
+        parameters = Parameter.objects.filter(station_id__in=station_ids, has_threshold=True)
+        threshold_map = {}
+        for param in parameters:
+            if param.station_id not in threshold_map:
+                threshold_map[param.station_id] = {}
+            threshold_map[param.station_id][param.name] = {
+                "caution_min": param.caution_min,
+                "caution_max": param.caution_max,
+                "danger_min": param.danger_min,
+                "danger_max": param.danger_max,
+            }
+
+        # Lấy tất cả transaction hôm nay
+        transactions = Transaction.objects.filter(
+            station_id__in=station_ids,
+            time__date=today,
+        )
+
+        if not transactions.exists():
+            return Response({"message": "Không có dữ liệu giao dịch hôm nay."}, status=status.HTTP_200_OK)
+
+        # Kết quả cuối cùng
+        hourly_status = {}
+
+        for hour in range(24):
+            hour_start = timezone.datetime.combine(today, datetime.min.time()) + timedelta(hours=hour)
+            hour_end = hour_start + timedelta(hours=1)
+
+            hour_transactions = transactions.filter(time__gte=hour_start, time__lt=hour_end)
+
+            danger_found = False
+            warning_found = False
+
+            for tx in hour_transactions:
+                # Check toàn bộ chỉ số cần kiểm tra
+                param_keys = [
+                    "temperature", "humidity", "pm25", "pm10",
+                    "airpressure", "noise", "rain", "radiation",
+                    "lux", "windspeed", "wind_direction", "co2"
+                ]
+
+                for key in param_keys:
+                    value = getattr(tx, key, None)
+                    if value is None:
+                        continue
+
+                    param_threshold = threshold_map.get(tx.station_id, {}).get(key)
+                    if not param_threshold:
+                        continue
+
+                    if param_threshold["danger_min"] is not None and value < param_threshold["danger_min"]:
+                        danger_found = True
+                    if param_threshold["danger_max"] is not None and value > param_threshold["danger_max"]:
+                        danger_found = True
+
+                    if param_threshold["caution_min"] is not None and value < param_threshold["caution_min"]:
+                        warning_found = True
+                    if param_threshold["caution_max"] is not None and value > param_threshold["caution_max"]:
+                        warning_found = True
+
+            # Xác định mức cao nhất
+            if danger_found:
+                hourly_status[hour] = "danger"
+            elif warning_found:
+                hourly_status[hour] = "warning"
+            else:
+                hourly_status[hour] = "normal"
+
+        return Response(hourly_status, status=status.HTTP_200_OK)

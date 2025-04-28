@@ -13,6 +13,18 @@ import ParameterCard from "../Icon/ParameterIcon";
 import { useError } from "../../context/ErrorContext";
 import ExportButton from "../Button/ExportButton";
 
+const customColorStatus = {
+  normal: {
+    color: "#70DF00",
+  },
+  caution: {
+    color: "#D37E0E",
+  },
+  danger: {
+    color: "#EE3D4A",
+  },
+};
+
 export default function StationDetailIndex() {
   const { plantId, stationId } = useParams();
   const [stations, setStations] = useState(null);
@@ -82,8 +94,17 @@ export default function StationDetailIndex() {
                 )}
               </Box>
               <Box sx={{ fontSize: "24px" }}>{stations?.name}</Box>
-              <Box sx={{ color: "#D37E0E", fontSize: "16px" }}>
-                • Caution(4)
+              <Box
+                sx={{
+                  color:
+                    customColorStatus[detailIndex.status_summary.status]
+                      ?.color || "inherit",
+                  fontSize: "16px",
+                }}
+              >
+                • {detailIndex.status_summary.status}
+                {detailIndex.status_summary.status !== "normal" &&
+                  ` (${detailIndex.status_summary.count})`}
               </Box>
             </Box>
             <Box sx={{ display: "flex", gap: "16px", pt: "16px", pb: "32px" }}>
