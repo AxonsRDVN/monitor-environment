@@ -27,4 +27,9 @@ urlpatterns = [
     path("plant/<int:plant_id>/warning-detail/", WarningDetailByPlantView.as_view(), name="plant-warning-detail"),
     path("plant/<int:plant_id>/maintenance-reminders/", MaintenanceReminderAPIView.as_view(), name="maintenance-reminders-by-plant"),
     path("plant/<int:plant_id>/24h-average/", Plant24hOverallStatusView.as_view(), name="24h-status-by-plant"),
+    path('station/<int:station_id>/', StationCRUDAPIView.as_view(), name='delete_station'),
+    path('stations/', StationCreateAPIView.as_view(), name='station-create'),
+    path('sensors/', SensorCreateAPIView.as_view(), name='create-sensor'),
+    path('parameters/', ParameterCreateAPIView.as_view(), name='create-parameter'),
+    path('clone-sensor/<int:sensor_id>/', CloneSensorAPIView.as_view(), name='clone-sensor'),
 ]

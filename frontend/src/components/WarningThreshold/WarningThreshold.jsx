@@ -35,6 +35,8 @@ export default function WarningThreshold() {
   const [loading, setLoading] = useState(false);
   const { showError } = useError();
   const { t } = useTranslation("translation");
+  console.log("selectedStation", selectedStation);
+  console.log("selectedPlant", selectedPlant);
 
   useEffect(() => {
     async function fetchPlants() {

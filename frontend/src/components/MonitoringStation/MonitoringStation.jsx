@@ -15,9 +15,10 @@ import {
   CircularProgress,
 } from "@mui/material";
 import MonitoringStationTable from "../Table/MonitoringStationTable";
-import AddNewButton from "../Button/ActionButtons";
 import MapDialog from "../Dialog/MapDialog";
 import { useError } from "../../context/ErrorContext"; // ✅ Đúng rồi nè
+import AddButton from "../Button/AddButtons";
+import AddNewStationDialog from "../Dialog/AddNewStationDiaglog";
 
 const API_BASE = process.env.REACT_APP_API_URL; // Đổi theo server của bạn
 
@@ -29,6 +30,7 @@ export default function MonitoringStation() {
   const { showError } = useError(); // ✅ Sửa lại đúng useError() (lúc trước bạn ghi nhầm useErrorr())
   const { t } = useTranslation("translation");
   const [mapDialogOpen, setMapDialogOpen] = useState(false);
+  const [addNewDialogOpen, setAddNewDialogOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState({
     lat: null,
     lng: null,
@@ -80,6 +82,41 @@ export default function MonitoringStation() {
     fetchStations();
   }, [selectedPlant]);
 
+  const handleDeleteStation = async (station) => {
+    if (
+      !window.confirm(`Bạn có chắc chắn muốn xóa trạm "${station.name}" không?`)
+    ) {
+      return;
+    }
+
+    try {
+      await axios.delete(
+        `${API_BASE}/monitor-environment/station/${station.id}/`
+      );
+
+      setStations((prevStations) =>
+        prevStations
+          .map((master) => {
+            if (master.id === station.id) {
+              return null;
+            }
+            if (master.stations) {
+              master.stations = master.stations.filter(
+                (s) => s.id !== station.id
+              );
+            }
+            return master;
+          })
+          .filter((m) => m !== null)
+      );
+
+      alert(`Xóa trạm ${station.name} thành công!!!`);
+    } catch (error) {
+      console.error("Lỗi khi xóa trạm:", error.message);
+      showError("Không thể xóa trạm. Vui lòng thử lại sau.");
+    }
+  };
+
   return (
     <PageContainer>
       <Breadcrumb
@@ -114,7 +151,7 @@ export default function MonitoringStation() {
               ))}
             </Select>
           </FormControl>
-          <AddNewButton />
+          <AddButton onClick={() => setAddNewDialogOpen(true)} />
         </Box>
 
         <Box sx={{ mt: 4 }}>
@@ -127,7 +164,7 @@ export default function MonitoringStation() {
               <MonitoringStationTable
                 stations={stations}
                 onEdit={(station) => console.log("Edit", station)}
-                onDelete={(station) => console.log("Delete", station)}
+                onDelete={handleDeleteStation}
                 onViewLocation={(lat, lng) => {
                   setSelectedLocation({ lat, lng });
                   setMapDialogOpen(true);
@@ -138,6 +175,10 @@ export default function MonitoringStation() {
                 onClose={() => setMapDialogOpen(false)}
                 latitude={selectedLocation.lat}
                 longitude={selectedLocation.lng}
+              />
+              <AddNewStationDialog
+                open={addNewDialogOpen}
+                onClose={() => setAddNewDialogOpen(false)}
               />
             </>
           )}

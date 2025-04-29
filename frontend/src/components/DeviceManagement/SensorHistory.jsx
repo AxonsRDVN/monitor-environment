@@ -80,13 +80,19 @@ export default function SensorHistory() {
       />
       <PageTitle title={"Bảo trì"} />
       <PageContent>
-        <HistoryMaintenanceTable
-          sensor={sensor}
-          onViewLocation={(lat, lng) => {
-            setSelectedLocation({ lat, lng });
-            setMapDialogOpen(true);
-          }}
-        />
+        {sensor.length > 0 ? (
+          <HistoryMaintenanceTable
+            sensor={sensor}
+            onViewLocation={(lat, lng) => {
+              setSelectedLocation({ lat, lng });
+              setMapDialogOpen(true);
+            }}
+          />
+        ) : (
+          <Typography textAlign="center" mt={4}>
+            Không có lịch sử bảo trì cho thiết bị này.
+          </Typography>
+        )}
         <MapDialog
           open={mapDialogOpen}
           onClose={() => setMapDialogOpen(false)}

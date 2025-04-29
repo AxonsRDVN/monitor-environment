@@ -6,7 +6,7 @@ from django.conf.urls.static import static
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("monitor-environment/", include("monitor_environment.urls")),
-    # path("sensor-manager/", include("sensor_manager.urls")),
+    path("sensor-manager/", include("sensor_manager.urls")),
 ]
 
 # Add media URL serving

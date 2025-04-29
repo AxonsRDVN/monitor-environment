@@ -147,5 +147,6 @@
   "admin_page_sub_name": "Loại cảnh báo",
   "admin_page_toast_choice": "Vui lòng chọn ít nhất một loại cảnh báo",
   "admin_page_toast_success": "Cập nhật thành công",
-  "admin_page_toast_fail": "Cập nhật không thành công"
+  "admin_page_toast_fail": "Cập nhật không thành công",
+  "airpressure": "Áp suất không khí"
 }

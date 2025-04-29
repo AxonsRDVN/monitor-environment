@@ -180,7 +180,7 @@ class Sensor(models.Model):
         null=True,
         blank=True,
     )
-    image = models.ImageField(upload_to="sensor_images/", null=True)
+    image = models.ImageField(upload_to="sensor_images/", null=True, blank=True)
     model_sensor = models.CharField(max_length=100, null=True)
     expiry = models.IntegerField(blank=True, null=True)
     expiry_date = models.DateTimeField(blank=True, null=True)

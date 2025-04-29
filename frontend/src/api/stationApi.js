@@ -7,3 +7,11 @@ export const getAllStationsByPlant = async (plantId) => {
   );
   return response.data;
 };
+
+export const createStation = async (payload) => {
+  const response = await axios.post(
+    `${API_BASE}/monitor-environment/stations/`,
+    payload
+  );
+  return response.data;
+};

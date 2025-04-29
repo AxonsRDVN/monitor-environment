@@ -125,6 +125,8 @@ class SensorSerializer(serializers.ModelSerializer):
 
 
 class ParameterSerializer(serializers.ModelSerializer):
+    image = serializers.ImageField(allow_null=True, required=False)  # 👈 thêm dòng này
+    
     class Meta:
         model = Parameter
         fields = "__all__"  # hoặc liệt kê cụ thể các trường
@@ -189,3 +191,22 @@ class TransactionWarningDetailSerializer(serializers.Serializer):
     unit = serializers.CharField()
     status = serializers.CharField()
     time = serializers.DateTimeField()
+
+class StationCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Station
+        fields = [
+            'id', 'name', 'code', 'location', 'latitude', 'longitude',
+            'channel', 'address', 'type', 'plant', 'master'
+        ]
+
+    def validate(self, data):
+        station_type = data.get('type')
+        master = data.get('master')
+
+        if station_type == 1 and master is None:
+            raise serializers.ValidationError("Station phải chọn một Master.")
+        if station_type == 2 and master is not None:
+            raise serializers.ValidationError("Master không được chọn Master khác.")
+
+        return data

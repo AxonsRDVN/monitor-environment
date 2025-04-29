@@ -9,6 +9,7 @@ import LightModeIcon from "@mui/icons-material/LightMode";
 import GraphicEqIcon from "@mui/icons-material/GraphicEq";
 import GrainIcon from "@mui/icons-material/Grain";
 import BlurOnIcon from "@mui/icons-material/BlurOn"; // Default
+import { useTranslation } from "react-i18next";
 
 // ICON cho từng paramKey
 export const ICON_MAP = {
@@ -144,6 +145,7 @@ export default function ParameterCard({
   const status = paramData?.status || "unknown"; // nếu thiếu thì cho unknown
   const colorConfig = statusColors[status] || statusColors["unknown"];
   const Icon = ICON_MAP[paramKey] || BlurOnIcon;
+  const { t } = useTranslation("translation");
 
   return (
     <Box
@@ -184,7 +186,7 @@ export default function ParameterCard({
               textTransform: "capitalize",
             }}
           >
-            {label}
+            {t(label)}
           </Box>
         </Box>
         <Box sx={{ ml: "auto" }}>{colorConfig.icon}</Box>

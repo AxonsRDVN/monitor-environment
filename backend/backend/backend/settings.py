@@ -18,8 +18,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "corsheaders",
-    "device_manager",
     "monitor_environment",
+    "sensor_manager"
 ]
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",

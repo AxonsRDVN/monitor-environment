@@ -18,6 +18,10 @@ from rest_framework.generics import RetrieveAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.generics import ListAPIView
 from rest_framework import status as http_status
+import os
+from django.conf import settings
+import shutil
+from django.core.files import File
 
 
 class PlantListAPIView(APIView):
@@ -1060,3 +1064,99 @@ class Plant24hOverallStatusView(APIView):
                 hourly_status[hour] = "normal"
 
         return Response(hourly_status, status=status.HTTP_200_OK)
+
+class StationCRUDAPIView(APIView):
+    def delete(self, request, station_id):
+        try:
+            station = Station.objects.get(id=station_id)
+            station.delete()
+            return Response({"message": "Xóa trạm thành công!"}, status=status.HTTP_204_NO_CONTENT)
+        except Station.DoesNotExist:
+            return Response({"error": "Không tìm thấy trạm."}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class StationCreateAPIView(APIView):
+    def post(self, request):
+        serializer = StationCreateSerializer(data=request.data)
+        if serializer.is_valid():
+            station = serializer.save()
+            return Response({
+                "message": "Tạo trạm thành công!",
+                "data": StationCreateSerializer(station).data
+            }, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class SensorCreateAPIView(APIView):
+    def post(self, request):
+        serializer = SensorSerializer(data=request.data)
+        if serializer.is_valid():
+            sensor = serializer.save()
+            return Response({"id": sensor.id}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class ParameterCreateAPIView(APIView):
+    def post(self, request):
+        serializer = ParameterSerializer(data=request.data)
+        if serializer.is_valid():
+            parameter = serializer.save()
+            return Response({"id": parameter.id}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class CloneSensorAPIView(APIView):
+    def post(self, request, sensor_id):
+        try:
+            original_sensor = Sensor.objects.get(id=sensor_id)
+        except Sensor.DoesNotExist:
+            return Response({"error": "Sensor không tồn tại."}, status=status.HTTP_404_NOT_FOUND)
+
+        station_id = request.data.get("station_id")
+        plant_id = request.data.get("plant_id")
+
+        if not station_id or not plant_id:
+            return Response({"error": "Thiếu station_id hoặc plant_id."}, status=status.HTTP_400_BAD_REQUEST)
+
+        clone_sensor = Sensor(
+            model_sensor=original_sensor.model_sensor ,
+            manufacturer=original_sensor.manufacturer,
+            expiry=original_sensor.expiry,
+            expiry_date=original_sensor.expiry_date,
+            station_id=station_id,
+            plant_id=plant_id,
+            day_clean=original_sensor.day_clean,
+        )
+
+        # Clone ảnh (nếu có)
+        if original_sensor.image:
+            original_path = original_sensor.image.path
+            if os.path.exists(original_path):
+                filename = os.path.basename(original_path)
+                new_filename = "clone_" + filename
+                new_path = os.path.join(settings.MEDIA_ROOT, "sensor_images", new_filename)
+
+                shutil.copy(original_path, new_path)
+                with open(new_path, "rb") as f:
+                    clone_sensor.image.save(new_filename, File(f), save=False)
+
+        clone_sensor.save()
+
+        # Clone các parameters (gán sensor_id và station_id mới)
+        original_parameters = Parameter.objects.filter(sensor=original_sensor)
+        for param in original_parameters:
+            Parameter.objects.create(
+                sensor=clone_sensor,
+                station_id=station_id,
+                name=param.name,
+                unit=param.unit,
+                min_value=param.min_value,
+                max_value=param.max_value,
+                has_threshold=param.has_threshold,
+                caution_min=param.caution_min,
+                caution_max=param.caution_max,
+                danger_min=param.danger_min,
+                danger_max=param.danger_max,
+                normal_min=param.normal_min,
+                normal_max=param.normal_max,
+            )
+
+        return Response({"message": "Clone sensor thành công!", "new_sensor_id": clone_sensor.id}, status=status.HTTP_201_CREATED)

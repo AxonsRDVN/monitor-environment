@@ -1,16 +1,16 @@
 class SensorManagerRouter:
     """
-    Điều hướng database cho app device_manager sang sensor_manager database.
+    Điều hướng database cho app sensor_manager sang sensor_manager database.
     Các app còn lại mặc định dùng database 'default'.
     """
 
     def db_for_read(self, model, **hints):
-        if model._meta.app_label == "device_manager":
+        if model._meta.app_label == "sensor_manager":
             return "sensor_manager"
         return "default"
 
     def db_for_write(self, model, **hints):
-        if model._meta.app_label == "device_manager":
+        if model._meta.app_label == "sensor_manager":
             return "sensor_manager"
         return "default"
 
@@ -22,6 +22,6 @@ class SensorManagerRouter:
         return None
 
     def allow_migrate(self, db, app_label, model_name=None, **hints):
-        if app_label == "device_manager":
+        if app_label == "sensor_manager":
             return db == "sensor_manager"
         return db == "default"
