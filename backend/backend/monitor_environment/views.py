@@ -1616,7 +1616,7 @@ class ExportPdfEmailAPIView(APIView):
             from_email=settings.DEFAULT_FROM_EMAIL,  # 👈 Lấy từ cấu hình
             to=[email],
         )
-        message.attach("baocao.pdf", pdf_buffer.read(), "application/pdf")
+        message.attach(f"[Báo cáo] {station.name} từ {from_date} đến {to_date}.pdf", pdf_buffer.read(), "application/pdf")
         message.send()
 
         return Response({"message": "Đã gửi thành công!"}, status=200)
