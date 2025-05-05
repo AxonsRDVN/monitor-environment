@@ -2,12 +2,12 @@ import React from "react";
 import { Button } from "@mui/material";
 import { SystemUpdateAlt } from "@mui/icons-material";
 
-export default function ExportButton({ onClick, text = "Export" }) {
+export default function ExportButton({ onExport, text = "Export" }) {
   return (
     <Button
       variant="contained"
       startIcon={<SystemUpdateAlt />}
-      onClick={onClick}
+      onClick={onExport}
       sx={{
         background: "#ffffff",
         borderRadius: "8px",

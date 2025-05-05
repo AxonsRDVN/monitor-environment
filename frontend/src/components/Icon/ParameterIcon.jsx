@@ -26,6 +26,24 @@ export const ICON_MAP = {
   pm10: GrainIcon,
 };
 
+const getWindDirectionLabel = (degree) => {
+  if (degree == null || isNaN(degree)) return "Không xác định";
+
+  const directions = [
+    "Bắc",
+    "Đông Bắc",
+    "Đông",
+    "Đông Nam",
+    "Nam",
+    "Tây Nam",
+    "Tây",
+    "Tây Bắc",
+    "Bắc",
+  ];
+  const index = Math.round(degree / 45);
+  return directions[index % 8];
+};
+
 // Màu + icon theo status
 export const statusColors = {
   normal: {
@@ -193,9 +211,17 @@ export default function ParameterCard({
       </Box>
 
       {/* Value */}
-      <Box sx={{ fontSize: 24, fontWeight: 600, color: colorConfig.text }}>
-        {paramData?.value} {paramData?.unit}
-      </Box>
+      {paramKey === "wind_direction" ? (
+        <Box>
+          <Box sx={{ fontSize: 24, fontWeight: 600, color: colorConfig.text }}>
+            Hướng: {getWindDirectionLabel(paramData?.value)}
+          </Box>
+        </Box>
+      ) : (
+        <Box sx={{ fontSize: 24, fontWeight: 600, color: colorConfig.text }}>
+          {paramData?.value} {paramData?.unit}
+        </Box>
+      )}
     </Box>
   );
 }

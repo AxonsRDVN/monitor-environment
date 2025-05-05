@@ -1,6 +1,30 @@
 from rest_framework import serializers
 from collections import defaultdict
 from .models import *
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        user = self.user
+
+        role_name = user.role.role_name if user.role else None
+        function_codes = (
+            list(user.role.functions.values_list("function_code", flat=True))
+            if user.role
+            else []
+        )
+
+        data["user"] = {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "role": role_name,
+            "functions": function_codes,
+        }
+        return data
+
 
 GROUP_MAP = {
     "Gas": ["co2", "nh3", "so2", "h2s", "ch4"],
@@ -111,26 +135,26 @@ class SensorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sensor
         fields = [
-            'id',
-            'plant',
-            'station',
-            'image',          # URL của ảnh
-            'model_sensor',
-            'expiry',
-            'expiry_date',
-            'manufacturer',
-            'day_clean',
-            'create_at',
+            "id",
+            "plant",
+            "station",
+            "image",  # URL của ảnh
+            "model_sensor",
+            "expiry",
+            "expiry_date",
+            "manufacturer",
+            "day_clean",
+            "create_at",
         ]
 
 
 class ParameterSerializer(serializers.ModelSerializer):
     image = serializers.ImageField(allow_null=True, required=False)  # 👈 thêm dòng này
-    
+
     class Meta:
         model = Parameter
         fields = "__all__"  # hoặc liệt kê cụ thể các trường
-        
+
 
 class MaintenanceSerializer(serializers.ModelSerializer):
     station_name = serializers.SerializerMethodField()
@@ -141,26 +165,26 @@ class MaintenanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Maintenance
         fields = [
-            'id',
-            'sensor',
-            'sensor_model',
-            'image_before',
-            'image_after',
-            'action',
-            'update_at',
-            'user_name',
-            'status',
-            'moderator',
-            'role',
-            'latitude',
-            'longitude',
-            'station_id',
-            'station_name',
-            'station_location',  # ✅ thêm vào fields
+            "id",
+            "sensor",
+            "sensor_model",
+            "image_before",
+            "image_after",
+            "action",
+            "update_at",
+            "user_name",
+            "status",
+            "moderator",
+            "role",
+            "latitude",
+            "longitude",
+            "station_id",
+            "station_name",
+            "station_location",  # ✅ thêm vào fields
         ]
 
     def create(self, validated_data):
-        validated_data['status'] = 'pending'
+        validated_data["status"] = "pending"
         return super().create(validated_data)
 
     def get_station_name(self, obj):
@@ -182,7 +206,8 @@ class MaintenanceSerializer(serializers.ModelSerializer):
         if obj.sensor:
             return obj.sensor.model_sensor
         return None
-    
+
+
 class TransactionWarningDetailSerializer(serializers.Serializer):
     station_id = serializers.IntegerField()
     station_name = serializers.CharField()
@@ -192,17 +217,27 @@ class TransactionWarningDetailSerializer(serializers.Serializer):
     status = serializers.CharField()
     time = serializers.DateTimeField()
 
+
 class StationCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Station
         fields = [
-            'id', 'name', 'code', 'location', 'latitude', 'longitude',
-            'channel', 'address', 'type', 'plant', 'master'
+            "id",
+            "name",
+            "code",
+            "location",
+            "latitude",
+            "longitude",
+            "channel",
+            "address",
+            "type",
+            "plant",
+            "master",
         ]
 
     def validate(self, data):
-        station_type = data.get('type')
-        master = data.get('master')
+        station_type = data.get("type")
+        master = data.get("master")
 
         if station_type == 1 and master is None:
             raise serializers.ValidationError("Station phải chọn một Master.")

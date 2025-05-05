@@ -1,12 +1,11 @@
 # monitor_environment/views.py
 
-from django.http import JsonResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .models import *
 from .serializers import *
-from django.db.models import Avg, Max, Min
+from django.db.models import Avg
 from django.db.models.functions import TruncMinute, TruncHour, TruncDay, TruncMonth
 from datetime import datetime, timedelta
 from django.utils.timezone import make_aware
@@ -14,14 +13,40 @@ from collections import defaultdict
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view
 from datetime import date, timedelta
-from rest_framework.generics import RetrieveAPIView
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.generics import ListAPIView
 from rest_framework import status as http_status
 import os
 from django.conf import settings
 import shutil
 from django.core.files import File
+from rest_framework_simplejwt.views import TokenObtainPairView
+from django.template.loader import render_to_string
+import requests
+from io import BytesIO
+from xhtml2pdf import pisa
+from django.core.mail import EmailMessage
+
+
+def get_wind_direction_label(degree):
+    if degree is None:
+        return "Không xác định"
+    directions = [
+        "Bắc",
+        "Đông Bắc",
+        "Đông",
+        "Đông Nam",
+        "Nam",
+        "Tây Nam",
+        "Tây",
+        "Tây Bắc",
+        "Bắc",
+    ]
+    idx = int((degree + 22.5) // 45)
+    return directions[idx % 8]
+
+
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = MyTokenObtainPairSerializer
 
 
 class PlantListAPIView(APIView):
@@ -36,23 +61,33 @@ class PlantListAPIView(APIView):
             # ✅ Bước 2: lấy tất cả transaction mới nhất của từng station
             latest_transactions = []
             for station in stations:
-                latest_tx = Transaction.objects.filter(station=station).order_by("-time").first()
+                latest_tx = (
+                    Transaction.objects.filter(station=station)
+                    .order_by("-time")
+                    .first()
+                )
                 if latest_tx:
                     latest_transactions.append(latest_tx)
 
             # Nếu không có transaction nào
             if not latest_transactions:
-                result.append({
-                    "id": plant.id,
-                    "name": plant.name,
-                    "status": "normal",
-                    "count": 0
-                })
+                result.append(
+                    {"id": plant.id, "name": plant.name, "status": "normal", "count": 0}
+                )
                 continue
 
             param_keys = [
-                "temperature", "humidity", "pm25", "pm10", "airpressure",
-                "noise", "rain", "radiation", "lux", "windspeed", "wind_direction"
+                "temperature",
+                "humidity",
+                "pm25",
+                "pm10",
+                "airpressure",
+                "noise",
+                "rain",
+                "radiation",
+                "lux",
+                "windspeed",
+                "wind_direction",
             ]
 
             level_count = {
@@ -66,9 +101,7 @@ class PlantListAPIView(APIView):
 
             for tx in latest_transactions:
                 parameters = Parameter.objects.filter(
-                    station=tx.station,
-                    has_threshold=True,
-                    name__in=param_keys
+                    station=tx.station, has_threshold=True, name__in=param_keys
                 )
 
                 for param in parameters:
@@ -80,11 +113,23 @@ class PlantListAPIView(APIView):
                     if value is None:
                         continue
 
-                    if param.normal_min is not None and param.normal_max is not None and param.normal_min <= value <= param.normal_max:
+                    if (
+                        param.normal_min is not None
+                        and param.normal_max is not None
+                        and param.normal_min <= value <= param.normal_max
+                    ):
                         level = "normal"
-                    elif param.caution_min is not None and param.caution_max is not None and param.caution_min <= value <= param.caution_max:
+                    elif (
+                        param.caution_min is not None
+                        and param.caution_max is not None
+                        and param.caution_min <= value <= param.caution_max
+                    ):
                         level = "caution"
-                    elif param.danger_min is not None and param.danger_max is not None and param.danger_min <= value <= param.danger_max:
+                    elif (
+                        param.danger_min is not None
+                        and param.danger_max is not None
+                        and param.danger_min <= value <= param.danger_max
+                    ):
                         level = "danger"
                     else:
                         level = "unknown"
@@ -103,12 +148,14 @@ class PlantListAPIView(APIView):
                 highest_level = "normal"
                 count = 0
 
-            result.append({
-                "id": plant.id,
-                "name": plant.name,
-                "status": highest_level,
-                "count": count
-            })
+            result.append(
+                {
+                    "id": plant.id,
+                    "name": plant.name,
+                    "status": highest_level,
+                    "count": count,
+                }
+            )
 
         return Response(result, status=status.HTTP_200_OK)
 
@@ -129,55 +176,57 @@ class StationListView(APIView):
 
                 station_children = []
                 for child_station in child_stations:
-                    child_status, child_count = self.calculate_station_status(child_station)
+                    child_status, child_count = self.calculate_station_status(
+                        child_station
+                    )
 
-                    station_children.append({
-                        "id": child_station.id,
-                        "name": child_station.name,
-                        "type": child_station.type,
-                        "code": child_station.code,
-                        "location": child_station.location,
-                        "latitude": child_station.latitude,
-                        "longitude": child_station.longitude,
-                        "channel":child_station.channel,
-                        "address": child_station.address,
-                        "status": child_status,
-                        "count": child_count,
-                    })
+                    station_children.append(
+                        {
+                            "id": child_station.id,
+                            "name": child_station.name,
+                            "type": child_station.type,
+                            "code": child_station.code,
+                            "location": child_station.location,
+                            "latitude": child_station.latitude,
+                            "longitude": child_station.longitude,
+                            "channel": child_station.channel,
+                            "address": child_station.address,
+                            "status": child_status,
+                            "count": child_count,
+                        }
+                    )
 
-                result.append({
-                    "id": master.id,
-                    "name": master.name,
-                    "type": master.type,
-                    "code": master.code,
-                    "location": master.location,
-                    "latitude": master.latitude,
-                    "longitude": master.longitude,
-                    "channel":master.channel,
-                    "address": master.address,
-                    "status": master_status,
-                    "count": master_count,
-                    "stations": station_children
-                })
+                result.append(
+                    {
+                        "id": master.id,
+                        "name": master.name,
+                        "type": master.type,
+                        "code": master.code,
+                        "location": master.location,
+                        "latitude": master.latitude,
+                        "longitude": master.longitude,
+                        "channel": master.channel,
+                        "address": master.address,
+                        "status": master_status,
+                        "count": master_count,
+                        "stations": station_children,
+                    }
+                )
 
             # ✅ Phải có RETURN Response ở đây
-            return Response({
-                "plant_name": plant.name,
-                "plant_id": plant.id,
-                "stations": result
-            }, status=status.HTTP_200_OK)
+            return Response(
+                {"plant_name": plant.name, "plant_id": plant.id, "stations": result},
+                status=status.HTTP_200_OK,
+            )
 
         except Plant.DoesNotExist:
             return Response(
-                {"detail": "Không tìm thấy nhà máy."},
-                status=status.HTTP_404_NOT_FOUND
+                {"detail": "Không tìm thấy nhà máy."}, status=status.HTTP_404_NOT_FOUND
             )
 
     def calculate_station_status(self, station):
         latest_tx = (
-            Transaction.objects.filter(station=station)
-            .order_by("-time")
-            .first()
+            Transaction.objects.filter(station=station).order_by("-time").first()
         )
 
         level_count = {
@@ -189,14 +238,21 @@ class StationListView(APIView):
 
         if latest_tx:
             param_keys = [
-                "temperature", "humidity", "pm25", "pm10", "airpressure",
-                "noise", "rain", "radiation", "lux", "windspeed", "wind_direction"
+                "temperature",
+                "humidity",
+                "pm25",
+                "pm10",
+                "airpressure",
+                "noise",
+                "rain",
+                "radiation",
+                "lux",
+                "windspeed",
+                "wind_direction",
             ]
 
             parameters = Parameter.objects.filter(
-                station=station,
-                has_threshold=True,
-                name__in=param_keys
+                station=station, has_threshold=True, name__in=param_keys
             )
 
             added_params = set()
@@ -209,11 +265,23 @@ class StationListView(APIView):
                 if value is None:
                     continue
 
-                if param.normal_min is not None and param.normal_max is not None and param.normal_min <= value <= param.normal_max:
+                if (
+                    param.normal_min is not None
+                    and param.normal_max is not None
+                    and param.normal_min <= value <= param.normal_max
+                ):
                     level = "normal"
-                elif param.caution_min is not None and param.caution_max is not None and param.caution_min <= value <= param.caution_max:
+                elif (
+                    param.caution_min is not None
+                    and param.caution_max is not None
+                    and param.caution_min <= value <= param.caution_max
+                ):
                     level = "caution"
-                elif param.danger_min is not None and param.danger_max is not None and param.danger_min <= value <= param.danger_max:
+                elif (
+                    param.danger_min is not None
+                    and param.danger_max is not None
+                    and param.danger_min <= value <= param.danger_max
+                ):
                     level = "danger"
                 else:
                     level = "unknown"
@@ -306,22 +374,40 @@ class StationDetailIndexLastestView(APIView):
 
                 if value is not None and param:
                     # Tính status
-                    if param.normal_min is not None and param.normal_max is not None and param.normal_min <= value <= param.normal_max:
+                    if (
+                        param.normal_min is not None
+                        and param.normal_max is not None
+                        and param.normal_min <= value <= param.normal_max
+                    ):
                         status_ = "normal"
-                    elif param.caution_min is not None and param.caution_max is not None and param.caution_min <= value <= param.caution_max:
+                    elif (
+                        param.caution_min is not None
+                        and param.caution_max is not None
+                        and param.caution_min <= value <= param.caution_max
+                    ):
                         status_ = "caution"
-                    elif param.danger_min is not None and param.danger_max is not None and param.danger_min <= value <= param.danger_max:
+                    elif (
+                        param.danger_min is not None
+                        and param.danger_max is not None
+                        and param.danger_min <= value <= param.danger_max
+                    ):
                         status_ = "danger"
                     else:
                         status_ = "unknown"
 
-                    groups[group][field] = {
+                    value_dict = {
                         "value": value,
                         "unit": param.unit or "",
-                        "status": status_
+                        "status": status_,
                     }
+
+                    # Nếu là hướng gió, thêm label
+                    if norm_field == "wind_direction":
+                        value_dict["label"] = get_wind_direction_label(value)
+
+                    groups[group][field] = value_dict
                     added_names.add(norm_field)
-        
+
         # === Tính status trước ===
         danger_count = 0
         caution_count = 0
@@ -346,17 +432,100 @@ class StationDetailIndexLastestView(APIView):
             overall_status = "normal"
             count = None  # normal thì không đếm
 
-        status_summary = {
-            "status": overall_status,
-            "count": count
-        }
-
-
+        status_summary = {"status": overall_status, "count": count}
 
         return Response(
             {
                 "station": StationSerializer(station).data,
-                "latest_transaction": {"time": transaction.time, "status_summary": status_summary, "groups": groups},
+                "latest_transaction": {
+                    "time": transaction.time,
+                    "status_summary": status_summary,
+                    "groups": groups,
+                },
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class StationDetailIndexRangeView(APIView):
+    def get(self, request, plant_id, station_id):
+        plant = get_object_or_404(Plant, id=plant_id)
+        station = get_object_or_404(Station, id=station_id, plant=plant)
+
+        from_date = request.GET.get("from")
+        to_date = request.GET.get("to")
+
+        if not from_date or not to_date:
+            return Response(
+                {"detail": "Vui lòng truyền đầy đủ from và to (yyyy-mm-dd)"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            from_date_obj = datetime.strptime(from_date, "%Y-%m-%d").date()
+            to_date_obj = datetime.strptime(to_date, "%Y-%m-%d").date()
+        except ValueError:
+            return Response(
+                {"detail": "Sai định dạng ngày. Định dạng: yyyy-mm-dd"}, status=400
+            )
+
+        transactions = Transaction.objects.filter(
+            plant=plant,
+            station=station,
+            time__date__range=(from_date_obj, to_date_obj),
+        ).order_by("time")
+
+        if not transactions.exists():
+            return Response(
+                {
+                    "station": StationSerializer(station).data,
+                    "transactions": [],
+                    "message": "Không có dữ liệu giao dịch trong khoảng thời gian này",
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        parameters = Parameter.objects.filter(station=station)
+        param_map = {normalize_key(p.name): p for p in parameters}
+
+        results = []
+
+        for transaction in transactions:
+            groups = defaultdict(dict)
+            added_names = set()
+
+            for group, field_list in GROUP_MAP.items():
+                for field in field_list:
+                    norm_field = normalize_key(field)
+                    if norm_field in added_names:
+                        continue
+
+                    value = getattr(transaction, field, None)
+                    param = param_map.get(norm_field)
+
+                    if value is not None and param:
+                        data = {
+                            "value": value,
+                            "unit": param.unit or "",
+                        }
+
+                        if norm_field == "wind_direction":
+                            data["label"] = get_wind_direction_label(value)
+
+                        groups[group][field] = data
+                        added_names.add(norm_field)
+
+            results.append(
+                {
+                    "time": transaction.time,
+                    "groups": groups,
+                }
+            )
+
+        return Response(
+            {
+                "station": StationSerializer(station).data,
+                "transactions": results,
             },
             status=status.HTTP_200_OK,
         )
@@ -463,19 +632,24 @@ class ParameterTrendView(APIView):
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+
 from django.utils import timezone
+
 
 class SensorByStationView(APIView):
     def get(self, request, station_id):
         sensors = Sensor.objects.filter(station_id=station_id)
 
         if not sensors.exists():
-            return Response({
-                "message": "Không có sensor nào thuộc trạm này.",
-                "plant": None,
-                "station": station_id,
-                "sensors": []
-            }, status=status.HTTP_200_OK)
+            return Response(
+                {
+                    "message": "Không có sensor nào thuộc trạm này.",
+                    "plant": None,
+                    "station": station_id,
+                    "sensors": [],
+                },
+                status=status.HTTP_200_OK,
+            )
 
         serializer = SensorSerializer(sensors, many=True)
         plant_id = sensors.first().plant_id
@@ -497,12 +671,15 @@ class SensorByStationView(APIView):
             sensor["longevity"] = longevity_days
             filtered_data.append(sensor)
 
-        return Response({
-            "message": "Lấy danh sách sensor thành công.",
-            "plant": plant_id,
-            "station": station_id,
-            "sensors": filtered_data
-        }, status=status.HTTP_200_OK)
+        return Response(
+            {
+                "message": "Lấy danh sách sensor thành công.",
+                "plant": plant_id,
+                "station": station_id,
+                "sensors": filtered_data,
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 class ParameterGroupedByStationView(APIView):
@@ -523,8 +700,17 @@ class ParameterGroupedByStationView(APIView):
         # ✅ Nếu có station_id → lọc theo các field thật sự có trong bảng Transaction
         if station_id:
             tracked_fields = [
-                "temperature", "humidity", "pm25", "pm10", "windspeed", "wind_direction",
-                "airpressure", "noise", "lux", "rain", "radiation"
+                "temperature",
+                "humidity",
+                "pm25",
+                "pm10",
+                "windspeed",
+                "wind_direction",
+                "airpressure",
+                "noise",
+                "lux",
+                "rain",
+                "radiation",
             ]
 
             transactions = Transaction.objects.filter(station_id=station_id)
@@ -547,18 +733,17 @@ class ParameterGroupedByStationView(APIView):
                     "plant_id": param.station.plant_id,
                     "station_id": sid,
                     "station_name": param.station.name,
-                    "parameters": []
+                    "parameters": [],
                 }
 
             # Lọc trùng name — chỉ giữ name đầu tiên
-            existing_names = {
-                p["name"] for p in grouped_data[sid]["parameters"]
-            }
+            existing_names = {p["name"] for p in grouped_data[sid]["parameters"]}
 
             if param.name not in existing_names:
                 grouped_data[sid]["parameters"].append(ParameterSerializer(param).data)
 
         return Response(list(grouped_data.values()), status=status.HTTP_200_OK)
+
 
 @api_view(["POST"])
 def update_sensor_day_clean(request):
@@ -579,26 +764,26 @@ def update_sensor_day_clean(request):
                 continue
 
     return Response(
-        {"message": f"Đã cập nhật {updated} sensor."},
-        status=status.HTTP_200_OK
+        {"message": f"Đã cập nhật {updated} sensor."}, status=status.HTTP_200_OK
     )
-    
+
+
 class UpdateThresholdsView(APIView):
     def post(self, request):
-        data = request.data.get('data', [])
+        data = request.data.get("data", [])
 
         for station_group in data:
-            for param_data in station_group.get('parameters', []):
+            for param_data in station_group.get("parameters", []):
                 try:
-                    param = Parameter.objects.get(id=param_data['id'])
-                    
+                    param = Parameter.objects.get(id=param_data["id"])
+
                     # Cập nhật các ngưỡng
-                    param.normal_min = param_data.get('normal_min')
-                    param.normal_max = param_data.get('normal_max')
-                    param.caution_min = param_data.get('caution_min')
-                    param.caution_max = param_data.get('caution_max')
-                    param.danger_min = param_data.get('danger_min')
-                    param.danger_max = param_data.get('danger_max')
+                    param.normal_min = param_data.get("normal_min")
+                    param.normal_max = param_data.get("normal_max")
+                    param.caution_min = param_data.get("caution_min")
+                    param.caution_max = param_data.get("caution_max")
+                    param.danger_min = param_data.get("danger_min")
+                    param.danger_max = param_data.get("danger_max")
 
                     param.save()
                 except Parameter.DoesNotExist:
@@ -606,59 +791,80 @@ class UpdateThresholdsView(APIView):
 
         return Response({"message": "Cập nhật thành công"}, status=status.HTTP_200_OK)
 
+
 class SensorDetailView(APIView):
     def get(self, request, station_id, sensor_id):
         try:
-            sensor = Sensor.objects.select_related('station', 'station__plant').get(id=sensor_id, station_id=station_id)
+            sensor = Sensor.objects.select_related("station", "station__plant").get(
+                id=sensor_id, station_id=station_id
+            )
         except Sensor.DoesNotExist:
-            return Response({"error": "Sensor không tồn tại với trạm này."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Sensor không tồn tại với trạm này."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
         serializer = SensorSerializer(sensor)
 
         # Thêm thông tin plant và station
         sensor_data = serializer.data
-        sensor_data['station_name'] = sensor.station.name if sensor.station else None
-        sensor_data['plant_name'] = sensor.station.plant.name if sensor.station and sensor.station.plant else None
+        sensor_data["station_name"] = sensor.station.name if sensor.station else None
+        sensor_data["plant_name"] = (
+            sensor.station.plant.name
+            if sensor.station and sensor.station.plant
+            else None
+        )
 
         return Response(sensor_data, status=status.HTTP_200_OK)
-    
+
+
 class MaintenanceListCreateAPIView(APIView):
     """
     GET: Lấy danh sách maintenance (filter theo status nếu có)
     POST: Tạo mới 1 yêu cầu maintenance
     """
+
     def get(self, request):
-        status_filter = request.GET.get('status', None)
-        queryset = Maintenance.objects.all().order_by('-update_at')
+        status_filter = request.GET.get("status", None)
+        queryset = Maintenance.objects.all().order_by("-update_at")
 
         if status_filter:
             # Nếu nhiều status, tách ra theo dấu phẩy
-            statuses = status_filter.split(',')
+            statuses = status_filter.split(",")
             queryset = queryset.filter(status__in=statuses)
 
         serializer = MaintenanceSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
-        sensor_id = request.data.get('sensor')
+        sensor_id = request.data.get("sensor")
 
         if not sensor_id:
-            return Response({"error": "Thiếu sensor_id"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Thiếu sensor_id"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         # Tìm bản pending hiện tại
-        existing = Maintenance.objects.filter(sensor_id=sensor_id, status='pending').first()
+        existing = Maintenance.objects.filter(
+            sensor_id=sensor_id, status="pending"
+        ).first()
 
         if existing:
             # Nếu có pending thì update bản cũ
-            serializer = MaintenanceSerializer(existing, data=request.data, partial=True)
+            serializer = MaintenanceSerializer(
+                existing, data=request.data, partial=True
+            )
         else:
             # Nếu không có thì tạo bản mới
             serializer = MaintenanceSerializer(data=request.data)
 
         if serializer.is_valid():
-            serializer.save(status='pending')  # Luôn để pending khi save
-            return Response(serializer.data, status=status.HTTP_200_OK if existing else status.HTTP_201_CREATED)
-        
+            serializer.save(status="pending")  # Luôn để pending khi save
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK if existing else status.HTTP_201_CREATED,
+            )
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -666,15 +872,21 @@ class MaintenanceUpdateStatusAPIView(APIView):
     """
     PATCH: Cập nhật status của một maintenance
     """
+
     def patch(self, request, pk):
         try:
             maintenance = Maintenance.objects.get(pk=pk)
         except Maintenance.DoesNotExist:
-            return Response({"error": "Không tìm thấy maintenance."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Không tìm thấy maintenance."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
-        status_update = request.data.get('status')
-        if status_update not in ['approved', 'rejected']:
-            return Response({"error": "Status không hợp lệ."}, status=status.HTTP_400_BAD_REQUEST)
+        status_update = request.data.get("status")
+        if status_update not in ["approved", "rejected"]:
+            return Response(
+                {"error": "Status không hợp lệ."}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         maintenance.status = status_update
         maintenance.save()
@@ -688,10 +900,13 @@ class MaintenanceBySensorAPIView(APIView):
     """
 
     def get(self, request, sensor_id):
-        maintenances = Maintenance.objects.filter(sensor_id=sensor_id).order_by('-update_at')
+        maintenances = Maintenance.objects.filter(sensor_id=sensor_id).order_by(
+            "-update_at"
+        )
         serializer = MaintenanceSerializer(maintenances, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
+
 class MaintenanceByPlantAPIView(APIView):
     """
     GET: Lấy tất cả maintenance theo plant_id
@@ -699,15 +914,16 @@ class MaintenanceByPlantAPIView(APIView):
     """
 
     def get(self, request, plant_id):
-        status_filter = request.GET.get('status', None)
+        status_filter = request.GET.get("status", None)
         queryset = Maintenance.objects.filter(sensor__plant_id=plant_id)
 
         if status_filter:
             queryset = queryset.filter(status=status_filter)
 
-        queryset = queryset.order_by('-update_at')
+        queryset = queryset.order_by("-update_at")
         serializer = MaintenanceSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class MaintenanceDetailAPIView(APIView):
     """
@@ -718,10 +934,13 @@ class MaintenanceDetailAPIView(APIView):
         try:
             maintenance = Maintenance.objects.get(pk=pk)
         except Maintenance.DoesNotExist:
-            return Response({"error": "Maintenance không tồn tại"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Maintenance không tồn tại"}, status=status.HTTP_404_NOT_FOUND
+            )
 
         serializer = MaintenanceSerializer(maintenance)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class PlantParameterWarningView(APIView):
     """
@@ -729,8 +948,8 @@ class PlantParameterWarningView(APIView):
     """
 
     def get(self, request, plant_id):
-        from_date_str = request.GET.get('from_date')
-        to_date_str = request.GET.get('to_date')
+        from_date_str = request.GET.get("from_date")
+        to_date_str = request.GET.get("to_date")
 
         # Nếu không truyền thì mặc định = hôm nay
         today_str = date.today().strftime("%Y-%m-%d")
@@ -745,29 +964,35 @@ class PlantParameterWarningView(APIView):
             from_date = datetime.strptime(from_date_str, "%Y-%m-%d")
             to_date = datetime.strptime(to_date_str, "%Y-%m-%d")
         except ValueError:
-            return Response({"error": "Sai định dạng ngày. Định dạng đúng: YYYY-MM-DD"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Sai định dạng ngày. Định dạng đúng: YYYY-MM-DD"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         # Lấy Plant
         try:
             plant = Plant.objects.get(id=plant_id)
         except Plant.DoesNotExist:
-            return Response({"error": "Không tìm thấy plant."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Không tìm thấy plant."}, status=status.HTTP_404_NOT_FOUND
+            )
 
         # Lấy stations thuộc plant
         stations = Station.objects.filter(plant_id=plant_id)
 
         if not stations.exists():
-            return Response({"error": "Plant này không có station nào."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Plant này không có station nào."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
-        final_result = {
-            "plant_id": plant.id,
-            "plant_name": plant.name,
-            "stations": []
-        }
+        final_result = {"plant_id": plant.id, "plant_name": plant.name, "stations": []}
 
         # Duyệt từng station
         for station in stations:
-            parameters = Parameter.objects.filter(station_id=station.id, has_threshold=True)
+            parameters = Parameter.objects.filter(
+                station_id=station.id, has_threshold=True
+            )
 
             if not parameters.exists():
                 continue
@@ -807,12 +1032,26 @@ class PlantParameterWarningView(APIView):
                     if value is None:
                         continue
 
-                    if thresholds["caution_min"] is not None and thresholds["caution_max"] is not None:
-                        if thresholds["caution_min"] <= value <= thresholds["caution_max"]:
+                    if (
+                        thresholds["caution_min"] is not None
+                        and thresholds["caution_max"] is not None
+                    ):
+                        if (
+                            thresholds["caution_min"]
+                            <= value
+                            <= thresholds["caution_max"]
+                        ):
                             station_warning_raw[param_name]["warning_count"] += 1
 
-                    if thresholds["danger_min"] is not None and thresholds["danger_max"] is not None:
-                        if thresholds["danger_min"] <= value <= thresholds["danger_max"]:
+                    if (
+                        thresholds["danger_min"] is not None
+                        and thresholds["danger_max"] is not None
+                    ):
+                        if (
+                            thresholds["danger_min"]
+                            <= value
+                            <= thresholds["danger_max"]
+                        ):
                             station_warning_raw[param_name]["danger_count"] += 1
 
             # Lọc chỉ lấy những param có warning hoặc danger > 0
@@ -823,18 +1062,22 @@ class PlantParameterWarningView(APIView):
             }
 
             if station_warning_filtered:
-                final_result["stations"].append({
-                    "id": station.id,
-                    "name": station.name,
-                    "warning": station_warning_filtered
-                })
+                final_result["stations"].append(
+                    {
+                        "id": station.id,
+                        "name": station.name,
+                        "warning": station_warning_filtered,
+                    }
+                )
 
         return Response(final_result, status=status.HTTP_200_OK)
 
+
 class WarningDetailPagination(PageNumberPagination):
     page_size = 50
-    page_size_query_param = 'page_size'
+    page_size_query_param = "page_size"
     max_page_size = 100
+
 
 class WarningDetailByPlantView(APIView):
     """
@@ -854,7 +1097,11 @@ class WarningDetailByPlantView(APIView):
                 from_datetime = datetime.combine(today, datetime.min.time())
 
             if to_date:
-                to_datetime = datetime.strptime(to_date, "%Y-%m-%d") + timedelta(days=1) - timedelta(seconds=1)
+                to_datetime = (
+                    datetime.strptime(to_date, "%Y-%m-%d")
+                    + timedelta(days=1)
+                    - timedelta(seconds=1)
+                )
             else:
                 to_datetime = datetime.combine(today, datetime.max.time())
 
@@ -869,10 +1116,15 @@ class WarningDetailByPlantView(APIView):
         station_ids = stations.values_list("id", flat=True)
 
         if not station_ids:
-            return Response({"error": "Plant này không có trạm nào."}, status=http_status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Plant này không có trạm nào."},
+                status=http_status.HTTP_404_NOT_FOUND,
+            )
 
         # Lấy Parameter và map theo station_id và parameter name
-        parameters = Parameter.objects.filter(station_id__in=station_ids, has_threshold=True)
+        parameters = Parameter.objects.filter(
+            station_id__in=station_ids, has_threshold=True
+        )
         parameter_map = {}
         for param in parameters:
             if param.station_id not in parameter_map:
@@ -881,8 +1133,7 @@ class WarningDetailByPlantView(APIView):
 
         # Lấy các Transaction trong khoảng thời gian
         transactions = Transaction.objects.filter(
-            station_id__in=station_ids,
-            time__range=[from_datetime, to_datetime]
+            station_id__in=station_ids, time__range=[from_datetime, to_datetime]
         ).order_by("-time")
 
         results = []
@@ -890,9 +1141,18 @@ class WarningDetailByPlantView(APIView):
         # Duyệt từng transaction
         for tx in transactions:
             param_keys = [
-                "temperature", "humidity", "pm25", "pm10",
-                "airpressure", "noise", "rain", "radiation",
-                "lux", "windspeed", "wind_direction", "co2"
+                "temperature",
+                "humidity",
+                "pm25",
+                "pm10",
+                "airpressure",
+                "noise",
+                "rain",
+                "radiation",
+                "lux",
+                "windspeed",
+                "wind_direction",
+                "co2",
             ]
             for key in param_keys:
                 value = getattr(tx, key, None)
@@ -903,25 +1163,39 @@ class WarningDetailByPlantView(APIView):
 
                     # So sánh ngưỡng để xác định trạng thái
                     status_ = None
-                    if param_obj.danger_min is not None and value < param_obj.danger_min:
+                    if (
+                        param_obj.danger_min is not None
+                        and value < param_obj.danger_min
+                    ):
                         status_ = "danger"
-                    elif param_obj.danger_max is not None and value > param_obj.danger_max:
+                    elif (
+                        param_obj.danger_max is not None
+                        and value > param_obj.danger_max
+                    ):
                         status_ = "danger"
-                    elif param_obj.caution_min is not None and value < param_obj.caution_min:
+                    elif (
+                        param_obj.caution_min is not None
+                        and value < param_obj.caution_min
+                    ):
                         status_ = "warning"
-                    elif param_obj.caution_max is not None and value > param_obj.caution_max:
+                    elif (
+                        param_obj.caution_max is not None
+                        and value > param_obj.caution_max
+                    ):
                         status_ = "warning"
 
                     if status_:
-                        results.append({
-                            "station_id": tx.station_id,
-                            "station_name": tx.station.name,
-                            "parameter_name": key,
-                            "value": value,
-                            "unit": param_obj.unit or "",
-                            "status": status_,
-                            "time": tx.time
-                        })
+                        results.append(
+                            {
+                                "station_id": tx.station_id,
+                                "station_name": tx.station.name,
+                                "parameter_name": key,
+                                "value": value,
+                                "unit": param_obj.unit or "",
+                                "status": status_,
+                                "time": tx.time,
+                            }
+                        )
 
         # Phân trang kết quả
         paginator = WarningDetailPagination()
@@ -929,6 +1203,7 @@ class WarningDetailByPlantView(APIView):
 
         serializer = TransactionWarningDetailSerializer(paginated_results, many=True)
         return paginator.get_paginated_response(serializer.data)
+
 
 class MaintenanceReminderAPIView(APIView):
     """
@@ -945,10 +1220,11 @@ class MaintenanceReminderAPIView(APIView):
 
         for sensor in sensors:
             # Tìm bản ghi maintenance gần nhất (chỉ tính những cái đã duyệt)
-            maintenance = Maintenance.objects.filter(
-                sensor=sensor,
-                status='approved'
-            ).order_by('-update_at').first()
+            maintenance = (
+                Maintenance.objects.filter(sensor=sensor, status="approved")
+                .order_by("-update_at")
+                .first()
+            )
 
             if not maintenance:
                 continue
@@ -957,22 +1233,35 @@ class MaintenanceReminderAPIView(APIView):
 
             # Tính số ngày còn lại
             if sensor.day_clean:
-                days_until_action = (last_maintenance_date + timedelta(days=(sensor.day_clean - today).days)) - today
+                days_until_action = (
+                    last_maintenance_date
+                    + timedelta(days=(sensor.day_clean - today).days)
+                ) - today
                 remaining_days = days_until_action.days
             else:
                 remaining_days = None
 
-            result.append({
-                "station_id": sensor.station.id if sensor.station else None,
-                "station_name": sensor.station.name if sensor.station else None,
-                "model_sensor": sensor.model_sensor or "",
-                "action": maintenance.action,
-                "last_maintenance_date": last_maintenance_date,
-                "action_due_date": (last_maintenance_date + timedelta(days=(sensor.day_clean - today).days)) if sensor.day_clean else None,
-                "remaining_days": remaining_days,
-            })
+            result.append(
+                {
+                    "station_id": sensor.station.id if sensor.station else None,
+                    "station_name": sensor.station.name if sensor.station else None,
+                    "model_sensor": sensor.model_sensor or "",
+                    "action": maintenance.action,
+                    "last_maintenance_date": last_maintenance_date,
+                    "action_due_date": (
+                        (
+                            last_maintenance_date
+                            + timedelta(days=(sensor.day_clean - today).days)
+                        )
+                        if sensor.day_clean
+                        else None
+                    ),
+                    "remaining_days": remaining_days,
+                }
+            )
 
         return Response(result, status=status.HTTP_200_OK)
+
 
 class Plant24hOverallStatusView(APIView):
     """
@@ -985,17 +1274,24 @@ class Plant24hOverallStatusView(APIView):
         try:
             plant = Plant.objects.get(id=plant_id)
         except Plant.DoesNotExist:
-            return Response({"error": "Không tìm thấy nhà máy"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Không tìm thấy nhà máy"}, status=status.HTTP_404_NOT_FOUND
+            )
 
         # Lấy toàn bộ station thuộc plant
         stations = Station.objects.filter(plant_id=plant.id)
-        station_ids = stations.values_list('id', flat=True)
+        station_ids = stations.values_list("id", flat=True)
 
         if not station_ids:
-            return Response({"error": "Nhà máy này không có trạm nào."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Nhà máy này không có trạm nào."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         # Lấy threshold cho các station
-        parameters = Parameter.objects.filter(station_id__in=station_ids, has_threshold=True)
+        parameters = Parameter.objects.filter(
+            station_id__in=station_ids, has_threshold=True
+        )
         threshold_map = {}
         for param in parameters:
             if param.station_id not in threshold_map:
@@ -1014,16 +1310,23 @@ class Plant24hOverallStatusView(APIView):
         )
 
         if not transactions.exists():
-            return Response({"message": "Không có dữ liệu giao dịch hôm nay."}, status=status.HTTP_200_OK)
+            return Response(
+                {"message": "Không có dữ liệu giao dịch hôm nay."},
+                status=status.HTTP_200_OK,
+            )
 
         # Kết quả cuối cùng
         hourly_status = {}
 
         for hour in range(24):
-            hour_start = timezone.datetime.combine(today, datetime.min.time()) + timedelta(hours=hour)
+            hour_start = timezone.datetime.combine(
+                today, datetime.min.time()
+            ) + timedelta(hours=hour)
             hour_end = hour_start + timedelta(hours=1)
 
-            hour_transactions = transactions.filter(time__gte=hour_start, time__lt=hour_end)
+            hour_transactions = transactions.filter(
+                time__gte=hour_start, time__lt=hour_end
+            )
 
             danger_found = False
             warning_found = False
@@ -1031,9 +1334,18 @@ class Plant24hOverallStatusView(APIView):
             for tx in hour_transactions:
                 # Check toàn bộ chỉ số cần kiểm tra
                 param_keys = [
-                    "temperature", "humidity", "pm25", "pm10",
-                    "airpressure", "noise", "rain", "radiation",
-                    "lux", "windspeed", "wind_direction", "co2"
+                    "temperature",
+                    "humidity",
+                    "pm25",
+                    "pm10",
+                    "airpressure",
+                    "noise",
+                    "rain",
+                    "radiation",
+                    "lux",
+                    "windspeed",
+                    "wind_direction",
+                    "co2",
                 ]
 
                 for key in param_keys:
@@ -1045,14 +1357,26 @@ class Plant24hOverallStatusView(APIView):
                     if not param_threshold:
                         continue
 
-                    if param_threshold["danger_min"] is not None and value < param_threshold["danger_min"]:
+                    if (
+                        param_threshold["danger_min"] is not None
+                        and value < param_threshold["danger_min"]
+                    ):
                         danger_found = True
-                    if param_threshold["danger_max"] is not None and value > param_threshold["danger_max"]:
+                    if (
+                        param_threshold["danger_max"] is not None
+                        and value > param_threshold["danger_max"]
+                    ):
                         danger_found = True
 
-                    if param_threshold["caution_min"] is not None and value < param_threshold["caution_min"]:
+                    if (
+                        param_threshold["caution_min"] is not None
+                        and value < param_threshold["caution_min"]
+                    ):
                         warning_found = True
-                    if param_threshold["caution_max"] is not None and value > param_threshold["caution_max"]:
+                    if (
+                        param_threshold["caution_max"] is not None
+                        and value > param_threshold["caution_max"]
+                    ):
                         warning_found = True
 
             # Xác định mức cao nhất
@@ -1065,28 +1389,57 @@ class Plant24hOverallStatusView(APIView):
 
         return Response(hourly_status, status=status.HTTP_200_OK)
 
+
 class StationCRUDAPIView(APIView):
     def delete(self, request, station_id):
         try:
             station = Station.objects.get(id=station_id)
             station.delete()
-            return Response({"message": "Xóa trạm thành công!"}, status=status.HTTP_204_NO_CONTENT)
+            return Response(
+                {"message": "Xóa trạm thành công!"}, status=status.HTTP_204_NO_CONTENT
+            )
         except Station.DoesNotExist:
-            return Response({"error": "Không tìm thấy trạm."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Không tìm thấy trạm."}, status=status.HTTP_404_NOT_FOUND
+            )
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def put(self, request, station_id):
+        try:
+            station = Station.objects.get(id=station_id)
+            serializer = StationSerializer(station, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Station.DoesNotExist:
+            return Response(
+                {"error": "Không tìm thấy trạm."}, status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
 
 class StationCreateAPIView(APIView):
     def post(self, request):
         serializer = StationCreateSerializer(data=request.data)
         if serializer.is_valid():
             station = serializer.save()
-            return Response({
-                "message": "Tạo trạm thành công!",
-                "data": StationCreateSerializer(station).data
-            }, status=status.HTTP_201_CREATED)
+            return Response(
+                {
+                    "message": "Tạo trạm thành công!",
+                    "data": StationCreateSerializer(station).data,
+                },
+                status=status.HTTP_201_CREATED,
+            )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
+
 class SensorCreateAPIView(APIView):
     def post(self, request):
         serializer = SensorSerializer(data=request.data)
@@ -1094,7 +1447,8 @@ class SensorCreateAPIView(APIView):
             sensor = serializer.save()
             return Response({"id": sensor.id}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
+
 class ParameterCreateAPIView(APIView):
     def post(self, request):
         serializer = ParameterSerializer(data=request.data)
@@ -1103,21 +1457,27 @@ class ParameterCreateAPIView(APIView):
             return Response({"id": parameter.id}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class CloneSensorAPIView(APIView):
     def post(self, request, sensor_id):
         try:
             original_sensor = Sensor.objects.get(id=sensor_id)
         except Sensor.DoesNotExist:
-            return Response({"error": "Sensor không tồn tại."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Sensor không tồn tại."}, status=status.HTTP_404_NOT_FOUND
+            )
 
         station_id = request.data.get("station_id")
         plant_id = request.data.get("plant_id")
 
         if not station_id or not plant_id:
-            return Response({"error": "Thiếu station_id hoặc plant_id."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Thiếu station_id hoặc plant_id."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         clone_sensor = Sensor(
-            model_sensor=original_sensor.model_sensor ,
+            model_sensor=original_sensor.model_sensor,
             manufacturer=original_sensor.manufacturer,
             expiry=original_sensor.expiry,
             expiry_date=original_sensor.expiry_date,
@@ -1132,7 +1492,9 @@ class CloneSensorAPIView(APIView):
             if os.path.exists(original_path):
                 filename = os.path.basename(original_path)
                 new_filename = "clone_" + filename
-                new_path = os.path.join(settings.MEDIA_ROOT, "sensor_images", new_filename)
+                new_path = os.path.join(
+                    settings.MEDIA_ROOT, "sensor_images", new_filename
+                )
 
                 shutil.copy(original_path, new_path)
                 with open(new_path, "rb") as f:
@@ -1159,4 +1521,102 @@ class CloneSensorAPIView(APIView):
                 normal_max=param.normal_max,
             )
 
-        return Response({"message": "Clone sensor thành công!", "new_sensor_id": clone_sensor.id}, status=status.HTTP_201_CREATED)
+        return Response(
+            {"message": "Clone sensor thành công!", "new_sensor_id": clone_sensor.id},
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class ExportPdfEmailAPIView(APIView):
+    def post(self, request):
+        email = request.data.get("email")
+        plant_id = request.data.get("plantId")
+        station_id = request.data.get("stationId")
+        from_date = request.data.get("fromDate")
+        to_date = request.data.get("toDate")
+
+        if not all([email, plant_id, station_id, from_date, to_date]):
+            return Response(
+                {"error": "Thiếu thông tin đầu vào"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            from_date_obj = datetime.strptime(from_date, "%Y-%m-%d").date()
+            to_date_obj = datetime.strptime(to_date, "%Y-%m-%d").date()
+        except ValueError:
+            return Response(
+                {"error": "Sai định dạng ngày. Đúng: YYYY-MM-DD"}, status=400
+            )
+
+        try:
+            plant = Plant.objects.get(id=plant_id)
+            station = Station.objects.get(id=station_id, plant=plant)
+        except (Plant.DoesNotExist, Station.DoesNotExist):
+            return Response({"error": "Không tìm thấy nhà máy hoặc trạm"}, status=404)
+
+        transactions = Transaction.objects.filter(
+            plant=plant,
+            station=station,
+            time__date__range=(from_date_obj, to_date_obj),
+        ).order_by("time")
+
+        parameters = Parameter.objects.filter(station=station)
+        param_map = {normalize_key(p.name): p for p in parameters}
+
+        results = []
+
+        for transaction in transactions:
+            flat_values = {}
+
+            for group, field_list in GROUP_MAP.items():
+                for field in field_list:
+                    norm_field = normalize_key(field)
+                    value = getattr(transaction, field, None)
+                    param = param_map.get(norm_field)
+                    if value is not None and param:
+                        value_dict = {
+                            "value": value,
+                            "unit": (param.unit or "").strip(),
+                        }
+
+                        if norm_field == "wind_direction":
+                            value_dict["label"] = get_wind_direction_label(value)
+
+                        flat_values[field] = value_dict
+
+
+            results.append(
+                {
+                    "time": transaction.time,
+                    "values": flat_values,
+                }
+            )
+
+        # Render HTML to PDF
+        html = render_to_string(
+            "export_pdf_template.html",
+            {
+                "station": StationSerializer(station).data,
+                "transactions": results,
+                "from_date": from_date,
+                "to_date": to_date,
+            },
+        )
+
+        pdf_buffer = BytesIO()
+        pisa_status = pisa.CreatePDF(html, dest=pdf_buffer)
+        if pisa_status.err:
+            return Response({"error": "Không thể tạo PDF"}, status=500)
+        pdf_buffer.seek(0)
+
+        # Send email
+        message = EmailMessage(
+            subject=f"[Báo cáo] {station.name} từ {from_date} đến {to_date}",
+            body="Vui lòng xem file PDF đính kèm.",
+            from_email=settings.DEFAULT_FROM_EMAIL,  # 👈 Lấy từ cấu hình
+            to=[email],
+        )
+        message.attach("baocao.pdf", pdf_buffer.read(), "application/pdf")
+        message.send()
+
+        return Response({"message": "Đã gửi thành công!"}, status=200)

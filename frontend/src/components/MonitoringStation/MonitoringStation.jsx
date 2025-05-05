@@ -13,16 +13,19 @@ import {
   Select,
   MenuItem,
   CircularProgress,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import MonitoringStationTable from "../Table/MonitoringStationTable";
 import MapDialog from "../Dialog/MapDialog";
 import { useError } from "../../context/ErrorContext"; // ✅ Đúng rồi nè
 import AddButton from "../Button/AddButtons";
 import AddNewStationDialog from "../Dialog/AddNewStationDiaglog";
+import EditStationDialog from "../Dialog/EditStationDialog";
 
 const API_BASE = process.env.REACT_APP_API_URL; // Đổi theo server của bạn
 
-export default function MonitoringStation() {
+export default function MonitoringStation({ station }) {
   const [plants, setPlants] = useState([]);
   const [stations, setStations] = useState([]);
   const [selectedPlant, setSelectedPlant] = useState("");
@@ -31,10 +34,14 @@ export default function MonitoringStation() {
   const { t } = useTranslation("translation");
   const [mapDialogOpen, setMapDialogOpen] = useState(false);
   const [addNewDialogOpen, setAddNewDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingStation, setEditingStation] = useState(null);
   const [selectedLocation, setSelectedLocation] = useState({
     lat: null,
     lng: null,
   });
+  const [successMessage, setSuccessMessage] = useState("");
+  const [reloadFlag, setReloadFlag] = useState(false);
 
   // Lấy danh sách plant
   useEffect(() => {
@@ -80,7 +87,7 @@ export default function MonitoringStation() {
     }
 
     fetchStations();
-  }, [selectedPlant]);
+  }, [selectedPlant, reloadFlag]);
 
   const handleDeleteStation = async (station) => {
     if (
@@ -110,10 +117,54 @@ export default function MonitoringStation() {
           .filter((m) => m !== null)
       );
 
-      alert(`Xóa trạm ${station.name} thành công!!!`);
+      setSuccessMessage("✅ Xóa trạm thành công!");
     } catch (error) {
       console.error("Lỗi khi xóa trạm:", error.message);
       showError("Không thể xóa trạm. Vui lòng thử lại sau.");
+    }
+  };
+  const handleEdit = (station) => {
+    setEditingStation({ ...station }); // clone để tránh ảnh hưởng gốc
+    setEditDialogOpen(true);
+  };
+
+  const handleDialogClose = () => {
+    setEditDialogOpen(false);
+    setEditingStation(null);
+  };
+
+  const handleChange = (updated) => {
+    setEditingStation(updated);
+  };
+
+  const handleSave = async () => {
+    try {
+      const response = await axios.put(
+        `${API_BASE}/monitor-environment/station/${editingStation.id}/`,
+        {
+          ...editingStation,
+          plant: selectedPlant, // hoặc editingStation.plant nếu đã có
+        }
+      );
+      console.log("✅ Cập nhật thành công:", response.data);
+      setSuccessMessage("✅ Cập nhật trạm thành công!");
+      // Cập nhật lại danh sách trạm
+      setStations((prev) =>
+        prev.map((master) => {
+          if (master.id === editingStation.id) return editingStation;
+          if (master.stations) {
+            master.stations = master.stations.map((s) =>
+              s.id === editingStation.id ? editingStation : s
+            );
+          }
+          return master;
+        })
+      );
+
+      setEditDialogOpen(false);
+    } catch (error) {
+      console.error("❌ Lỗi khi cập nhật:", error);
+      showError("Cập nhật thất bại.");
     }
   };
 
@@ -163,7 +214,7 @@ export default function MonitoringStation() {
             <>
               <MonitoringStationTable
                 stations={stations}
-                onEdit={(station) => console.log("Edit", station)}
+                onEdit={handleEdit}
                 onDelete={handleDeleteStation}
                 onViewLocation={(lat, lng) => {
                   setSelectedLocation({ lat, lng });
@@ -179,11 +230,32 @@ export default function MonitoringStation() {
               <AddNewStationDialog
                 open={addNewDialogOpen}
                 onClose={() => setAddNewDialogOpen(false)}
+                onSubmit={() => {
+                  setAddNewDialogOpen(false);
+                  setReloadFlag((prev) => !prev); // Toggle flag để trigger reload
+                }}
+              />
+              <EditStationDialog
+                open={editDialogOpen}
+                onClose={handleDialogClose}
+                station={editingStation}
+                onChange={handleChange}
+                onUpdate={handleSave}
               />
             </>
           )}
         </Box>
       </PageContent>
+      <Snackbar
+        open={!!successMessage}
+        autoHideDuration={3000}
+        onClose={() => setSuccessMessage("")}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert severity="success" sx={{ width: "100%" }}>
+          {successMessage}
+        </Alert>
+      </Snackbar>
     </PageContainer>
   );
 }

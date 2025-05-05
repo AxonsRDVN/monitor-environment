@@ -6,12 +6,12 @@ import PageContainer from "../PageContainer/PageContainer";
 import Breadcrumb from "../Breadcrumb/Breadcrumb";
 import PageContent from "../PageContent/PageContent";
 import { AccessTime, Router, Sensors } from "@mui/icons-material";
-import ExportChartButton from "../Button/ButtonSave";
 import { getDetailIndexLastest } from "../../api/detailIndexApi";
 import FormattedTime from "../FormatTime/FormatDateTime";
 import ParameterCard from "../Icon/ParameterIcon";
 import { useError } from "../../context/ErrorContext";
 import ExportButton from "../Button/ExportButton";
+import ExportDialogEmail from "../ExportPdf/ExportPdfToEmail";
 
 const customColorStatus = {
   normal: {
@@ -25,6 +25,8 @@ const customColorStatus = {
   },
 };
 
+const API_BASE = process.env.REACT_APP_API_URL;
+
 export default function StationDetailIndex() {
   const { plantId, stationId } = useParams();
   const [stations, setStations] = useState(null);
@@ -35,6 +37,42 @@ export default function StationDetailIndex() {
   const navigate = useNavigate();
   const [detailIndex, setDetailIndex] = useState(null);
   const [selectedGroup, setSelectedGroup] = useState("Air");
+  const [exportDialogEmailOpen, setExportDialogEmailOpen] = useState(false);
+
+  const handleExportEmailConfirm = async ({ fromDate, toDate, email }) => {
+    console.log(
+      "Xuất từ:",
+      fromDate.format("YYYY-MM-DD"),
+      "đến:",
+      toDate.format("YYYY-MM-DD"),
+      "email:",
+      email
+    );
+
+    try {
+      const res = await fetch(
+        `${API_BASE}/monitor-environment/export-pdf-email/`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fromDate: fromDate.format("YYYY-MM-DD"),
+            toDate: toDate.format("YYYY-MM-DD"),
+            plantId,
+            stationId,
+            email,
+          }),
+        }
+      );
+
+      if (!res.ok) throw new Error("Gửi thất bại");
+
+      alert("✅ File PDF đã được gửi qua email!");
+    } catch (err) {
+      console.error(err);
+      alert("❌ Gửi thất bại. Vui lòng thử lại.");
+    }
+  };
 
   useEffect(() => {
     const loadStations = async () => {
@@ -222,7 +260,12 @@ export default function StationDetailIndex() {
                 </Box>
               )}
             </Box>
-            <ExportButton />
+            <ExportButton onExport={() => setExportDialogEmailOpen(true)} />
+            <ExportDialogEmail
+              open={exportDialogEmailOpen}
+              onClose={() => setExportDialogEmailOpen(false)}
+              onConfirm={handleExportEmailConfirm}
+            />
           </Box>
         ) : (
           <Box sx={{ mt: 2 }}>{t("no_data_to_display")}</Box>

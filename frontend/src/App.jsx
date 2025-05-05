@@ -19,8 +19,16 @@ import DeviceManagementPage from "./page/DeviceManagementPage/DeviceManagementPa
 import SensorMaintenancePage from "./page/DeviceManagementPage/SensorMaintenancePage";
 import SensorHistoryPage from "./page/DeviceManagementPage/SensorHistoryPage";
 import UserManagementPage from "./page/UserManagementPage/UserManagementPage";
+import { useEffect } from "react";
 
 function App() {
+  useEffect(() => {
+    const email = localStorage.getItem("email");
+    if (!email) {
+      localStorage.setItem("email", "chuleeminh265@gmail.com");
+      console.log("✅ Email mặc định đã được lưu:", "test@example.com");
+    }
+  }, []);
   return (
     <BrowserRouter>
       <Routes>

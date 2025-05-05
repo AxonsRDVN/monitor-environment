@@ -1,0 +1,68 @@
+{% load custom_filters %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      @font-face {
+        font-family: "DejaVu Sans";
+        src: url("static/fonts/DejaVuSans.ttf");
+      }
+      body {
+        font-family: "DejaVu Sans", sans-serif;
+        font-size: 8px;
+      }
+      h2,
+      p {
+        text-align: center;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 16px;
+      }
+      th,
+      td {
+        border: 1px solid #999;
+        text-align: center;
+        padding-top: 3px;
+      }
+      th {
+        background-color: #0a6ee1;
+        color: #ffffff;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Tram: {{ station.name }}</h2>
+    <p>Thoi gian: {{ from_date }} → {{ to_date }}</p>
+
+    <table>
+      <thead>
+        {% if transactions %}
+        <tr>
+          {% for key in transactions.0.values.keys %}
+          <th>{{ key }}</th>
+          {% endfor %}
+          <th>Time</th>
+        </tr>
+        {% endif %}
+      </thead>
+      <tbody>
+        {% for t in transactions %}
+        <tr>
+          {% for key, value in t.values.items %}
+          <td>
+            {{ value.value }} {{ value.unit }}
+            {% if key == "wind_direction" and value.label %}
+              - {{ value.label }}
+            {% endif %}
+          </td>
+          {% endfor %}
+          <td>{{ t.time|date:"d/m/Y H:i:s" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </body>
+</html>

@@ -3,8 +3,8 @@ from decouple import config, Csv
 import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 BASE_DIR = Path(__file__).resolve().parent.parent
 DEBUG = config("DEBUG", default=False, cast=bool)
 SECRET_KEY = config("SECRET_KEY")
@@ -17,9 +17,10 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "rest_framework_simplejwt",
     "corsheaders",
     "monitor_environment",
-    "sensor_manager"
+    "sensor_manager",
 ]
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
@@ -97,3 +98,16 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
 ]
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    )
+}
+SELF_BASE_URL = "http://127.0.0.1:8000"  # hoặc http://127.0.0.1:8000 nếu chạy local
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = "noreply.itrdaxonsvn@gmail.com"  # bạn muốn dùng email nào để gửi đi
+EMAIL_HOST_PASSWORD = "ovhx opds gxfv idlr"  # không phải mật khẩu Gmail, mà là app password!
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

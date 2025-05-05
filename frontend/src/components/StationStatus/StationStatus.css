@@ -1,0 +1,13 @@
+/* Ẩn khi xem trên trình duyệt (screen), nhưng vẫn hiển thị khi export PDF */
+@media screen {
+  .only-pdf {
+    display: none !important;
+  }
+}
+
+/* Dành cho trình in hoặc để đảm bảo hiển thị khi html2canvas dùng layout full DOM */
+@media print {
+  .only-pdf {
+    display: block !important;
+  }
+}

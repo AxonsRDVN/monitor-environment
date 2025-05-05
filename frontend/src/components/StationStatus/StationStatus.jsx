@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getAllStationsByPlant } from "../../api/stationApi";
 import {
@@ -20,11 +20,12 @@ import { Router, Sensors } from "@mui/icons-material";
 import PieChartWithNeedle from "../Chart/PieChartWithNeedle";
 import LineChartHorizontal from "../Chart/LineChartHorizontal";
 import StatusIcon from "../Icon/StatusIcon";
-import ExportChartButton from "../Button/ButtonSave";
 import { statusColors } from "../Icon/ParameterIcon";
 import { useError } from "../../context/ErrorContext";
 import ExportButton from "../Button/ExportButton";
 import axios from "axios";
+import ExportPDFLineChart from "../ExportPdf/ExportPdfLineChart";
+import "./StationStatus.css";
 
 const API_BASE = process.env.REACT_APP_API_URL;
 
@@ -39,7 +40,16 @@ export default function StationStatus() {
   const [searchText, setSearchText] = useState("");
   const [plantName, setPlantName] = useState("");
   const [lineData, setLineData] = useState([]);
+  const pdfRef = useRef();
 
+  const handleExport = () => {
+    if (pdfRef.current) {
+      console.log("🟡 Gọi export từ nút"); // DEBUG
+      pdfRef.current.exportToPDF(); // Gọi method từ ref
+    } else {
+      console.warn("❌ pdfRef.current bị null");
+    }
+  };
   useEffect(() => {
     const loadStations = async () => {
       try {
@@ -57,6 +67,7 @@ export default function StationStatus() {
 
     loadStations();
   }, [plantId]);
+  console.log("plan name", plantName);
 
   useEffect(() => {
     async function fetch24hAverage() {
@@ -124,7 +135,16 @@ export default function StationStatus() {
   };
 
   const overallStatus = getOverallStatus(stations);
-  console.log(lineData);
+
+  function getTodayDate() {
+    const today = new Date();
+    const day = String(today.getDate()).padStart(2, "0");
+    const month = String(today.getMonth() + 1).padStart(2, "0"); // Tháng bắt đầu từ 0
+    const year = today.getFullYear();
+
+    return `${day}-${month}-${year}`;
+  }
+
   return (
     <PageContainer>
       <Breadcrumb
@@ -396,21 +416,26 @@ export default function StationStatus() {
                 </svg>
                 <Typography>Biểu đồ trạng thái</Typography>
               </Box>
-              <ExportButton />
+              <ExportButton onExport={handleExport} />
             </Box>
-            <Box sx={{ display: "flex", justifyContent: "center" }}>
-              <PieChartWithNeedle status={overallStatus} />
-            </Box>
-            <Box>
-              <LineChartHorizontal
-                data={lineData}
-                titleLineChart={t("admin_page_sub_table_status")}
-              />
-            </Box>
-            <Box sx={{ textAlign: "center", marginBottom: "32px" }}>
-              24 giờ qua
-            </Box>
-            <StatusIcon />
+            <ExportPDFLineChart
+              ref={pdfRef}
+              fileName={`bieudotrangthai-ngay${getTodayDate()}-nhamay${plantName}.pdf`}
+            >
+              <Box sx={{ display: "flex", justifyContent: "center" }}>
+                <PieChartWithNeedle status={overallStatus} />
+              </Box>
+              <Box>
+                <LineChartHorizontal
+                  data={lineData}
+                  titleLineChart={t("admin_page_sub_table_status")}
+                />
+              </Box>
+              <Box sx={{ textAlign: "center", marginBottom: "32px" }}>
+                24 giờ qua
+              </Box>
+              <StatusIcon />
+            </ExportPDFLineChart>
           </Box>
         </Box>
       </PageContent>

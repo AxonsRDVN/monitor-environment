@@ -7,17 +7,15 @@ import {
   TextField,
   Button,
   MenuItem,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { useError } from "../../context/ErrorContext";
 import { getAllPlants } from "../../api/plantApi";
 import axios from "axios";
 import { createStation } from "../../api/stationApi";
-import {
-  cloneSensor,
-  createParameter,
-  createSensor,
-} from "../../api/sensorApi";
+import { cloneSensor } from "../../api/sensorApi";
 
 const API_BASE = process.env.REACT_APP_API_URL;
 
@@ -46,6 +44,7 @@ export default function AddNewStationDialog({ open, onClose, onSubmit }) {
   const [masters, setMasters] = useState([]);
   const [sensors, setSensors] = useState([]);
   const { showError } = useError();
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     const fetchPlants = async () => {
@@ -138,16 +137,20 @@ export default function AddNewStationDialog({ open, onClose, onSubmit }) {
       // Step 1: Tạo station
       const response = await createStation(payload);
       const stationId = response.data.id;
-      const plantId = stationData.plant; // Lấy luôn plant từ form
+      const plantId = stationData.plant;
 
-      // Step 2: Clone sensors đã chọn
+      // Step 2: Clone sensors
       for (const sensorId of stationData.selectedSensors) {
-        await cloneSensor(sensorId, stationId, plantId); // 👈 Gọi API clone cho từng sensor
+        await cloneSensor(sensorId, stationId, plantId);
       }
 
+      // ✅ Gọi lại hàm reload cha (nếu có)
       if (onSubmit) {
         onSubmit();
       }
+
+      // ✅ Hiển thị thông báo
+      setSuccessMessage("Thêm trạm thành công!");
 
       // Reset form
       setStationData({
@@ -164,6 +167,7 @@ export default function AddNewStationDialog({ open, onClose, onSubmit }) {
         selectedSensors: [],
         selectedParameters: [],
       });
+
       onClose();
     } catch (error) {
       console.error("Lỗi tạo trạm hoặc clone sensor:", error);
@@ -300,6 +304,15 @@ export default function AddNewStationDialog({ open, onClose, onSubmit }) {
             value={stationData.latitude}
             onChange={handleChange("latitude")}
           />
+          <iframe
+            title="Google Map"
+            width="100%"
+            height="300"
+            frameBorder="0"
+            style={{ border: 0 }}
+            src={`https://www.google.com/maps?q=${stationData.longitude},${stationData.latitude}&hl=vi&z=16&output=embed`}
+            allowFullScreen
+          />
           <TextField
             label="Channel"
             fullWidth
@@ -307,7 +320,7 @@ export default function AddNewStationDialog({ open, onClose, onSubmit }) {
             value={stationData.channel}
             onChange={handleChange("channel")}
           />
-          <Box sx={{ mt: 2 }}>
+          <Box sx={{ mt: 2, mb: 2 }}>
             <Typography variant="subtitle1">Chọn Sensor</Typography>
             {sensors.map((sensor) => (
               <Box
@@ -389,6 +402,20 @@ export default function AddNewStationDialog({ open, onClose, onSubmit }) {
         >
           Lưu
         </Button>
+        <Snackbar
+          open={!!successMessage}
+          autoHideDuration={3000}
+          onClose={() => setSuccessMessage("")}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        >
+          <Alert
+            onClose={() => setSuccessMessage("")}
+            severity="success"
+            sx={{ width: "100%" }}
+          >
+            {successMessage}
+          </Alert>
+        </Snackbar>
       </Box>
     </Drawer>
   );
