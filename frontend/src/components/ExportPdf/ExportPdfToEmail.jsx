@@ -25,7 +25,7 @@ export default function ExportDialog({ open, onClose, onConfirm }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const email = localStorage.getItem("email");
+    const email = localStorage.getItem("userEmail");
     if (email) setDefaultEmail(email);
   }, []);
 

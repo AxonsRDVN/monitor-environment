@@ -21,10 +21,10 @@ import shutil
 from django.core.files import File
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.template.loader import render_to_string
-import requests
 from io import BytesIO
 from xhtml2pdf import pisa
 from django.core.mail import EmailMessage
+from rest_framework.permissions import IsAuthenticated
 
 
 def get_wind_direction_label(degree):
@@ -47,6 +47,56 @@ def get_wind_direction_label(degree):
 
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
+
+
+class UserListAPIView(APIView):
+    def get(self, request):
+        users = User.objects.all()
+        serializer = UserSerializer(users, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {"message": "User created successfully"}, status=status.HTTP_201_CREATED
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserDetailAPIView(APIView):
+    def get(self, request, pk):
+        user = get_object_or_404(User, pk=pk)
+        serializer = UserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def delete(self, request, pk):
+        user = get_object_or_404(User, pk=pk)
+        user.delete()
+        return Response(
+            {"message": "User deleted successfully"}, status=status.HTTP_204_NO_CONTENT
+        )
+
+    def patch(self, request, pk):
+        user = get_object_or_404(User, pk=pk)
+        serializer = UserSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "User updated successfully"})
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = MyTokenObtainPairSerializer
+
+
+class CurrentUserAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data)
 
 
 class PlantListAPIView(APIView):
@@ -1584,7 +1634,6 @@ class ExportPdfEmailAPIView(APIView):
 
                         flat_values[field] = value_dict
 
-
             results.append(
                 {
                     "time": transaction.time,
@@ -1616,7 +1665,11 @@ class ExportPdfEmailAPIView(APIView):
             from_email=settings.DEFAULT_FROM_EMAIL,  # 👈 Lấy từ cấu hình
             to=[email],
         )
-        message.attach(f"[Báo cáo] {station.name} từ {from_date} đến {to_date}.pdf", pdf_buffer.read(), "application/pdf")
+        message.attach(
+            f"[Báo cáo] {station.name} từ {from_date} đến {to_date}.pdf",
+            pdf_buffer.read(),
+            "application/pdf",
+        )
         message.send()
 
         return Response({"message": "Đã gửi thành công!"}, status=200)

@@ -1,5 +1,10 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.contrib.auth.models import (
+    AbstractBaseUser,
+    PermissionsMixin,
+    BaseUserManager,
+)
 
 
 class Plant(models.Model):
@@ -43,35 +48,52 @@ class Role(models.Model):
         return f"{self.role_name} (ID: {self.id})"
 
 
-class User(models.Model):
-    GENDER_CHOICES = [
-        ("male", "Male"),
-        ("female", "Female"),
-    ]
+class CustomUserManager(BaseUserManager):
+    def create_user(self, username, email, password=None, **extra_fields):
+        if not username:
+            raise ValueError("Username is required")
+        if not email:
+            raise ValueError("Email is required")
+
+        email = self.normalize_email(email)
+        user = self.model(username=username, email=email, **extra_fields)
+        user.set_password(password)
+        user.save()
+        return user
+
+    def create_superuser(self, username, email, password=None, **extra_fields):
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
+        return self.create_user(username, email, password, **extra_fields)
+
+
+class User(AbstractBaseUser, PermissionsMixin):
+    GENDER_CHOICES = [("male", "Male"), ("female", "Female")]
 
     full_name = models.CharField(max_length=100, blank=True, null=True)
     username = models.CharField(max_length=100, unique=True)
-    password_hash = models.CharField(max_length=255)  # Lưu mật khẩu đã hash
+    email = models.EmailField(max_length=100, unique=True)
     role = models.ForeignKey(Role, on_delete=models.SET_NULL, blank=True, null=True)
     address = models.CharField(max_length=200, blank=True, null=True)
     phone_number = models.CharField(max_length=15, blank=True, null=True)
-    email = models.EmailField(max_length=100, unique=True)
     date_of_birth = models.DateField(blank=True, null=True)
     avatar_img = models.ImageField(blank=True, null=True, upload_to="avatars/")
-    access_times = models.IntegerField(default=0)
     gender = models.CharField(
         max_length=20, choices=GENDER_CHOICES, blank=True, null=True
     )
-    is_active = models.BooleanField(default=True)  # Dùng is_active chuẩn Django
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)  # cần nếu dùng admin
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    access_times = models.IntegerField(default=0)
 
-    def increase_access_time(self):
-        self.access_times += 1
-        self.save()
+    USERNAME_FIELD = "username"
+    REQUIRED_FIELDS = ["email"]
+
+    objects = CustomUserManager()
 
     def __str__(self):
-        return f"{self.full_name} (ID: {self.id})"
+        return f"{self.username} (ID: {self.id})"
 
 
 class Station(models.Model):
@@ -170,9 +192,7 @@ class Threshold(models.Model):
 
 # Create your models here.
 class Sensor(models.Model):
-    plant = models.ForeignKey(
-        Plant, on_delete=models.CASCADE, related_name="sensors"
-    )
+    plant = models.ForeignKey(Plant, on_delete=models.CASCADE, related_name="sensors")
     station = models.ForeignKey(
         Station,
         on_delete=models.CASCADE,
@@ -187,7 +207,6 @@ class Sensor(models.Model):
     manufacturer = models.CharField(max_length=100, null=True)
     day_clean = models.DateField(blank=True, null=True)
     create_at = models.DateField(auto_now_add=True)
-
 
     def __str__(self):
         return f"{self.model_sensor}"
@@ -215,7 +234,9 @@ class Parameter(models.Model):
     def __str__(self):
         return f"{self.name} ({self.sensor})"
 
+
 from django.db import models
+
 
 class Maintenance(models.Model):
     ACTION_CHOICES = [
@@ -236,20 +257,26 @@ class Maintenance(models.Model):
     ]
 
     sensor = models.ForeignKey(
-        Sensor,
-        on_delete=models.CASCADE,
-        related_name="maintenances"
+        Sensor, on_delete=models.CASCADE, related_name="maintenances"
     )
-    image_before = models.ImageField(upload_to="maintenance_images/before/", null=True, blank=True)
-    image_after = models.ImageField(upload_to="maintenance_images/after/", null=True, blank=True)
+    image_before = models.ImageField(
+        upload_to="maintenance_images/before/", null=True, blank=True
+    )
+    image_after = models.ImageField(
+        upload_to="maintenance_images/after/", null=True, blank=True
+    )
     action = models.CharField(max_length=20, choices=ACTION_CHOICES)
     update_at = models.DateTimeField(auto_now=True)  # tự động cập nhật khi sửa
     user_name = models.CharField(max_length=100)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     moderator = models.CharField(max_length=100, null=True, blank=True)
     role = models.CharField(max_length=50, choices=ROLE_CHOICES, null=True, blank=True)
-    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)  # vĩ độ
-    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True) # kinh độ
+    latitude = models.DecimalField(
+        max_digits=9, decimal_places=6, null=True, blank=True
+    )  # vĩ độ
+    longitude = models.DecimalField(
+        max_digits=9, decimal_places=6, null=True, blank=True
+    )  # kinh độ
 
     def __str__(self):
         return f"Maintenance for {self.sensor.model_sensor} - {self.get_action_display()} ({self.get_status_display()})"

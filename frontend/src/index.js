@@ -8,16 +8,19 @@ import { AppProvider } from "./context/AppContext.jsx";
 import "bootstrap/dist/css/bootstrap.min.css"; // ✅ Thêm dòng này
 import "./i18n/i18n.js";
 import { ErrorProvider } from "./context/ErrorContext.jsx";
+import { AuthProvider } from "./context/AuthContext.jsx";
 
 const theme = createTheme();
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <ThemeProvider theme={theme}>
-    <AppProvider>
-      <ErrorProvider>
-        <App />
-      </ErrorProvider>
-    </AppProvider>
+    <AuthProvider>
+      <AppProvider>
+        <ErrorProvider>
+          <App />
+        </ErrorProvider>
+      </AppProvider>
+    </AuthProvider>
   </ThemeProvider>
 );

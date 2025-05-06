@@ -109,5 +109,8 @@ EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = "noreply.itrdaxonsvn@gmail.com"  # bạn muốn dùng email nào để gửi đi
-EMAIL_HOST_PASSWORD = "ovhx opds gxfv idlr"  # không phải mật khẩu Gmail, mà là app password!
+EMAIL_HOST_PASSWORD = (
+    "ovhx opds gxfv idlr"  # không phải mật khẩu Gmail, mà là app password!
+)
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+AUTH_USER_MODEL = "monitor_environment.User"

@@ -3,12 +3,16 @@
 from django.urls import path
 from .views import *
 from rest_framework_simplejwt.views import TokenRefreshView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 
 urlpatterns = [
     # ví dụ:
-    path("api/login/", MyTokenObtainPairView.as_view(), name="token_obtain_pair"),
-    path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("user/", UserListAPIView.as_view(), name="user-detail"),
+    path("user/<int:pk>/", UserDetailAPIView.as_view(), name="user-detail"),
+    path("token/", MyTokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("me/", CurrentUserAPIView.as_view()),
     path("plants/", PlantListAPIView.as_view(), name="plant-list"),
     path(
         "plant/<int:plant_id>/stations",

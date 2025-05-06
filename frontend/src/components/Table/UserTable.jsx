@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { ToggleOff, ToggleOn } from "@mui/icons-material";
 
 export default function UserTable({
   users,
@@ -20,20 +21,64 @@ export default function UserTable({
   currentUserRole,
 }) {
   let stt = 1;
-
+  const getRoleName = (id) => {
+    switch (id) {
+      case 1:
+        return "Admin";
+      case 2:
+        return "Manager";
+      case 3:
+        return "User";
+      default:
+        return "";
+    }
+  };
   return (
     <TableContainer component={Paper}>
       <Table>
         <TableHead sx={{ background: "#DEEDFE" }}>
           <TableRow>
-            <TableCell>STT</TableCell>
-            <TableCell>Username</TableCell>
-            <TableCell>Họ tên</TableCell>
-            <TableCell>Email</TableCell>
-            <TableCell>Vai trò</TableCell>
-            <TableCell>Lượt truy cập</TableCell>
-            <TableCell>Trạng thái</TableCell>
-            <TableCell>Hành động</TableCell>
+            <TableCell
+              sx={{ color: "#0A6EE1", fontWeight: "600", fontSize: 16 }}
+            >
+              STT
+            </TableCell>
+            <TableCell
+              sx={{ color: "#0A6EE1", fontWeight: "600", fontSize: 16 }}
+            >
+              Username
+            </TableCell>
+            <TableCell
+              sx={{ color: "#0A6EE1", fontWeight: "600", fontSize: 16 }}
+            >
+              Họ tên
+            </TableCell>
+            <TableCell
+              sx={{ color: "#0A6EE1", fontWeight: "600", fontSize: 16 }}
+            >
+              Email
+            </TableCell>
+            <TableCell
+              sx={{ color: "#0A6EE1", fontWeight: "600", fontSize: 16 }}
+            >
+              Vai trò
+            </TableCell>
+            <TableCell
+              sx={{ color: "#0A6EE1", fontWeight: "600", fontSize: 16 }}
+            >
+              Lượt truy cập
+            </TableCell>
+            <TableCell
+              align="center"
+              sx={{ color: "#0A6EE1", fontWeight: "600", fontSize: 16 }}
+            >
+              Trạng thái
+            </TableCell>
+            <TableCell
+              sx={{ color: "#0A6EE1", fontWeight: "600", fontSize: 16 }}
+            >
+              Hành động
+            </TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -43,13 +88,13 @@ export default function UserTable({
               <TableCell>{user.username}</TableCell>
               <TableCell>{user.full_name}</TableCell>
               <TableCell>{user.email}</TableCell>
-              <TableCell>{user.role}</TableCell>
+              <TableCell>{getRoleName(user.role)}</TableCell>
               <TableCell>{user.session_time}</TableCell>
-              <TableCell>
+              <TableCell align="center">
                 {user.is_active ? (
-                  <Chip label="Đang hoạt động" color="success" />
+                  <ToggleOn sx={{ color: "#22AB68", fontSize: 50 }} />
                 ) : (
-                  <Chip label="Ngừng hoạt động" color="default" />
+                  <ToggleOff sx={{ color: "#c7c7c7", fontSize: 50 }} />
                 )}
               </TableCell>
               <TableCell>

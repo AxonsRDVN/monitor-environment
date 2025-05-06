@@ -3,6 +3,26 @@ from .models import *
 
 
 # Register your models here.
+@admin.register(Function)
+class FunctionAdmin(admin.ModelAdmin):
+    list_display = ("function_code", "description", "id")
+    search_fields = ("function_code", "description")
+
+
+@admin.register(Role)
+class RoleAdmin(admin.ModelAdmin):
+    list_display = ("role_name", "description", "id")
+    search_fields = ("role_name",)
+    filter_horizontal = ("functions",)  # Dễ chọn nhiều chức năng
+
+
+@admin.register(User)
+class UserAdmin(admin.ModelAdmin):
+    list_display = ("full_name", "username", "email", "phone_number", "role", "is_active", "created_at")
+    search_fields = ("username", "email", "full_name", "phone_number")
+    list_filter = ("is_active", "gender", "role")
+    readonly_fields = ("created_at", "updated_at", "access_times")
+
 @admin.register(Plant)
 class PlantAdmin(admin.ModelAdmin):
     list_display = ("name", "org_code", "status", "is_active", "created_at")

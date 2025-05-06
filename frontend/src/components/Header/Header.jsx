@@ -46,8 +46,8 @@ const Header = (props) => {
   };
 
   // Dữ liệu giả (bạn có thể lấy từ localStorage, context, v.v.)
-  const userName = localStorage.getItem("userName") || "Nguyễn Văn A";
-  const userRole = localStorage.getItem("userRole") || "Quản trị viên";
+  const userName = localStorage.getItem("username") || "";
+  const userRole = localStorage.getItem("role") || "";
 
   const handleOpenMenu = (event) => {
     setAnchorEl(event.currentTarget);

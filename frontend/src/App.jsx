@@ -7,6 +7,7 @@ import {
   HomePage,
   LoginPage,
   MaintenanceApprovalPage,
+  NoPermissionPage,
   ParameterDetailPage,
   StationDetailIndexPage,
   StationStatusPage,
@@ -19,74 +20,128 @@ import DeviceManagementPage from "./page/DeviceManagementPage/DeviceManagementPa
 import SensorMaintenancePage from "./page/DeviceManagementPage/SensorMaintenancePage";
 import SensorHistoryPage from "./page/DeviceManagementPage/SensorHistoryPage";
 import UserManagementPage from "./page/UserManagementPage/UserManagementPage";
-import { useEffect } from "react";
+import PrivateRoute from "./components/PrivateRouter";
 
 function App() {
-  useEffect(() => {
-    const email = localStorage.getItem("email");
-    if (!email) {
-      localStorage.setItem("email", "chuleeminh265@gmail.com");
-      console.log("✅ Email mặc định đã được lưu:", "test@example.com");
-    }
-  }, []);
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Navigate to={ROUTE_PATH.HOME} replace />} />
         <Route path={ROUTE_PATH.LOGIN} element={<LoginPage />} />
-        <Route path={ROUTE_PATH.HOME || "" || "/"} element={<HomePage />} />
+
+        <Route
+          path={ROUTE_PATH.HOME}
+          element={
+            <PrivateRoute>
+              <HomePage />
+            </PrivateRoute>
+          }
+        />
         <Route
           path={`${ROUTE_PATH.HOME}/plant/:plantId/stations`}
-          element={<StationStatusPage />}
+          element={
+            <PrivateRoute>
+              <StationStatusPage />
+            </PrivateRoute>
+          }
         />
         <Route
           path={`${ROUTE_PATH.HOME}/plant/:plantId/stations/:stationId/detail-index-lastest`}
-          element={<StationDetailIndexPage />}
+          element={
+            <PrivateRoute>
+              <StationDetailIndexPage />
+            </PrivateRoute>
+          }
         />
         <Route
           path={`${ROUTE_PATH.HOME}/plant/:plantId/stations/:stationId/detail-index-lastest/:parameterKey`}
-          element={<ParameterDetailPage />}
+          element={
+            <PrivateRoute>
+              <ParameterDetailPage />
+            </PrivateRoute>
+          }
         />
         <Route
           path={ROUTE_PATH.SETTING_WARNING_THRESHOLD}
-          element={<WarningThresholdPage />}
+          element={
+            <PrivateRoute allowedRoles={["admin", "manager"]}>
+              <WarningThresholdPage />
+            </PrivateRoute>
+          }
         />
         <Route
           path={ROUTE_PATH.SETTING_CLEANING_DAY}
-          element={<CleaningDayPage />}
+          element={
+            <PrivateRoute allowedRoles={["admin", "manager"]}>
+              <CleaningDayPage />
+            </PrivateRoute>
+          }
         />
         <Route
           path={ROUTE_PATH.MONITORING_STATION}
-          element={<MonitoringStationPage />}
+          element={
+            <PrivateRoute allowedRoles={["admin", "manager"]}>
+              <MonitoringStationPage />
+            </PrivateRoute>
+          }
         />
         <Route
           path={ROUTE_PATH.DEVICE_MANAGEMENT}
-          element={<DeviceManagementPage />}
+          element={
+            <PrivateRoute>
+              <DeviceManagementPage />
+            </PrivateRoute>
+          }
         />
         <Route
           path={`${ROUTE_PATH.DEVICE_MANAGEMENT}/maintenance/:stationId/:sensorId`}
-          element={<SensorMaintenancePage />}
+          element={
+            <PrivateRoute>
+              <SensorMaintenancePage />
+            </PrivateRoute>
+          }
         />
         <Route
           path={`${ROUTE_PATH.DEVICE_MANAGEMENT}/history/:sensorId`}
-          element={<SensorHistoryPage />}
+          element={
+            <PrivateRoute>
+              <SensorHistoryPage />
+            </PrivateRoute>
+          }
         />
         <Route
           path={ROUTE_PATH.MAINTENANCE_APPROVAL}
-          element={<MaintenanceApprovalPage />}
+          element={
+            <PrivateRoute allowedRoles={["admin", "manager"]}>
+              <MaintenanceApprovalPage />
+            </PrivateRoute>
+          }
         />
         <Route
           path={ROUTE_PATH.REPORT_DEVICE_STATUS}
-          element={<DeviceStatusPage />}
+          element={
+            <PrivateRoute>
+              <DeviceStatusPage />
+            </PrivateRoute>
+          }
         />
         <Route
           path={ROUTE_PATH.REPORT_WARNING_INDICATOR}
-          element={<WarningIndicatorPage />}
+          element={
+            <PrivateRoute>
+              <WarningIndicatorPage />
+            </PrivateRoute>
+          }
         />
         <Route
           path={ROUTE_PATH.USER_MANAGEMENT}
-          element={<UserManagementPage />}
+          element={
+            <PrivateRoute allowedRoles={["admin"]}>
+              <UserManagementPage />
+            </PrivateRoute>
+          }
         />
+        <Route path="/not-found" element={<NoPermissionPage/>} />
       </Routes>
     </BrowserRouter>
   );

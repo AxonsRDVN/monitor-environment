@@ -9,3 +9,4 @@ export { default as DeviceManagementPage } from "./DeviceManagementPage/DeviceMa
 export { default as MaintenanceApprovalPage } from "./MaintenanceApprovalPage/MaintenanceApprovalPage.jsx";
 export { default as DeviceStatusPage } from "./DeviceStatusPage/DeviceStatusPage.jsx";
 export { default as WarningIndicatorPage } from "./WarningIndicatorPage/WarningIndicatorPage.jsx";
+export { default as NoPermissionPage } from "./NoPermissionPage/NoPermissionPage.jsx";

@@ -7,7 +7,6 @@ import i18n from "i18next";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ROUTE_PATH } from "../../config/router.config.js";
 import {
   FormControl,
   IconButton,
@@ -18,23 +17,34 @@ import {
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { LANGUAGE_TYPE } from "../../i18n/type";
 import logo from "../../assets/CPBackGround.jpg";
-import { toast } from "react-toastify";
-import { initToast } from "../../utils/helper";
-import { ToastId } from "../../config/app.config";
 import "./LoginForm.css";
-// import API from "../../api/api.js";
+import axios from "axios";
+import { ROUTE_PATH } from "../../config/router.config";
+import CustomSnackbar from "../CustomSnackbar/CustomSnackbar";
+import { useAuth } from "../../context/AuthContext";
+
+const API_BASE = process.env.REACT_APP_API_URL;
 
 const LoginForm = () => {
-  // const [email, setEmail] = useState("");
+  const { login } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [showWarningEmail, setShowWarningEmail] = useState(false);
+  const [showWarningUserName, setShowWarningUserName] = useState(false);
   const [showWarningPassword, setShowWarningPassword] = useState(false);
   const [fullscreen, setFullSreen] = useState(
     window.innerWidth > 600 ? undefined : true
   );
   const navigate = useNavigate();
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success", // "success" | "error" | "warning" | "info"
+  });
+
+  const showSnackbar = (message, severity = "success") => {
+    setSnackbar({ open: true, message, severity });
+  };
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
 
@@ -53,7 +63,7 @@ const LoginForm = () => {
   const handleChangeUsername = (e) => {
     setUsername(e.target.value);
     if (e.target.value) {
-      setShowWarningEmail(false);
+      setShowWarningUserName(false);
     }
   };
 
@@ -64,11 +74,9 @@ const LoginForm = () => {
     }
   };
 
-  const handleLoginBtn = async (e) => {
-    initToast(ToastId.Login);
-
+  const handleLoginBtn = async () => {
     if (!username) {
-      setShowWarningEmail(true);
+      setShowWarningUserName(true);
       return;
     }
 
@@ -78,41 +86,33 @@ const LoginForm = () => {
     }
 
     try {
+      const res = await axios.post(`${API_BASE}/monitor-environment/token/`, {
+        username,
+        password,
+      });
+
+      const { access, refresh } = res.data;
+      await login(access);
+
+      localStorage.setItem("accessToken", access);
+      localStorage.setItem("refreshToken", refresh);
+
+      showSnackbar("Đăng nhập thành công!", "success");
+      setTimeout(() => {
+        navigate(ROUTE_PATH.HOME);
+      }, 200);
+      navigate(ROUTE_PATH.HOME); // hoặc bất kỳ trang nào bạn muốn chuyển đến sau khi đăng nhập
     } catch (error) {
       console.error("Lỗi đăng nhập:", error);
 
       if (error.response) {
-        // Kiểm tra mã lỗi từ API
-        if (error.response.status === 400 || error.response.status === 401) {
-          toast.update(ToastId.Login, {
-            render: t("toast_login_wrong_info"),
-            type: "error",
-            isLoading: false,
-            autoClose: 3000,
-          });
+        if (error.response.status === 401 || error.response.status === 400) {
+          showSnackbar("Sai thông tin đăng nhập!", "error");
         } else if (error.response.status >= 500) {
-          toast.update(ToastId.Login, {
-            render: t("toast_login_server_error"),
-            type: "error",
-            isLoading: false,
-            autoClose: 3000,
-          });
-        } else {
-          toast.update(ToastId.Login, {
-            render: error.response.data?.message || t("toast_login_fail"),
-            type: "error",
-            isLoading: false,
-            autoClose: 3000,
-          });
+          showSnackbar("Lỗi máy chủ!", "error");
         }
       } else {
-        // Trường hợp không có response từ server (mạng lỗi, API không phản hồi)
-        toast.update(ToastId.Login, {
-          render: t("toast_login_cannot_connect"),
-          type: "error",
-          isLoading: false,
-          autoClose: 3000,
-        });
+        showSnackbar("Không thể kết nối đến máy chủ!", "error");
       }
     }
   };
@@ -187,7 +187,7 @@ const LoginForm = () => {
                 onChange={handleChangeUsername}
                 onKeyDown={handlePressEnter}
               />
-              {showWarningEmail && (
+              {showWarningUserName && (
                 <div className="login-form-text-field-warning">
                   {t("login_email_warning")}
                 </div>
@@ -243,6 +243,12 @@ const LoginForm = () => {
             </div>
           </div>
           <div className="login-form-padding-bottom"></div>
+          <CustomSnackbar
+            open={snackbar.open}
+            onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+            message={snackbar.message}
+            severity={snackbar.severity}
+          />
         </Modal.Body>
       </Modal>
     </div>
