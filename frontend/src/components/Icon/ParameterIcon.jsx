@@ -214,7 +214,7 @@ export default function ParameterCard({
       {paramKey === "wind_direction" ? (
         <Box>
           <Box sx={{ fontSize: 24, fontWeight: 600, color: colorConfig.text }}>
-            Hướng: {getWindDirectionLabel(paramData?.value)}
+            {getWindDirectionLabel(paramData?.value)}
           </Box>
         </Box>
       ) : (

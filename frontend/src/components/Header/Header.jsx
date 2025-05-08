@@ -69,7 +69,7 @@ const Header = (props) => {
     appContext.setOpenMenuTabMobile(true);
   };
 
-  const navigateToHome = () => navigate(ROUTE_PATH.COLD_STORAGE_DASHBOARD);
+  const navigateToHome = () => navigate(ROUTE_PATH.HOME);
 
   window.addEventListener("resize", () => {
     setDisplayHeader(!isAuthen && window.innerWidth <= 600 ? "none" : "flex");

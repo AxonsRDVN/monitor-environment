@@ -1316,10 +1316,14 @@ class MaintenanceReminderAPIView(APIView):
 class Plant24hOverallStatusView(APIView):
     """
     API lấy trạng thái cao nhất mỗi giờ (danger > warning > normal) cho toàn nhà máy trong hôm nay
+    (chỉ lấy từ đầu ngày đến giờ hiện tại)
     """
 
     def get(self, request, plant_id):
-        today = timezone.now().date()
+        # Lấy thời gian hiện tại và giờ hiện tại
+        now = timezone.now()
+        today = now.date()
+        current_hour = now.hour
 
         try:
             plant = Plant.objects.get(id=plant_id)
@@ -1368,7 +1372,9 @@ class Plant24hOverallStatusView(APIView):
         # Kết quả cuối cùng
         hourly_status = {}
 
-        for hour in range(24):
+        # Chỉ xử lý từ giờ 0 đến giờ hiện tại
+        for hour in range(current_hour + 1):
+            # Tạo giờ bắt đầu và kết thúc của mỗi giờ
             hour_start = timezone.datetime.combine(
                 today, datetime.min.time()
             ) + timedelta(hours=hour)
@@ -1438,8 +1444,8 @@ class Plant24hOverallStatusView(APIView):
                 hourly_status[hour] = "normal"
 
         return Response(hourly_status, status=status.HTTP_200_OK)
-
-
+    
+    
 class StationCRUDAPIView(APIView):
     def delete(self, request, station_id):
         try:
