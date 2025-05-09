@@ -13,7 +13,6 @@ import {
   MenuItem,
   List,
   ListItem,
-  ListItemText,
   CircularProgress,
   TextField,
   InputAdornment,
@@ -47,8 +46,8 @@ export default function CleaningDay() {
           setSelectedPlant(res.data[0].id);
         }
       } catch (error) {
-        console.error("Lỗi khi lấy nhà máy:", error.message);
-        showError("Không thể tải danh sách nhà máy. Vui lòng thử lại!");
+        console.error("error:", error.message);
+        showError("error");
       }
     }
     fetchPlants();
@@ -83,8 +82,8 @@ export default function CleaningDay() {
           setSensors([]);
         }
       } catch (error) {
-        console.error("Lỗi khi lấy trạm:", error.message);
-        showError("Không thể tải danh sách trạm. Vui lòng thử lại!");
+        console.error("error", error.message);
+        showError("error");
         setStations([]);
         setSensors([]);
         setSelectedStation("");
@@ -117,8 +116,8 @@ export default function CleaningDay() {
         setSensorDays(daysData);
         setOriginalSensorDays(daysData);
       } catch (error) {
-        console.error("Lỗi khi lấy sensor:", error.message);
-        showError("Không thể tải danh sách thiết bị. Vui lòng thử lại!");
+        console.error("error", error.message);
+        showError("error");
         setSensors([]);
       } finally {
         setLoading(false);
@@ -142,10 +141,10 @@ export default function CleaningDay() {
           sensors: updates,
         }
       );
-      alert("Cập nhật ngày vệ sinh thành công!");
+      alert(t("update_day_clean_successfully"));
     } catch (error) {
-      console.error("Lỗi khi lưu:", error.message);
-      showError("Không thể lưu số ngày vệ sinh. Vui lòng thử lại!");
+      console.error("error", error.message);
+      showError("error");
     } finally {
       setLoading(false);
     }
@@ -159,11 +158,11 @@ export default function CleaningDay() {
     <PageContainer>
       <Breadcrumb
         items={[
-          { label: "Cài đặt", path: "/setting/warning_threshold" },
-          { label: "Số ngày phải vệ sinh", path: "/setting/warning_threshold" },
+          { label: t("setting"), path: "/setting/cleaning_day" },
+          { label: t("cleaning_day"), path: "/setting/cleaning_day" },
         ]}
       />
-      <PageTitle title={"Số ngày vệ sinh"} />
+      <PageTitle title={t("cleaning_day")} />
       <PageContent sx={{ marginBottom: { xs: "100px", sm: "0" } }}>
         <Box
           sx={{
@@ -175,7 +174,7 @@ export default function CleaningDay() {
           }}
         >
           <FormControl fullWidth sx={{ minWidth: 250, flex: 1 }}>
-            <InputLabel>Chọn nhà máy</InputLabel>
+            <InputLabel>{t("plant")}</InputLabel>
             <Select
               value={selectedPlant}
               label="Chọn nhà máy"
@@ -194,7 +193,7 @@ export default function CleaningDay() {
             sx={{ minWidth: 250, flex: 1 }}
             disabled={!selectedPlant}
           >
-            <InputLabel>Chọn trạm</InputLabel>
+            <InputLabel>{t("station")}</InputLabel>
             <Select
               value={selectedStation}
               label="Chọn trạm"
@@ -213,7 +212,7 @@ export default function CleaningDay() {
           {loading ? (
             <CircularProgress />
           ) : sensors.length === 0 ? (
-            <Typography variant="body2">Không có sensor nào.</Typography>
+            <Typography variant="body2">{t("no_sensor")}</Typography>
           ) : (
             <Box>
               <List>
@@ -261,7 +260,7 @@ export default function CleaningDay() {
                         color="text.secondary"
                         sx={{ mt: 0.5 }}
                       >
-                        Hãng: {sensor.manufacturer}
+                        {t("manufacturer")}: {sensor.manufacturer}
                       </Typography>
                     </Box>
 
@@ -277,7 +276,9 @@ export default function CleaningDay() {
                       }
                       InputProps={{
                         endAdornment: (
-                          <InputAdornment position="end">ngày</InputAdornment>
+                          <InputAdornment position="end">
+                            {t("day")}
+                          </InputAdornment>
                         ),
                       }}
                       sx={{ width: 220 }}
@@ -285,7 +286,12 @@ export default function CleaningDay() {
                   </ListItem>
                 ))}
               </List>
-              <ActionButtons onSave={handleSave} onCancel={handleCancel} />
+              <ActionButtons
+                onSave={handleSave}
+                onCancel={handleCancel}
+                saveText={t("save")}
+                cancelText={t("cancel")}
+              />
             </Box>
           )}
         </Box>

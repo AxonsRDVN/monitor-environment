@@ -6,15 +6,15 @@ import { PieChart, Pie, Cell } from "recharts";
 const RADIAN = Math.PI / 180;
 
 const data = [
-  { name: "Danger", value: 1, color: "#EE3D4A" },
-  { name: "Caution", value: 1, color: "#F8BD26" },
-  { name: "Normal", value: 1, color: "#70DF00" },
+  { name: "danger", value: 1, color: "#EE3D4A" },
+  { name: "caution", value: 1, color: "#F8BD26" },
+  { name: "normal", value: 1, color: "#70DF00" },
 ];
 
 const cx = 150;
-const cy = 100;
+const cy = 120;
 const iR = 50;
-const oR = 100;
+const oR = 120;
 
 // 👉 Hàm tính vị trí kim dựa trên status
 const getNeedleValueFromStatus = (status) => {

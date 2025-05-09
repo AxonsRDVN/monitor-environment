@@ -16,13 +16,9 @@ import { getAllPlants } from "../../api/plantApi";
 import axios from "axios";
 import { createStation } from "../../api/stationApi";
 import { cloneSensor } from "../../api/sensorApi";
+import { useTranslation } from "react-i18next";
 
 const API_BASE = process.env.REACT_APP_API_URL;
-
-const stationTypeOptions = [
-  { value: 1, label: "Station" },
-  { value: 2, label: "Master" },
-];
 
 export default function AddNewStationDialog({ open, onClose, onSubmit }) {
   const [stationData, setStationData] = useState({
@@ -36,15 +32,22 @@ export default function AddNewStationDialog({ open, onClose, onSubmit }) {
     plant: "",
     type: 1,
     master: "",
-    sensorId: "", // 👈 thêm để lưu sensor đã chọn
-    selectedSensors: [], // 👈 danh sách sensor được tick chọn
+    sensorId: "",
+    selectedSensors: [],
     selectedParameters: [],
   });
+
   const [plants, setPlants] = useState([]);
   const [masters, setMasters] = useState([]);
   const [sensors, setSensors] = useState([]);
   const { showError } = useError();
   const [successMessage, setSuccessMessage] = useState("");
+  const { t } = useTranslation("translation");
+
+  const stationTypeOptions = [
+    { value: 1, labelKey: t("Station") },
+    { value: 2, labelKey: t("Master") },
+  ];
 
   useEffect(() => {
     const fetchPlants = async () => {
@@ -55,7 +58,7 @@ export default function AddNewStationDialog({ open, onClose, onSubmit }) {
           setStationData((prev) => ({ ...prev, plant: res[0].id }));
         }
       } catch (err) {
-        showError("Không thể kết nối server!");
+        showError(t("can_connect_to_server"));
         console.error(err);
       }
     };
@@ -87,22 +90,20 @@ export default function AddNewStationDialog({ open, onClose, onSubmit }) {
       try {
         const response = await axios.get(`${API_BASE}/sensor-manager/sensors/`);
         setSensors(response.data);
-        console.log("API trả về:", response.data);
       } catch (error) {
         console.error("Lỗi khi lấy thông tin sensor", error);
       }
     };
 
-    fetchSensors(); // GỌI LUÔN
+    fetchSensors();
   }, []);
-  console.log(sensors);
 
   const handleChange = (field) => (e) => {
     const value = e.target.value;
     setStationData((prev) => ({
       ...prev,
       [field]: value,
-      ...(field === "type" && value === 2 ? { master: "" } : {}), // Nếu chọn Master thì reset master
+      ...(field === "type" && value === 2 ? { master: "" } : {}),
     }));
   };
 
@@ -124,7 +125,7 @@ export default function AddNewStationDialog({ open, onClose, onSubmit }) {
     );
 
     if (hasEmptyField) {
-      showError("Vui lòng điền đầy đủ thông tin!");
+      showError(t("fill_all_fields"));
       return;
     }
 
@@ -134,25 +135,18 @@ export default function AddNewStationDialog({ open, onClose, onSubmit }) {
         delete payload.master;
       }
 
-      // Step 1: Tạo station
       const response = await createStation(payload);
       const stationId = response.data.id;
       const plantId = stationData.plant;
 
-      // Step 2: Clone sensors
       for (const sensorId of stationData.selectedSensors) {
         await cloneSensor(sensorId, stationId, plantId);
       }
 
-      // ✅ Gọi lại hàm reload cha (nếu có)
-      if (onSubmit) {
-        onSubmit();
-      }
+      if (onSubmit) onSubmit();
 
-      // ✅ Hiển thị thông báo
-      setSuccessMessage("Thêm trạm thành công!");
+      setSuccessMessage(t("add_station_success"));
 
-      // Reset form
       setStationData({
         name: "",
         code: "",
@@ -171,7 +165,7 @@ export default function AddNewStationDialog({ open, onClose, onSubmit }) {
       onClose();
     } catch (error) {
       console.error("Lỗi tạo trạm hoặc clone sensor:", error);
-      showError("Không thể tạo trạm hoặc clone sensor. Vui lòng kiểm tra lại!");
+      showError(t("create_or_clone_failed"));
     }
   };
 
@@ -180,9 +174,7 @@ export default function AddNewStationDialog({ open, onClose, onSubmit }) {
       anchor="right"
       open={open}
       onClose={onClose}
-      PaperProps={{
-        sx: { width: "400px" },
-      }}
+      PaperProps={{ sx: { width: "400px" } }}
     >
       <Box
         sx={{
@@ -201,7 +193,7 @@ export default function AddNewStationDialog({ open, onClose, onSubmit }) {
             justifyContent: "space-between",
           }}
         >
-          <Typography variant="h6">Thêm mới trạm</Typography>
+          <Typography variant="h6">{t("add_new_station")}</Typography>
           <IconButton onClick={onClose}>
             <CloseIcon />
           </IconButton>
@@ -210,7 +202,7 @@ export default function AddNewStationDialog({ open, onClose, onSubmit }) {
         {/* Form */}
         <Box sx={{ mt: 4, flexGrow: 1 }}>
           <TextField
-            label="Chọn Plant"
+            label={t("plant")}
             fullWidth
             select
             margin="normal"
@@ -225,7 +217,7 @@ export default function AddNewStationDialog({ open, onClose, onSubmit }) {
           </TextField>
 
           <TextField
-            label="Loại trạm"
+            label={t("station_type")}
             fullWidth
             select
             margin="normal"
@@ -234,14 +226,14 @@ export default function AddNewStationDialog({ open, onClose, onSubmit }) {
           >
             {stationTypeOptions.map((option) => (
               <MenuItem key={option.value} value={option.value}>
-                {option.label}
+                {t(option.labelKey)}
               </MenuItem>
             ))}
           </TextField>
 
           {stationData.type === 1 && (
             <TextField
-              label="Chọn Master"
+              label={t("select_master")}
               fullWidth
               select
               margin="normal"
@@ -256,54 +248,55 @@ export default function AddNewStationDialog({ open, onClose, onSubmit }) {
                 ))
               ) : (
                 <MenuItem disabled value="">
-                  Không có Master
+                  {t("no_master")}
                 </MenuItem>
               )}
             </TextField>
           )}
 
           <TextField
-            label="Tên trạm"
+            label={t("station_name")}
             fullWidth
             margin="normal"
             value={stationData.name}
             onChange={handleChange("name")}
           />
           <TextField
-            label="Mã trạm"
+            label={t("station_code")}
             fullWidth
             margin="normal"
             value={stationData.code}
             onChange={handleChange("code")}
           />
           <TextField
-            label="Vị trí"
+            label={t("location")}
             fullWidth
             margin="normal"
             value={stationData.location}
             onChange={handleChange("location")}
           />
           <TextField
-            label="Địa chỉ"
+            label={t("address")}
             fullWidth
             margin="normal"
             value={stationData.address}
             onChange={handleChange("address")}
           />
           <TextField
-            label="Kinh độ"
+            label={t("longitude")}
             fullWidth
             margin="normal"
             value={stationData.longitude}
             onChange={handleChange("longitude")}
           />
           <TextField
-            label="Vĩ độ"
+            label={t("latitude")}
             fullWidth
             margin="normal"
             value={stationData.latitude}
             onChange={handleChange("latitude")}
           />
+
           <iframe
             title="Google Map"
             width="100%"
@@ -313,15 +306,17 @@ export default function AddNewStationDialog({ open, onClose, onSubmit }) {
             src={`https://www.google.com/maps?q=${stationData.longitude},${stationData.latitude}&hl=vi&z=16&output=embed`}
             allowFullScreen
           />
+
           <TextField
-            label="Channel"
+            label={t("channel")}
             fullWidth
             margin="normal"
             value={stationData.channel}
             onChange={handleChange("channel")}
           />
+
           <Box sx={{ mt: 2, mb: 2 }}>
-            <Typography variant="subtitle1">Chọn Sensor</Typography>
+            <Typography variant="subtitle1">{t("select_sensor")}</Typography>
             {sensors.map((sensor) => (
               <Box
                 key={sensor.id}
@@ -359,7 +354,7 @@ export default function AddNewStationDialog({ open, onClose, onSubmit }) {
                 }}
               >
                 <Typography variant="subtitle2" fontWeight="bold">
-                  Parameters của Sensor: {sensor.model_sensor}
+                  {t("parameter_of_sensor")}: {sensor.model_sensor}
                 </Typography>
                 {sensor.parameters.map((param) => (
                   <Box
@@ -384,7 +379,7 @@ export default function AddNewStationDialog({ open, onClose, onSubmit }) {
                       }}
                     />
                     <Typography sx={{ ml: 1 }}>
-                      {param.name} ({param.unit})
+                      {t(param.name)} ({param.unit})
                     </Typography>
                   </Box>
                 ))}
@@ -400,8 +395,9 @@ export default function AddNewStationDialog({ open, onClose, onSubmit }) {
           fullWidth
           onClick={handleSubmit}
         >
-          Lưu
+          {t("save")}
         </Button>
+
         <Snackbar
           open={!!successMessage}
           autoHideDuration={3000}

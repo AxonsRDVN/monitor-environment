@@ -7,11 +7,12 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Typography,
-  Box,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 export default function GeneralWarningIndicatorTable({ sensors }) {
+  const { t } = useTranslation("translation");
+
   let stt = 1; // 🆕 Khởi tạo số thứ tự
   return (
     <TableContainer component={Paper} sx={{ boxShadow: 3, borderRadius: 2 }}>
@@ -21,23 +22,27 @@ export default function GeneralWarningIndicatorTable({ sensors }) {
             <TableCell
               sx={{ fontWeight: "bold", color: "#0A6EE1", textAlign: "center" }}
             >
-              STT
-            </TableCell>
-            <TableCell sx={{ fontWeight: "bold", color: "#0A6EE1" }}>
-              Trạm
-            </TableCell>
-            <TableCell sx={{ fontWeight: "bold", color: "#0A6EE1" }}>
-              Chỉ số
+              {t("index")}
             </TableCell>
             <TableCell
               sx={{ fontWeight: "bold", color: "#0A6EE1", textAlign: "center" }}
             >
-              Warning Count
+              {t("station")}
             </TableCell>
             <TableCell
               sx={{ fontWeight: "bold", color: "#0A6EE1", textAlign: "center" }}
             >
-              Danger Count
+              {t("indicator")}
+            </TableCell>
+            <TableCell
+              sx={{ fontWeight: "bold", color: "#0A6EE1", textAlign: "center" }}
+            >
+              {t("warning_count")}
+            </TableCell>
+            <TableCell
+              sx={{ fontWeight: "bold", color: "#0A6EE1", textAlign: "center" }}
+            >
+              {t("danger_count")}
             </TableCell>
           </TableRow>
         </TableHead>
@@ -54,8 +59,12 @@ export default function GeneralWarningIndicatorTable({ sensors }) {
               >
                 <TableCell sx={{ textAlign: "center" }}>{stt++}</TableCell>{" "}
                 {/* 🆕 Hiển thị và tăng STT */}
-                <TableCell>{station.name}</TableCell>
-                <TableCell sx={{}}>{paramName}</TableCell>
+                <TableCell sx={{ textAlign: "center" }}>
+                  {station.name}
+                </TableCell>
+                <TableCell sx={{ textAlign: "center" }}>
+                  {t(paramName)}
+                </TableCell>
                 <TableCell
                   sx={{
                     color: counts.warning_count > 0 ? "#F59E0B" : "inherit",

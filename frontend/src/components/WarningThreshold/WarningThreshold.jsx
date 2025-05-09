@@ -35,8 +35,6 @@ export default function WarningThreshold() {
   const [loading, setLoading] = useState(false);
   const { showError } = useError();
   const { t } = useTranslation("translation");
-  console.log("selectedStation", selectedStation);
-  console.log("selectedPlant", selectedPlant);
 
   useEffect(() => {
     async function fetchPlants() {
@@ -47,8 +45,8 @@ export default function WarningThreshold() {
           setSelectedPlant(res.data[0].id);
         }
       } catch (error) {
-        console.error("Lỗi khi lấy danh sách plant:", error.message);
-        showError("Không thể tải danh sách nhà máy. Vui lòng thử lại sau!");
+        console.error(t("toast_login_fail"), error.message);
+        showError(t("toast_login_fail"));
       }
     }
     fetchPlants();
@@ -79,8 +77,8 @@ export default function WarningThreshold() {
         setData([]);
         setEditableData([]);
       } catch (error) {
-        console.error("Lỗi khi lấy danh sách station:", error.message);
-        showError("Không thể tải danh sách trạm. Vui lòng thử lại sau!");
+        console.error(t("toast_login_fail"), error.message);
+        showError(t("toast_login_fail"));
         setStations([]);
         setData([]);
         setEditableData([]);
@@ -101,8 +99,8 @@ export default function WarningThreshold() {
         setData(res.data || []);
         setEditableData(JSON.parse(JSON.stringify(res.data || [])));
       } catch (error) {
-        console.error("Lỗi khi lấy dữ liệu ngưỡng:", error.message);
-        showError("Không thể tải dữ liệu ngưỡng cảnh báo. Vui lòng thử lại!");
+        console.error(t("toast_login_fail"), error.message);
+        showError(t("toast_login_fail"));
         setData([]);
         setEditableData([]);
       } finally {
@@ -129,10 +127,10 @@ export default function WarningThreshold() {
           data: editableData,
         }
       );
-      alert("Cập nhật thành công!"); // 👉 Nếu muốn đẹp hơn dùng Snackbar hoặc Toast
+      alert(t("admin_page_toast_success")); // 👉 Nếu muốn đẹp hơn dùng Snackbar hoặc Toast
     } catch (error) {
-      console.error("Lỗi khi lưu ngưỡng:", error.message);
-      showError("Không thể lưu ngưỡng cảnh báo. Vui lòng thử lại!");
+      console.error(t("toast_login_fail"), error.message);
+      showError(t("toast_login_fail"));
     } finally {
       setLoading(false);
     }
@@ -146,11 +144,14 @@ export default function WarningThreshold() {
     <PageContainer>
       <Breadcrumb
         items={[
-          { label: "Cài đặt", path: "/setting/warning_threshold" },
-          { label: "Ngưỡng cảnh báo", path: "/setting/warning_threshold" },
+          { label: t("setting"), path: "/setting/warning_threshold" },
+          {
+            label: t("warning_threshhold"),
+            path: "/setting/warning_threshold",
+          },
         ]}
       />
-      <PageTitle title={"Ngưỡng cảnh báo"} />
+      <PageTitle title={t("warning_threshhold")} />
       <PageContent sx={{ marginBottom: { xs: "100px", sm: "0" } }}>
         <Box sx={{ mt: 3 }}>
           {/* Select Plant & Station */}
@@ -164,7 +165,7 @@ export default function WarningThreshold() {
             }}
           >
             <FormControl fullWidth sx={{ minWidth: 240 }}>
-              <InputLabel>Chọn nhà máy</InputLabel>
+              <InputLabel>{t("plant")}</InputLabel>
               <Select
                 value={selectedPlant}
                 label="Chọn nhà máy"
@@ -183,7 +184,7 @@ export default function WarningThreshold() {
               sx={{ minWidth: 240 }}
               disabled={!stations.length}
             >
-              <InputLabel>Chọn trạm</InputLabel>
+              <InputLabel>{t("station")}</InputLabel>
               <Select
                 value={selectedStation}
                 label="Chọn trạm"
@@ -222,7 +223,7 @@ export default function WarningThreshold() {
                           fontSize: "24px",
                         }}
                       >
-                        {param.name} ({param.min_value}-{param.max_value}){" "}
+                        {t(param.name)} ({param.min_value}-{param.max_value}){" "}
                         {param.unit || "-"}
                       </Typography>
 
@@ -250,11 +251,11 @@ export default function WarningThreshold() {
                               fontWeight={600}
                               sx={{ color: "#344054", mb: 2 }}
                             >
-                              {level.charAt(0).toUpperCase() + level.slice(1)}
+                              {t(level)}
                             </Typography>
                             <Box sx={{ display: "flex", gap: 2 }}>
                               <TextField
-                                label="Min"
+                                label={t("min")}
                                 size="small"
                                 fullWidth
                                 value={
@@ -279,7 +280,7 @@ export default function WarningThreshold() {
                                 }}
                               />
                               <TextField
-                                label="Max"
+                                label={t("max")}
                                 size="small"
                                 fullWidth
                                 value={
@@ -314,7 +315,12 @@ export default function WarningThreshold() {
             ))
           )}
 
-          <ActionButtons onSave={handleSave} onCancel={handleCancel} />
+          <ActionButtons
+            onSave={handleSave}
+            onCancel={handleCancel}
+            saveText={t("save")}
+            cancelText={t("cancel")}
+          />
         </Box>
       </PageContent>
     </PageContainer>

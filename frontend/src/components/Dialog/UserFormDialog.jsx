@@ -18,11 +18,12 @@ import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
+import { useTranslation } from "react-i18next";
 
 const ROLES = {
   1: "admin",
-  2: "manager",
-  3: "user",
+  2: "user",
+  3: "manager",
 };
 
 export default function UserFormDialog({
@@ -42,7 +43,7 @@ export default function UserFormDialog({
     gender: "Male",
     date_of_birth: dayjs().format("YYYY-MM-DD"),
   };
-
+  const { t } = useTranslation("translation");
   const [formData, setFormData] = useState(defaultFormData);
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
@@ -58,7 +59,7 @@ export default function UserFormDialog({
               initialData.gender?.toLowerCase() === "female"
                 ? "Female"
                 : "Male",
-            role: ROLES[initialData.role] || "user",
+            role: ROLES[initialData.role],
             date_of_birth:
               initialData.date_of_birth || dayjs().format("YYYY-MM-DD"),
           }
@@ -112,7 +113,7 @@ export default function UserFormDialog({
           }}
         >
           <Typography variant="h6">
-            {initialData ? "Sửa Người Dùng" : "Thêm Người Dùng"}
+            {initialData ? t("edit_user") : t("add_user")}
           </Typography>
           <IconButton onClick={onClose}>
             <CloseIcon />
@@ -121,7 +122,7 @@ export default function UserFormDialog({
 
         <TextField
           name="username"
-          label="Tên đăng nhập"
+          label={t("login_email")}
           fullWidth
           margin="normal"
           value={formData.username}
@@ -131,7 +132,7 @@ export default function UserFormDialog({
         />
 
         <FormControl fullWidth variant="outlined" sx={{ mt: 2, mb: 1 }}>
-          <InputLabel>Mật khẩu</InputLabel>
+          <InputLabel>{t("password")}</InputLabel>
           <OutlinedInput
             name="password"
             type={showPassword ? "text" : "password"}
@@ -149,7 +150,7 @@ export default function UserFormDialog({
                 </IconButton>
               </InputAdornment>
             }
-            label="Mật khẩu"
+            label={t("password")}
           />
           {errors.password && (
             <Typography color="error" variant="caption" sx={{ ml: 2 }}>
@@ -160,7 +161,7 @@ export default function UserFormDialog({
 
         <TextField
           name="full_name"
-          label="Tên người dùng"
+          label={t("full_name")}
           fullWidth
           margin="normal"
           value={formData.full_name}
@@ -170,21 +171,21 @@ export default function UserFormDialog({
         />
 
         <FormControl fullWidth margin="normal">
-          <InputLabel>Giới tính</InputLabel>
+          <InputLabel>{t("gender")}</InputLabel>
           <Select
             name="gender"
             value={formData.gender}
             onChange={handleChange}
-            label="Giới tính"
+            label={t("gender")}
           >
-            <MenuItem value="Male">Nam</MenuItem>
-            <MenuItem value="Female">Nữ</MenuItem>
+            <MenuItem value="Male">{t("male")}</MenuItem>
+            <MenuItem value="Female">{t("female")}</MenuItem>
           </Select>
         </FormControl>
 
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <DatePicker
-            label="Ngày sinh"
+            label={t("birth_date")}
             value={dayjs(formData.date_of_birth)}
             onChange={handleDateChange}
             sx={{ mt: 2, mb: 1 }}
@@ -205,7 +206,7 @@ export default function UserFormDialog({
 
         <TextField
           name="phone_number"
-          label="Số điện thoại"
+          label={t("phone_number")}
           fullWidth
           margin="normal"
           value={formData.phone_number}
@@ -216,7 +217,7 @@ export default function UserFormDialog({
 
         <TextField
           name="address"
-          label="Địa chỉ công tác"
+          label={t("admin_page_factory_address")}
           fullWidth
           margin="normal"
           value={formData.address}
@@ -226,16 +227,16 @@ export default function UserFormDialog({
         />
 
         <FormControl fullWidth margin="normal">
-          <InputLabel>Vai trò</InputLabel>
+          <InputLabel>{t("role")}</InputLabel>
           <Select
             name="role"
             value={formData.role}
             onChange={handleChange}
             label="Vai trò"
           >
-            <MenuItem value="admin">Admin</MenuItem>
-            <MenuItem value="manager">Manager</MenuItem>
-            <MenuItem value="user">User</MenuItem>
+            <MenuItem value="admin">{t("admin")}</MenuItem>
+            <MenuItem value="manager">{t("user")}</MenuItem>
+            <MenuItem value="user">{t("manager")}</MenuItem>
           </Select>
         </FormControl>
 
@@ -244,7 +245,7 @@ export default function UserFormDialog({
           onClick={handleSubmit}
           sx={{ background: "#074E9F", color: "#ffffff", mt: 3 }}
         >
-          {initialData ? "Cập nhật" : "Thêm mới"}
+          {initialData ? t("update") : t("create")}
         </Button>
       </Box>
     </Drawer>

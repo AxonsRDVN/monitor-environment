@@ -8,6 +8,7 @@ import axios from "axios";
 import { useError } from "../../context/ErrorContext"; // ✅ nhớ import useError
 import {
   Box,
+  CircularProgress,
   FormControl,
   InputLabel,
   MenuItem,
@@ -39,6 +40,8 @@ export default function WarningIndicator() {
   const [data, setData] = useState([]);
   const [page, setPage] = useState(1);
   const [count, setCount] = useState(0);
+  const [loadingGeneral, setLoadingGeneral] = useState(false);
+  const [loadingDetail, setLoadingDetail] = useState(false);
 
   useEffect(() => {
     async function fetchPlants() {
@@ -81,17 +84,11 @@ export default function WarningIndicator() {
 
   useEffect(() => {
     if (selectedPlant) {
-      async function fetchWarningsAndDetails() {
+      async function fetchWarnings() {
         try {
-          setLoading(true);
-
-          // 👉 Reset trước khi gọi
+          setLoadingGeneral(true);
           setSensors([]);
-          setData([]);
-          setCount(0);
-
-          // 📦 Gọi danh sách tổng quát
-          const warningRes = await axios.get(
+          const res = await axios.get(
             `${API_BASE}/monitor-environment/plant/${selectedPlant}/warnings/`,
             {
               params: {
@@ -100,9 +97,27 @@ export default function WarningIndicator() {
               },
             }
           );
-          setSensors(warningRes.data.stations || []);
+          setSensors(res.data.stations || []);
+        } catch (error) {
+          console.error("Lỗi khi load warning:", error.message);
+          showError("Không thể tải dữ liệu cảnh báo. Vui lòng thử lại sau!");
+        } finally {
+          setLoadingGeneral(false);
+        }
+      }
 
-          // 📦 Gọi danh sách chi tiết
+      fetchWarnings();
+    }
+  }, [selectedPlant, fromDate, toDate]);
+
+  useEffect(() => {
+    if (selectedPlant) {
+      async function fetchWarningsDetail() {
+        try {
+          setLoadingDetail(true);
+          setData([]);
+          setCount(0);
+
           const detailRes = await axios.get(
             `${API_BASE}/monitor-environment/plant/${selectedPlant}/warning-detail/`,
             {
@@ -116,14 +131,14 @@ export default function WarningIndicator() {
           setData(detailRes.data.results || []);
           setCount(Math.ceil(detailRes.data.count / 10));
         } catch (error) {
-          console.error("Lỗi load warning:", error.message);
-          showError("Không thể tải dữ liệu cảnh báo. Vui lòng thử lại sau!");
+          console.error("Lỗi load warning detail:", error.message);
+          showError("Không thể tải dữ liệu cảnh báo chi tiết.");
         } finally {
-          setLoading(false);
+          setLoadingDetail(false);
         }
       }
 
-      fetchWarningsAndDetails();
+      fetchWarningsDetail();
     }
   }, [selectedPlant, fromDate, toDate, page]);
 
@@ -143,15 +158,15 @@ export default function WarningIndicator() {
     <PageContainer>
       <Breadcrumb
         items={[
-          { label: "Báo cáo", path: "/setting/warning_threshold" },
-          { label: "Chỉ số cảnh báo", path: "/setting/warning_threshold" },
+          { label: t("report"), path: "/report/warning-indicator" },
+          { label: t("warning_index"), path: "/report/warning-indicator" },
         ]}
       />
-      <PageTitle title="Chỉ số cảnh báo" />
+      <PageTitle title={t("report")} />
       <PageContent sx={{ marginBottom: { xs: "100px", sm: "0" } }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <FormControl sx={{ maxWidth: 250, flex: 1 }}>
-            <InputLabel>Chọn nhà máy</InputLabel>
+            <InputLabel>{t("plant")}</InputLabel>
             <Select
               value={selectedPlant}
               label="Chọn nhà máy"
@@ -175,7 +190,7 @@ export default function WarningIndicator() {
               }}
             >
               <Box>
-                <Typography>Từ ngày</Typography>
+                <Typography>{t("report_dropdown_from_date_label")}</Typography>
                 <DatePicker
                   value={fromDate}
                   onChange={handleFromDateChange}
@@ -191,7 +206,7 @@ export default function WarningIndicator() {
                 />
               </Box>
               <Box>
-                <Typography>Đến ngày</Typography>
+                <Typography>{t("report_dropdown_to_date_label")}</Typography>
                 <DatePicker
                   value={toDate}
                   onChange={handleToDateChange}
@@ -207,6 +222,7 @@ export default function WarningIndicator() {
           </LocalizationProvider>
         </Box>
         <Box>
+          {/* Phần bảng tổng quát */}
           <Box
             sx={{
               display: "flex",
@@ -217,10 +233,20 @@ export default function WarningIndicator() {
             }}
           >
             <CalendarToday />
-            <Box sx={{ fontWeight: "600", fontSize: "24px" }}>Tổng quát</Box>
+            <Box sx={{ fontWeight: "600", fontSize: "24px" }}>
+              {t("report_detail_sub_title_1")}
+            </Box>
           </Box>
-          <GeneralWarningIndicatorTable sensors={sensors} />
+          {/* Bảng tổng quát */}
+          {loadingGeneral ? (
+            <Box display="flex" justifyContent="center" mt={4}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <GeneralWarningIndicatorTable sensors={sensors} />
+          )}
 
+          {/* Phần bảng chi tiết */}
           <Box
             sx={{
               display: "flex",
@@ -231,10 +257,20 @@ export default function WarningIndicator() {
             }}
           >
             <CalendarToday />
-            <Box sx={{ fontWeight: "600", fontSize: "24px" }}>Chi tiết</Box>
+            <Box sx={{ fontWeight: "600", fontSize: "24px" }}>
+              {t("report_detail_sub_title_2")}
+            </Box>
           </Box>
-          <DetailWarningIndicatorTable dataApi={data} />
-          {count > 1 && (
+          {loadingDetail ? (
+            <Box display="flex" justifyContent="center" mt={4}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <DetailWarningIndicatorTable dataApi={data} />
+          )}
+
+          {/* Pagination */}
+          {count > 1 && !loadingDetail && (
             <Box display="flex" justifyContent="center" mt={3}>
               <Pagination
                 count={count}

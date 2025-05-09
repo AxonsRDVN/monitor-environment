@@ -42,7 +42,7 @@ export default function Home() {
         const res = await getAllPlants();
         setPlants(res);
       } catch (err) {
-        showError("Không thể kết nối server!");
+        showError(showError(t("can_connect_to_server")));
         console.error(err);
       } finally {
         setLoading(false);
@@ -53,8 +53,8 @@ export default function Home() {
 
   return (
     <PageContainer>
-      <Breadcrumb items={[{ label: "Trang chủ", path: "/home" }]} />
-      <PageTitle title="Trang chủ" />
+      <Breadcrumb items={[{ label: t("home_page"), path: "/home" }]} />
+      <PageTitle title={t("home_page")} />
       <PageContent sx={{ background: "#F8F9FA", padding: 0 }}>
         <Grid container spacing={3} alignItems="stretch">
           {plants.map((plant) => (
@@ -109,13 +109,13 @@ export default function Home() {
                       }}
                     >
                       <Typography fontSize="14px" color="#667085">
-                        Stations: {plant.station}
+                        {t("stations")}: {t(plant.station_count) || 0}
                       </Typography>
                       <Typography
                         fontSize="14px"
                         color={statusColors[plant.status]?.text}
                       >
-                        • {plant.status}
+                        • {t(plant.status)}
                         {plant.count > 0 && ` (${plant.count})`}
                       </Typography>
                     </Box>

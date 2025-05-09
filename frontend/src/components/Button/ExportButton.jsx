@@ -2,7 +2,7 @@ import React from "react";
 import { Button } from "@mui/material";
 import { SystemUpdateAlt } from "@mui/icons-material";
 
-export default function ExportButton({ onExport, text = "Export" }) {
+export default function ExportButton({ onExport, text }) {
   return (
     <Button
       variant="contained"

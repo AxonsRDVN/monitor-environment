@@ -1,15 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { getAllStationsByPlant } from "../../api/stationApi";
 import {
   Box,
   List,
-  ListItem,
-  ListItemText,
-  TextField,
-  Typography,
   InputAdornment,
-  Button,
   CircularProgress,
   FormControl,
   OutlinedInput,
@@ -20,22 +13,17 @@ import PageContainer from "../PageContainer/PageContainer";
 import Breadcrumb from "../Breadcrumb/Breadcrumb";
 import PageTitle from "../PageTitle/PageTitle";
 import PageContent from "../PageContent/PageContent";
-import SearchIcon from "@mui/icons-material/Search";
-import { Router, Search, Sensors } from "@mui/icons-material";
-import PieChartWithNeedle from "../Chart/PieChartWithNeedle";
-import LineChartHorizontal from "../Chart/LineChartHorizontal";
-import StatusIcon from "../Icon/StatusIcon";
-import ExportChartButton from "../Button/ButtonSave";
-import { statusColors } from "../Icon/ParameterIcon";
-import { useError } from "../../context/ErrorContext";
+import { Search } from "@mui/icons-material";
 import axios from "axios";
 import UserTable from "../Table/UserTable";
 import UserFormDialog from "../Dialog/UserFormDialog";
 import AddButton from "../Button/AddButtons";
+import { t } from "i18next";
 
 const API_BASE = process.env.REACT_APP_API_URL;
 
 export default function UserManagement() {
+  const { t } = useTranslation("translation");
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
@@ -134,13 +122,13 @@ export default function UserManagement() {
   return (
     <PageContainer>
       <Breadcrumb
-        items={[{ label: "Quản lý người dùng", path: "/user-management" }]}
+        items={[{ label: t("user_management"), path: "/user-management" }]}
       />
-      <PageTitle title="Quản lý người dùng" />
+      <PageTitle title={t("user_management")} />
       <PageContent>
         <Box display="flex" justifyContent="space-between" mb={4}>
           <FormControl>
-            <InputLabel>Tìm kiếm người dùng</InputLabel>
+            <InputLabel>{t("search_user")}</InputLabel>
             <OutlinedInput
               startAdornment={
                 <InputAdornment position="start">
@@ -152,7 +140,7 @@ export default function UserManagement() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </FormControl>
-          <AddButton onClick={handleAdd} />
+          <AddButton onClick={handleAdd} addText={t("add_new")} />
         </Box>
 
         {loading ? (

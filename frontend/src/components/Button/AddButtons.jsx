@@ -2,7 +2,7 @@ import React from "react";
 import { Button } from "@mui/material";
 import { Add } from "@mui/icons-material";
 
-export default function AddButton({ onClick, text = "Thêm mới" }) {
+export default function AddButton({ onClick, addText }) {
   return (
     <Button
       variant="contained"
@@ -21,7 +21,7 @@ export default function AddButton({ onClick, text = "Thêm mới" }) {
         },
       }}
     >
-      {text}
+      {addText}
     </Button>
   );
 }

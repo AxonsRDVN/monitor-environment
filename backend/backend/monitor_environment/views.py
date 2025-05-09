@@ -31,15 +31,15 @@ def get_wind_direction_label(degree):
     if degree is None:
         return "Không xác định"
     directions = [
-        "Bắc",
-        "Đông Bắc",
-        "Đông",
-        "Đông Nam",
-        "Nam",
-        "Tây Nam",
-        "Tây",
-        "Tây Bắc",
-        "Bắc",
+        "north",
+        "northeast",
+        "east",
+        "southeast",
+        "south",
+        "southwest",
+        "west",
+        "northwest",
+        "north"
     ]
     idx = int((degree + 22.5) // 45)
     return directions[idx % 8]
@@ -204,6 +204,7 @@ class PlantListAPIView(APIView):
                     "name": plant.name,
                     "status": highest_level,
                     "count": count,
+                    "station_count": stations.count(),
                 }
             )
 

@@ -44,7 +44,6 @@ export default function StationStatus() {
 
   const handleExport = () => {
     if (pdfRef.current) {
-      console.log("🟡 Gọi export từ nút"); // DEBUG
       pdfRef.current.exportToPDF(); // Gọi method từ ref
     } else {
       console.warn("❌ pdfRef.current bị null");
@@ -58,8 +57,8 @@ export default function StationStatus() {
         setPlantName(res.plant_name);
       } catch (err) {
         console.error(err);
-        setError("Không thể tải danh sách trạm 😥");
-        showError("Không thể kết nối server!");
+        setError(t("unable_to_load_list"));
+        showError(showError(t("can_connect_to_server")));
       } finally {
         setLoading(false);
       }
@@ -67,7 +66,6 @@ export default function StationStatus() {
 
     loadStations();
   }, [plantId]);
-  console.log("plan name", plantName);
 
   useEffect(() => {
     async function fetch24hAverage() {
@@ -87,7 +85,7 @@ export default function StationStatus() {
 
         setLineData(formattedData);
       } catch (error) {
-        console.error("Lỗi khi load 24h trung bình:", error);
+        console.error(t("error_loading_24h_average"), error);
       }
     }
     fetch24hAverage();
@@ -122,7 +120,6 @@ export default function StationStatus() {
     { ...master, stations: undefined }, // loại bỏ "stations" để tránh lặp
     ...(master.stations || []),
   ]);
-  console.log("flatStation", flatStations);
 
   const getOverallStatus = (stations) => {
     const priority = ["danger", "caution", "normal"];
@@ -149,7 +146,7 @@ export default function StationStatus() {
     <PageContainer>
       <Breadcrumb
         items={[
-          { label: "Trang chủ", path: "/home" },
+          { label: t("home_page"), path: "/home" },
           { label: `${plantName}`, path: "/monitoring-station" },
         ]}
       />
@@ -212,9 +209,7 @@ export default function StationStatus() {
                       textAlign: "center",
                       fontStyle: "italic",
                     }}
-                    primary={
-                      t("no_station_found") || "Không tìm thấy trạm phù hợp"
-                    }
+                    primary={t("no_station") || "Không tìm thấy trạm phù hợp"}
                   />
                 </ListItem>
               ) : (
@@ -278,7 +273,7 @@ export default function StationStatus() {
                             color: "#6B7280", // xám nhẹ
                           }}
                           primary={master.name}
-                          secondary={`node : ${master.stations?.length || 0}`}
+                          secondary={`Node : ${master.stations?.length || 0}`}
                         />
                         <Box sx={{ display: "flex", gap: "6px" }}>
                           <Box
@@ -414,9 +409,12 @@ export default function StationStatus() {
                     fill="#667085"
                   />
                 </svg>
-                <Typography>Biểu đồ trạng thái</Typography>
+                <Typography>{t("chart_status")}</Typography>
               </Box>
-              <ExportButton onExport={handleExport} />
+              <ExportButton
+                onExport={handleExport}
+                text={t("report_export_label")}
+              />
             </Box>
             <ExportPDFLineChart
               ref={pdfRef}
@@ -432,7 +430,7 @@ export default function StationStatus() {
                 />
               </Box>
               <Box sx={{ textAlign: "center", marginBottom: "32px" }}>
-                24 giờ qua
+                {t("last_24h")}
               </Box>
               <StatusIcon />
             </ExportPDFLineChart>

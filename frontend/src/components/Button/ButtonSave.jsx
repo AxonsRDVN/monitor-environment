@@ -2,11 +2,7 @@ import React from "react";
 import { Button } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 
-export default function ButtonSave({
-  onClick,
-  disabled = false,
-  text = "Lưu",
-}) {
+export default function ButtonSave({ onClick, disabled = false, saveText }) {
   return (
     <Button
       variant="contained"
@@ -26,7 +22,7 @@ export default function ButtonSave({
         },
       }}
     >
-      {text}
+      {saveText}
     </Button>
   );
 }

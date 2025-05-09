@@ -15,7 +15,7 @@ import { ROUTE_PATH } from "./router.config";
 
 export const SIDEBAR_MENU = [
   {
-    label: "Trang chủ",
+    label: t("home_page"),
     path: ROUTE_PATH.HOME,
     icon: <Home />,
   },

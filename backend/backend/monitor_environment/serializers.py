@@ -106,7 +106,14 @@ class StationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Station
         fields = "__all__"
+    def log_deletion(self, request, object, object_repr):
+        pass  # Bỏ ghi log khi xóa
 
+    def log_addition(self, request, object, message):
+        pass  # Bỏ ghi log khi thêm
+
+    def log_change(self, request, object, message):
+        pass  # Bỏ ghi log khi sửa
 
 class SubStationSerializer(serializers.ModelSerializer):
     class Meta:

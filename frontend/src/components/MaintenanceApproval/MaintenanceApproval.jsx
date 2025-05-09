@@ -47,8 +47,8 @@ export default function MaintenanceApproval() {
           setSelectedPlant(res.data[0].id);
         }
       } catch (error) {
-        console.error("Lỗi khi load plants:", error);
-        showError("Không thể kết nối server!");
+        console.error(t("toast_login_fail"), error);
+        showError(showError(t("can_connect_to_server")));
       }
     }
     fetchPlants();
@@ -64,8 +64,8 @@ export default function MaintenanceApproval() {
           );
           setSensors(res.data || []);
         } catch (error) {
-          console.error("Lỗi khi load maintenance:", error);
-          showError("Không thể kết nối server!");
+          console.error(t("toast_login_fail"), error);
+          showError(showError(t("can_connect_to_server")));
         } finally {
           setLoading(false);
         }
@@ -83,8 +83,8 @@ export default function MaintenanceApproval() {
       setSelectedDetail(res.data);
       setIsMaintenanceDetailPage(true);
     } catch (error) {
-      console.error("Lỗi khi lấy chi tiết maintenance:", error);
-      showError("Không thể kết nối server!");
+      console.error(t("toast_login_fail"), error);
+      showError(showError(t("can_connect_to_server")));
     } finally {
       setLoadingDetail(false);
     }
@@ -99,14 +99,15 @@ export default function MaintenanceApproval() {
         { status: newStatus }
       );
       alert(
-        `Đã cập nhật trạng thái: ${
-          newStatus === "approved" ? "Đã duyệt" : "Hủy bỏ"
+        `${t("update_status")}: ${
+          newStatus === "approved" ? t("approved") : t("rejected")
         }`
       );
+
       handleBackToList();
     } catch (error) {
-      console.error("Lỗi khi cập nhật trạng thái maintenance:", error);
-      showError("Không thể cập nhật trạng thái. Vui lòng thử lại!");
+      console.error(t("toast_login_fail"), error);
+      showError(t("toast_login_fail"));
     }
   };
 
@@ -118,16 +119,21 @@ export default function MaintenanceApproval() {
   return (
     <PageContainer>
       <Breadcrumb
-        items={[{ label: "Duyệt bảo trì", path: "/setting/warning_threshold" }]}
+        items={[
+          {
+            label: t("approve_maintenance"),
+            path: "/approve-maintenance",
+          },
+        ]}
       />
-      <PageTitle title="Duyệt bảo trì" />
+      <PageTitle title={t("approve_maintenance")} />
       <PageContent sx={{ marginBottom: { xs: "100px", sm: "0" } }}>
         {!isMaintenanceDetailPage ? (
           // Trang danh sách Maintenance
           <>
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: "24px", mt: 2 }}>
               <FormControl sx={{ minWidth: 250 }}>
-                <InputLabel>Chọn nhà máy</InputLabel>
+                <InputLabel>{t("plant")}</InputLabel>
                 <Select
                   value={selectedPlant}
                   label="Chọn nhà máy"
@@ -175,32 +181,34 @@ export default function MaintenanceApproval() {
             ) : selectedDetail ? (
               <>
                 <Typography>
-                  <strong>Model thiết bị:</strong> {selectedDetail.sensor_model}
+                  <strong>{t("device_model")}:</strong>{" "}
+                  {selectedDetail.sensor_model}
                 </Typography>
                 <Typography>
-                  <strong>Trạm:</strong> {selectedDetail.station_name}
+                  <strong>{t("station")}:</strong> {selectedDetail.station_name}
                 </Typography>
                 <Typography>
-                  <strong>Vị trí trạm:</strong>{" "}
+                  <strong>{t("station_location")}:</strong>{" "}
                   {selectedDetail.station_location}
                 </Typography>
                 <Typography>
-                  <strong>Hành động:</strong> {selectedDetail.action}
+                  <strong>{t("action")}:</strong> {selectedDetail.action}
                 </Typography>
                 <Typography>
-                  <strong>Trạng thái:</strong> {selectedDetail.status}
+                  <strong>{t("status")}:</strong> {selectedDetail.status}
                 </Typography>
                 <Typography>
-                  <strong>Người yêu cầu:</strong> {selectedDetail.user_name}
+                  <strong>{t("requested_by")}:</strong>{" "}
+                  {selectedDetail.user_name}
                 </Typography>
                 <Typography>
-                  <strong>Moderator:</strong> {selectedDetail.moderator}
+                  <strong>{t("moderator")}:</strong> {selectedDetail.moderator}
                 </Typography>
                 <Typography>
-                  <strong>Vai trò:</strong> {selectedDetail.role}
+                  <strong>{t("role")}:</strong> {selectedDetail.role}
                 </Typography>
                 <Typography>
-                  <strong>Ngày cập nhật:</strong>{" "}
+                  <strong>{t("updated_at")}:</strong>{" "}
                   {new Date(selectedDetail.update_at).toLocaleString()}
                 </Typography>
                 <Box
@@ -244,7 +252,7 @@ export default function MaintenanceApproval() {
                             objectFit: "cover",
                           }}
                         />
-                        <Typography pt={2}>Ảnh trước</Typography>
+                        <Typography pt={2}>{t("before_image")}</Typography>
                       </Box>
                     )}
                     {selectedDetail.image_after && (
@@ -262,12 +270,14 @@ export default function MaintenanceApproval() {
                             objectFit: "cover",
                           }}
                         />
-                        <Typography pt={2}>Ảnh sau</Typography>
+                        <Typography pt={2}>{t("after_image")}</Typography>
                       </Box>
                     )}
                   </Box>
                 </Box>
                 <ActionButtons
+                  saveText={t("save")}
+                  cancelText={t("cancel")}
                   onSave={() => handleUpdateStatus("approved")}
                   onCancel={() => handleUpdateStatus("rejected")}
                 />
@@ -277,11 +287,11 @@ export default function MaintenanceApproval() {
                   sx={{ mt: 3 }}
                   onClick={handleBackToList}
                 >
-                  Quay lại danh sách
+                  {t("go_back")}
                 </Button>
               </>
             ) : (
-              <Typography>Không tìm thấy chi tiết bảo trì.</Typography>
+              <Typography>{t("no_detail_maintance")}</Typography>
             )}
           </Box>
         )}

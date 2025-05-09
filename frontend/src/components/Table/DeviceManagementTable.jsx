@@ -10,12 +10,14 @@ import {
   IconButton,
 } from "@mui/material";
 import { BuildOutlined, SettingsBackupRestore } from "@mui/icons-material";
+import { useTranslation } from "react-i18next";
 
 export default function DeviceManagementTable({
   sensors,
   onMaintenance,
   onHistory,
 }) {
+  const { t } = useTranslation("translation");
   let stt = 1;
   const API_BASE_URL = process.env.REACT_APP_API_URL; // hoặc lấy từ biến môi trường
   return (
@@ -29,16 +31,22 @@ export default function DeviceManagementTable({
             color="primary"
             sx={{ background: "#DEEDFE", color: "#0A6EE1" }}
           >
-            <TableCell>STT</TableCell>
-            <TableCell>Model thiết bị</TableCell>
-            <TableCell>Hình thiết bị</TableCell>
-            <TableCell>Hạn sử dụng</TableCell>
-            <TableCell>Tuổi thọ hiện tại</TableCell>
-            <TableCell>Ngày khởi động</TableCell>
-            <TableCell>Bảo trì gần nhất</TableCell>
-            <TableCell>Bảo trì kế tiếp</TableCell>
-            <TableCell>Ngày trễ</TableCell>
-            <TableCell>Tính năng</TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>{t("index")}</TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>{t("device_model")}</TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>{t("device_image")}</TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>{t("expiry_date")}</TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>
+              {t("current_lifespan")}
+            </TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>{t("start_date")}</TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>
+              {t("last_maintenance")}
+            </TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>
+              {t("next_maintenance")}
+            </TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>{t("delayed_days")}</TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>{t("action")}</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>

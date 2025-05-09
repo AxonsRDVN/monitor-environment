@@ -10,9 +10,11 @@ import {
   Box,
 } from "@mui/material";
 import dayjs from "dayjs";
+import { useTranslation } from "react-i18next";
 
 export default function DetailWarningIndicatorTable({ dataApi }) {
   let stt = 1;
+  const { t } = useTranslation("translation");
 
   return (
     <TableContainer component={Paper}>
@@ -26,34 +28,44 @@ export default function DetailWarningIndicatorTable({ dataApi }) {
             sx={{ background: "#DEEDFE", color: "#0A6EE1" }}
           >
             <TableCell
-              sx={{ color: "#0A6EE1", fontWeight: "600", fontSize: "16px" }}
+              sx={{ color: "#0A6EE1", fontWeight: 600, fontSize: "16px" }}
             >
-              STT
+              {t("index")}
             </TableCell>
             <TableCell
-              sx={{ color: "#0A6EE1", fontWeight: "600", fontSize: "16px" }}
+              sx={{ color: "#0A6EE1", fontWeight: 600, fontSize: "16px" }}
             >
-              Trạm
+              {t("station")}
             </TableCell>
             <TableCell
-              sx={{ color: "#0A6EE1", fontWeight: "600", fontSize: "16px" }}
+              sx={{ color: "#0A6EE1", fontWeight: 600, fontSize: "16px" }}
             >
-              Chỉ số
+              {t("indicator")}
             </TableCell>
             <TableCell
-              sx={{ color: "#0A6EE1", fontWeight: "600", fontSize: "16px" }}
+              sx={{ color: "#0A6EE1", fontWeight: 600, fontSize: "16px" }}
             >
-              Giá trị
+              {t("value")}
             </TableCell>
             <TableCell
-              sx={{ color: "#0A6EE1", fontWeight: "600", fontSize: "16px" }}
+              sx={{
+                color: "#0A6EE1",
+                fontWeight: 600,
+                fontSize: "16px",
+                textAlign: "center",
+              }}
             >
-              Trạng thái
+              {t("status")}
             </TableCell>
             <TableCell
-              sx={{ color: "#0A6EE1", fontWeight: "600", fontSize: "16px" }}
+              sx={{
+                color: "#0A6EE1",
+                fontWeight: 600,
+                fontSize: "16px",
+                textAlign: "center",
+              }}
             >
-              Thời gian
+              {t("report_table_column_time")}
             </TableCell>
           </TableRow>
         </TableHead>
@@ -63,7 +75,7 @@ export default function DetailWarningIndicatorTable({ dataApi }) {
               <TableRow>
                 <TableCell>{stt++}</TableCell>
                 <TableCell>{data.station_name || "-"}</TableCell>
-                <TableCell>{data.parameter_name || "-"}</TableCell>
+                <TableCell>{t(data.parameter_name) || "-"}</TableCell>
                 <TableCell>
                   {data.value} {data.unit}
                 </TableCell>
@@ -80,7 +92,7 @@ export default function DetailWarningIndicatorTable({ dataApi }) {
                       fontSize: "14px",
                     }}
                   >
-                    {data.status === "danger" ? "Nguy hiểm" : "Cảnh báo"}
+                    {data.status === "danger" ? t("danger") : t("caution")}
                   </Box>
                 </TableCell>
 

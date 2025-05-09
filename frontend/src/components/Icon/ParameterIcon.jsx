@@ -30,15 +30,15 @@ const getWindDirectionLabel = (degree) => {
   if (degree == null || isNaN(degree)) return "Không xác định";
 
   const directions = [
-    "Bắc",
-    "Đông Bắc",
-    "Đông",
-    "Đông Nam",
-    "Nam",
-    "Tây Nam",
-    "Tây",
-    "Tây Bắc",
-    "Bắc",
+    "north",
+    "northeast",
+    "east",
+    "southeast",
+    "south",
+    "southwest",
+    "west",
+    "northwest",
+    "north",
   ];
   const index = Math.round(degree / 45);
   return directions[index % 8];
@@ -214,12 +214,12 @@ export default function ParameterCard({
       {paramKey === "wind_direction" ? (
         <Box>
           <Box sx={{ fontSize: 24, fontWeight: 600, color: colorConfig.text }}>
-            {getWindDirectionLabel(paramData?.value)}
+            {t(getWindDirectionLabel(paramData?.value))}
           </Box>
         </Box>
       ) : (
         <Box sx={{ fontSize: 24, fontWeight: 600, color: colorConfig.text }}>
-          {paramData?.value} {paramData?.unit}
+          {t(paramData?.value)} {paramData?.unit}
         </Box>
       )}
     </Box>

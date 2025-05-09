@@ -1,9 +1,11 @@
 import { Box, Typography } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 export default function StatusIcon() {
+  const { t } = useTranslation();
   const statusStyles = {
-    Normal: {
-      label: "Normal",
+    ormal: {
+      label: "normal",
       icon: (
         <svg
           width="24"
@@ -25,7 +27,7 @@ export default function StatusIcon() {
       ),
     },
     Caution: {
-      label: "Caution",
+      label: "caution",
       icon: (
         <svg
           width="28"
@@ -47,7 +49,7 @@ export default function StatusIcon() {
       ),
     },
     Danger: {
-      label: "Danger",
+      label: "danger",
       icon: (
         <svg
           width="27"
@@ -93,7 +95,7 @@ export default function StatusIcon() {
         >
           {icon}
           <Typography variant="body2" sx={{ mt: 1, fontWeight: 500 }}>
-            {label}
+            {t(label)}
           </Typography>
         </Box>
       ))}

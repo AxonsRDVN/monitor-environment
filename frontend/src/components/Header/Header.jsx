@@ -1,6 +1,5 @@
 import logoIcon from "../../assets/logo.png";
 import logoAxon from "../../assets/logoAxons.png";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import {
   Box,
   IconButton,
@@ -10,7 +9,6 @@ import {
   MenuItem,
   Typography,
 } from "@mui/material";
-import MenuIcon from "@mui/icons-material/Menu";
 import ReactCountryFlag from "react-country-flag";
 import { useTranslation } from "react-i18next";
 import i18n from "i18next";
@@ -20,7 +18,6 @@ import { useNavigate } from "react-router-dom";
 import { AppContext } from "../../context/AppContext";
 import { ROUTE_PATH } from "../../config/router.config";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import PersonIcon from "@mui/icons-material/Person";
 import LogoutIcon from "@mui/icons-material/Logout";
 import "./Header.css";
 
@@ -90,7 +87,9 @@ const Header = (props) => {
           className="header-container-1-logo-img"
           onClick={navigateToHome}
         />
-        <span className="header-container-1-title">{t("header_title")}</span>
+        <span className="header-container-1-title">
+          {t("monitor_environmental_indicators")}
+        </span>
       </div>
       <div className="d-flex flex-row align-items-center header-container-2">
         <div>
@@ -211,18 +210,6 @@ const Header = (props) => {
               <MenuItem
                 onClick={() => {
                   handleUserMenuClose();
-                  navigate("/profile");
-                }}
-              >
-                <ListItemIcon>
-                  <PersonIcon fontSize="small" />
-                </ListItemIcon>
-                <ListItemText>Thông tin cá nhân</ListItemText>
-              </MenuItem>
-
-              <MenuItem
-                onClick={() => {
-                  handleUserMenuClose();
                   // xử lý logout ở đây
                   localStorage.clear();
                   navigate("/login");
@@ -231,7 +218,7 @@ const Header = (props) => {
                 <ListItemIcon>
                   <LogoutIcon fontSize="small" />
                 </ListItemIcon>
-                <ListItemText>Đăng xuất</ListItemText>
+                <ListItemText>{t("menu_tab_logout")}</ListItemText>
               </MenuItem>
             </Menu>
           </Box>

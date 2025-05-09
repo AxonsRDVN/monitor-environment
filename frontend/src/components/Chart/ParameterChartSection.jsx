@@ -24,13 +24,7 @@ import dayjs from "dayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-
-const timeOptions = [
-  { label: "Phút", value: "minute" },
-  { label: "Giờ", value: "hour" },
-  { label: "Ngày", value: "day" },
-  { label: "Tháng", value: "month" },
-];
+import { useTranslation } from "react-i18next";
 
 export default function ParameterChartSection() {
   const { plantId, stationId, parameterKey } = useParams();
@@ -41,13 +35,21 @@ export default function ParameterChartSection() {
   const [toDate, setToDate] = useState(dayjs());
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { t } = useTranslation("translation");
+
+  const timeOptions = [
+    { label: t("minute"), value: "minute" },
+    { label: t("hour"), value: "hour" },
+    { label: t("day"), value: "day" },
+    { label: t("month"), value: "month" },
+  ];
 
   useEffect(() => {
     const fetchData = async () => {
       if (!plantId || !stationId || !parameterKey) return;
 
       if (fromDate.isAfter(toDate)) {
-        setError("Ngày bắt đầu không được lớn hơn ngày kết thúc");
+        setError(t("toast_login_fail"));
         return;
       }
 
@@ -63,8 +65,6 @@ export default function ParameterChartSection() {
           fromDate.format("YYYY-MM-DD"),
           toDate.format("YYYY-MM-DD")
         );
-        console.log("Dữ liệu từ API:", res); // 👈 check dữ liệu trả về
-
         setSummary(res.summary || { avg: 0, max: 0, min: 0 });
         setChartData(res.data || []);
       } catch (err) {
@@ -77,7 +77,7 @@ export default function ParameterChartSection() {
 
     fetchData();
   }, [plantId, stationId, parameterKey, selectedTime, fromDate, toDate]);
-  console.log(summary);
+
   // Các hàm xử lý thay đổi ngày
   const handleFromDateChange = (newValue) => {
     if (newValue && dayjs(newValue).isValid()) {
@@ -122,7 +122,7 @@ export default function ParameterChartSection() {
           {formatXAxis(label)}
         </Typography>
         <Typography sx={{ color: "#074E9F", fontSize: "14px" }}>
-          Giá trị trung bình:{" "}
+          {t("average_value")}:{" "}
           {typeof payload[0].value === "number"
             ? payload[0].value.toFixed(2)
             : payload[0].value}
@@ -152,7 +152,7 @@ export default function ParameterChartSection() {
           }}
         >
           <Box>
-            <Typography>Từ ngày</Typography>
+            <Typography>{t("report_dropdown_from_date_label")}</Typography>
             <DatePicker
               value={fromDate}
               onChange={handleFromDateChange}
@@ -168,7 +168,7 @@ export default function ParameterChartSection() {
             />
           </Box>
           <Box>
-            <Typography>Đến ngày</Typography>
+            <Typography>{t("report_dropdown_to_date_label")}</Typography>
             <DatePicker
               value={toDate}
               onChange={handleToDateChange}
@@ -302,9 +302,9 @@ export default function ParameterChartSection() {
         }}
       >
         {[
-          { label: "Trung bình", value: summary.avg },
-          { label: "Lớn nhất", value: summary.max },
-          { label: "Nhỏ nhất", value: summary.min },
+          { label: t("average"), value: summary.avg },
+          { label: t("max"), value: summary.max },
+          { label: t("min"), value: summary.min },
         ].map((item, i) => (
           <Box
             key={i}

@@ -4,8 +4,6 @@ import {
   Box,
   Typography,
   CircularProgress,
-  Button,
-  TextField,
   FormControl,
   InputLabel,
   Select,
@@ -36,6 +34,8 @@ export default function SensorMaintenance() {
   const { t } = useTranslation("translation");
   const [action, setAction] = useState("maintenance");
   const navigate = useNavigate();
+  const user = localStorage.getItem("username");
+  const role = localStorage.getItem("role");
 
   useEffect(() => {
     async function fetchData() {
@@ -54,7 +54,7 @@ export default function SensorMaintenance() {
         }
       } catch (error) {
         console.error("Error fetching sensor:", error);
-        showError("Không thể kết nối server!");
+        showError(showError(t("can_connect_to_server")));
       } finally {
         setLoading(false);
       }
@@ -65,7 +65,7 @@ export default function SensorMaintenance() {
 
   const handleSubmit = async () => {
     if (!imageBefore || !imageAfter) {
-      alert("Vui lòng chọn ảnh trước và sau bảo trì!");
+      alert(t("upload_before_after_required"));
       return;
     }
 
@@ -77,9 +77,9 @@ export default function SensorMaintenance() {
     formData.append("action", action); // Mặc định là bảo trì, nếu có thêm thay thế sau này thì sửa
     formData.append("image_before", imageBefore);
     formData.append("image_after", imageAfter);
-    formData.append("user_name", "Tên người dùng A"); // Nếu có user đăng nhập thì thay bằng tên user thực tế
-    formData.append("moderator", "Người quản lý B"); // Nếu cần chọn thì thêm input, hiện hardcode
-    formData.append("role", "admin"); // Lắp đặt, hoặc lấy từ login
+    formData.append("user_name", user); // Nếu có user đăng nhập thì thay bằng tên user thực tế
+    formData.append("moderator", "Admin"); // Nếu cần chọn thì thêm input, hiện hardcode
+    formData.append("role", role); // Lắp đặt, hoặc lấy từ login
     formData.append("latitude", fixedLatitude);
     formData.append("longitude", fixedLongitude);
 
@@ -94,11 +94,11 @@ export default function SensorMaintenance() {
           },
         }
       );
-      alert("Gửi yêu cầu bảo trì thành công!");
+      alert(t("submit_success"));
       navigate(`/device-management/history/${sensorId}`);
     } catch (error) {
       console.error("Error submitting maintenance request:", error);
-      alert("Gửi thất bại, vui lòng thử lại!");
+      alert(t("submit_failed"));
     } finally {
       setLoadingSubmit(false);
     }
@@ -120,7 +120,7 @@ export default function SensorMaintenance() {
   if (!sensor) {
     return (
       <Box textAlign="center" mt={5}>
-        <Typography variant="h6">Không tìm thấy sensor.</Typography>
+        <Typography variant="h6">{t("no_sensor")}</Typography>
       </Box>
     );
   }
@@ -133,32 +133,32 @@ export default function SensorMaintenance() {
     <PageContainer>
       <Breadcrumb
         items={[
-          { label: "Quản lí thiết bị", path: "/setting/warning_threshold" },
-          { label: "Bảo trì", path: "/setting/warning_threshold" },
+          { label: t("device_management"), path: "/device-management" },
+          { label: t("maintenance"), path: "/device-management" },
         ]}
       />
-      <PageTitle title={"Bảo trì"} />
+      <PageTitle title={t("maintenance")} />
       <PageContent>
         <Box mb={2} color={"#344054"} fontWeight={"700"} fontSize={"22px"}>
           {sensor.model_sensor}
         </Box>
         <Box mb={2}>
-          Nhà máy/Trang trại: <strong>{sensor.plant_name}</strong>
+          {t("factory_farm")}: <strong>{sensor.plant_name}</strong>
         </Box>
         <Box mb={2}>
-          Trạm: <strong>{sensor.station_name}</strong>
+          {t("station")}: <strong>{sensor.station_name}</strong>
         </Box>
         <Box mt={2}>
           <FormControl sx={{ mt: 2, width: "334px" }}>
-            <InputLabel id="action-select-label">Hành động</InputLabel>
+            <InputLabel id="action-select-label">{t("action")}</InputLabel>
             <Select
               labelId="action-select-label"
               value={action}
               label="Hành động"
               onChange={(e) => setAction(e.target.value)}
             >
-              <MenuItem value="maintenance">Bảo trì</MenuItem>
-              <MenuItem value="replacement">Thay thế</MenuItem>
+              <MenuItem value="maintenance">{t("maintenance")}</MenuItem>
+              <MenuItem value="replacement">{t("replacement")}</MenuItem>
             </Select>
           </FormControl>
         </Box>
@@ -215,10 +215,10 @@ export default function SensorMaintenance() {
                         fontSize: "16px",
                       }}
                     >
-                      Click to upload
+                      {t("click_to_upload")}
                     </Typography>
                     <Typography sx={{ color: "#344054", fontSize: "14px" }}>
-                      or drag and drop
+                      {t("or_drag_and_drop")}
                     </Typography>
                   </Box>
                 )}
@@ -241,7 +241,7 @@ export default function SensorMaintenance() {
                   }}
                 />
                 <Box mt={1} fontSize={"16px"} color={"#344054"}>
-                  Ảnh trước bảo trì
+                  {t("before_image")}
                 </Box>
               </Box>
 
@@ -289,10 +289,10 @@ export default function SensorMaintenance() {
                         fontSize: "16px",
                       }}
                     >
-                      Click to upload
+                      {t("click_to_upload")}
                     </Typography>
                     <Typography sx={{ color: "#344054", fontSize: "14px" }}>
-                      or drag and drop
+                      {t("or_drag_and_drop")}
                     </Typography>
                   </Box>
                 )}
@@ -315,7 +315,7 @@ export default function SensorMaintenance() {
                   }}
                 />
                 <Box mt={1} fontSize={"16px"} color={"#344054"}>
-                  Ảnh sau bảo trì
+                  {t("after_image")}
                 </Box>
               </Box>
             </Box>
@@ -323,10 +323,12 @@ export default function SensorMaintenance() {
 
           <Box mt={4}>
             <Typography>
-              <strong>Kinh độ:</strong> {longitude || "Đang lấy vị trí..."}
+              <strong>{t("longitude")}:</strong>{" "}
+              {longitude || "Đang lấy vị trí..."}
             </Typography>
             <Typography>
-              <strong>Vĩ độ:</strong> {latitude || "Đang lấy vị trí..."}
+              <strong>{t("latitude")}:</strong>{" "}
+              {latitude || "Đang lấy vị trí..."}
             </Typography>
           </Box>
 
@@ -339,7 +341,12 @@ export default function SensorMaintenance() {
           >
             {loadingSubmit ? "Đang gửi..." : "Gửi yêu cầu bảo trì"}
           </Button> */}
-          <ActionButtons onSave={handleSubmit} onCancel={handleBack} />
+          <ActionButtons
+            onSave={handleSubmit}
+            onCancel={handleBack}
+            saveText={t("save")}
+            cancelText={t("cancel")}
+          />
         </Box>
       </PageContent>
     </PageContainer>

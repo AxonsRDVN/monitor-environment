@@ -26,6 +26,7 @@ const Sidebar = () => {
   const { isMenuOpen, setIsMenuOpen } = useContext(AppContext);
   const { t } = useTranslation("translation");
   const isSmallScreen = useMediaQuery("(max-width:1050px)");
+  const role = localStorage.getItem("role");
 
   useEffect(() => {
     menuItems.forEach((item) => {
@@ -66,49 +67,25 @@ const Sidebar = () => {
         padding: "30px 10px 0",
       }}
     >
-      {menuItems?.map((item, index) => (
-        <div key={index}>
-          {!item.subItems ? (
-            <ListItem
-              button
-              component={Link}
-              to={item.path}
-              onClick={() => handleSetActiveItem(item.text)}
-              sx={{
-                backgroundColor:
-                  activeItem === item.text ? "#0C4DA0" : "transparent",
-                color: activeItem === item.text ? "white" : "black",
-                borderRadius: "5px",
-                "&:hover": {
-                  backgroundColor:
-                    activeItem !== item.text ? "lightgray" : "#004092",
-                },
-              }}
-            >
-              <ListItemIcon
-                sx={{
-                  color: activeItem === item.text ? "white" : "black",
-                }}
-              >
-                {item.icon}
-              </ListItemIcon>
-              <ListItemText
-                primary={item.text}
-                sx={{
-                  color: activeItem === item.text ? "white" : "black",
-                }}
-              />
-            </ListItem>
-          ) : (
-            <>
+      {menuItems
+        ?.filter((item) => item.allowedRoles?.includes(role))
+        .map((item, index) => (
+          <div key={index}>
+            {!item.subItems ? (
               <ListItem
                 button
-                onClick={() => handleToggleSubmenu(item.text)}
+                component={Link}
+                to={item.path}
+                onClick={() => handleSetActiveItem(item.text)}
                 sx={{
                   backgroundColor:
                     activeItem === item.text ? "#0C4DA0" : "transparent",
                   color: activeItem === item.text ? "white" : "black",
-                  cursor: "pointer",
+                  borderRadius: "5px",
+                  "&:hover": {
+                    backgroundColor:
+                      activeItem !== item.text ? "lightgray" : "#004092",
+                  },
                 }}
               >
                 <ListItemIcon
@@ -124,57 +101,84 @@ const Sidebar = () => {
                     color: activeItem === item.text ? "white" : "black",
                   }}
                 />
-                {openSubmenu[item.text] ? (
-                  <ExpandLessIcon />
-                ) : (
-                  <ExpandMoreIcon />
-                )}
               </ListItem>
+            ) : (
+              <>
+                <ListItem
+                  button
+                  onClick={() => handleToggleSubmenu(item.text)}
+                  sx={{
+                    backgroundColor:
+                      activeItem === item.text ? "#0C4DA0" : "transparent",
+                    color: activeItem === item.text ? "white" : "black",
+                    cursor: "pointer",
+                  }}
+                >
+                  <ListItemIcon
+                    sx={{
+                      color: activeItem === item.text ? "white" : "black",
+                    }}
+                  >
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={item.text}
+                    sx={{
+                      color: activeItem === item.text ? "white" : "black",
+                    }}
+                  />
+                  {openSubmenu[item.text] ? (
+                    <ExpandLessIcon />
+                  ) : (
+                    <ExpandMoreIcon />
+                  )}
+                </ListItem>
 
-              <Collapse
-                in={openSubmenu[item.text]}
-                timeout="auto"
-                unmountOnExit
-              >
-                <List component="div" disablePadding>
-                  {item.subItems.map((subItem, subIndex) => (
-                    <ListItem
-                      button
-                      key={subIndex}
-                      sx={{
-                        pl: 4,
-                        borderRadius: "5px",
-                        backgroundColor:
-                          activeItem === subItem.text
-                            ? "#0C4DA0"
-                            : "transparent",
-                        color: activeItem === subItem.text ? "white" : "black",
-                        "&:hover": {
-                          backgroundColor:
-                            activeItem !== subItem.text
-                              ? "lightgray"
-                              : "#004092",
-                        },
-                      }}
-                      component={Link}
-                      to={subItem.path}
-                      onClick={() => handleSetActiveItem(subItem.text)}
-                    >
-                      <ListItemText
-                        primary={subItem.text}
+                <Collapse
+                  in={openSubmenu[item.text]}
+                  timeout="auto"
+                  unmountOnExit
+                >
+                  <List component="div" disablePadding>
+                    {item.subItems.map((subItem, subIndex) => (
+                      <ListItem
+                        button
+                        key={subIndex}
                         sx={{
+                          pl: 4,
+                          borderRadius: "5px",
+                          backgroundColor:
+                            activeItem === subItem.text
+                              ? "#0C4DA0"
+                              : "transparent",
                           color:
                             activeItem === subItem.text ? "white" : "black",
+                          "&:hover": {
+                            backgroundColor:
+                              activeItem !== subItem.text
+                                ? "lightgray"
+                                : "#004092",
+                          },
                         }}
-                      />
-                    </ListItem>
-                  ))}
-                </List>
-              </Collapse>
-            </>
-          )}
-        </div>
-      ))}
+                        component={Link}
+                        to={subItem.path}
+                        onClick={() => handleSetActiveItem(subItem.text)}
+                      >
+                        <ListItemText
+                          primary={subItem.text}
+                          sx={{
+                            color:
+                              activeItem === subItem.text ? "white" : "black",
+                          }}
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                </Collapse>
+              </>
+            )}
+          </div>
+        ))}
     </List>
   );
 

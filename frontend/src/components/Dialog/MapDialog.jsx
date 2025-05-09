@@ -1,9 +1,11 @@
 import { Dialog, DialogTitle, DialogContent, Typography } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 export default function MapDialog({ open, onClose, latitude, longitude }) {
+  const { t } = useTranslation("translation");
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>Bản đồ vị trí</DialogTitle>
+      <DialogTitle>{t("coordinate")}</DialogTitle>
       <DialogContent sx={{ p: 0 }}>
         {latitude && longitude ? (
           <iframe
@@ -17,7 +19,7 @@ export default function MapDialog({ open, onClose, latitude, longitude }) {
           />
         ) : (
           <Typography variant="body2" sx={{ p: 2 }}>
-            Không có thông tin tọa độ.
+            {t("no_coordinate")}
           </Typography>
         )}
       </DialogContent>

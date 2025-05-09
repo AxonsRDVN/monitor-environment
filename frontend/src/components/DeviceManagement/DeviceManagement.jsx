@@ -16,7 +16,7 @@ import {
 } from "@mui/material";
 import DeviceManagementTable from "../Table/DeviceManagementTable";
 import { useNavigate } from "react-router-dom";
-import { useError } from "../../context/ErrorContext"; // ✅ import thiếu
+import { useError } from "../../context/ErrorContext";
 
 const API_BASE = process.env.REACT_APP_API_URL;
 
@@ -31,26 +31,23 @@ export default function DeviceManagement() {
   const { t } = useTranslation("translation");
   const navigate = useNavigate();
 
-  // Lấy danh sách plant
   useEffect(() => {
     async function fetchPlants() {
       try {
         const res = await axios.get(`${API_BASE}/monitor-environment/plants/`);
         const plantList = res.data || [];
         setPlants(plantList);
-
         if (plantList.length > 0) {
           setSelectedPlant(plantList[0].id);
         }
       } catch (error) {
-        console.error("Lỗi khi tải danh sách nhà máy:", error.message);
-        showError("Không thể tải danh sách nhà máy. Vui lòng thử lại sau!");
+        console.error(t("load_plant_error"), error.message);
+        showError(t("load_plant_error"));
       }
     }
     fetchPlants();
   }, []);
 
-  // Lấy danh sách station theo plant
   useEffect(() => {
     async function fetchStations() {
       if (!selectedPlant) {
@@ -63,10 +60,8 @@ export default function DeviceManagement() {
           `${API_BASE}/monitor-environment/plant/${selectedPlant}/stations`
         );
         const stationList = res.data.stations || [];
-
         const allStations = [];
 
-        // Gộp cả master và station con
         stationList.forEach((master) => {
           allStations.push({
             id: master.id,
@@ -75,7 +70,7 @@ export default function DeviceManagement() {
             code: master.code,
           });
 
-          if (master.stations && master.stations.length > 0) {
+          if (master.stations?.length > 0) {
             master.stations.forEach((station) => {
               allStations.push({
                 id: station.id,
@@ -88,20 +83,18 @@ export default function DeviceManagement() {
         });
 
         setStations(allStations);
-
         if (allStations.length > 0) {
-          setSelectedStation(allStations[0].id); // Chọn mặc định
+          setSelectedStation(allStations[0].id);
         }
       } catch (error) {
-        console.error("Lỗi khi tải danh sách trạm:", error.message);
-        showError("Không thể tải danh sách trạm. Vui lòng thử lại sau!");
+        console.error(t("load_station_error"), error.message);
+        showError(t("load_station_error"));
         setStations([]);
       }
     }
     fetchStations();
   }, [selectedPlant]);
 
-  // Lấy danh sách sensor theo station
   useEffect(() => {
     async function fetchSensors() {
       if (!selectedStation) {
@@ -116,8 +109,8 @@ export default function DeviceManagement() {
         );
         setSensors(res.data.sensors || []);
       } catch (error) {
-        console.error("Lỗi khi tải danh sách sensor:", error.message);
-        showError("Không thể tải danh sách thiết bị. Vui lòng thử lại sau!");
+        console.error(t("load_sensor_error"), error.message);
+        showError(t("load_sensor_error"));
         setSensors([]);
       } finally {
         setLoading(false);
@@ -130,10 +123,10 @@ export default function DeviceManagement() {
     <PageContainer>
       <Breadcrumb
         items={[
-          { label: "Quản lí thiết bị", path: "/setting/warning_threshold" },
+          { label: t("device_management"), path: "/setting/device-management" },
         ]}
       />
-      <PageTitle title={"Quản lí thiết bị"} />
+      <PageTitle title={t("device_management")} />
       <PageContent sx={{ marginBottom: { xs: "100px", sm: "0" } }}>
         <Box
           sx={{
@@ -144,10 +137,10 @@ export default function DeviceManagement() {
           }}
         >
           <FormControl sx={{ width: { xs: "100%", sm: "50%" } }}>
-            <InputLabel>Chọn nhà máy</InputLabel>
+            <InputLabel>{t("plant")}</InputLabel>
             <Select
               value={selectedPlant}
-              label="Chọn nhà máy"
+              label={t("plant")}
               onChange={(e) => setSelectedPlant(e.target.value)}
             >
               {plants.map((plant) => (
@@ -162,10 +155,10 @@ export default function DeviceManagement() {
             sx={{ width: { xs: "100%", sm: "50%" } }}
             disabled={!selectedPlant}
           >
-            <InputLabel>Chọn trạm</InputLabel>
+            <InputLabel>{t("station")}</InputLabel>
             <Select
               value={selectedStation}
-              label="Chọn trạm"
+              label={t("station")}
               onChange={(e) => setSelectedStation(e.target.value)}
             >
               {stations.map((station) => (
@@ -181,7 +174,7 @@ export default function DeviceManagement() {
           {loading ? (
             <CircularProgress />
           ) : stations.length === 0 ? (
-            <Typography variant="body2">Không có trạm nào.</Typography>
+            <Typography variant="body2">{t("no_station")}</Typography>
           ) : (
             <DeviceManagementTable
               sensors={sensors}

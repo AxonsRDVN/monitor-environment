@@ -38,6 +38,8 @@ export default function StationDetailIndex() {
   const [detailIndex, setDetailIndex] = useState(null);
   const [selectedGroup, setSelectedGroup] = useState("Air");
   const [exportDialogEmailOpen, setExportDialogEmailOpen] = useState(false);
+  const status = detailIndex?.status_summary.status;
+  const count = detailIndex?.status_summary.count;
 
   const handleExportEmailConfirm = async ({ fromDate, toDate, email }) => {
     console.log(
@@ -67,10 +69,10 @@ export default function StationDetailIndex() {
 
       if (!res.ok) throw new Error("Gửi thất bại");
 
-      alert("✅ File PDF đã được gửi qua email!");
+      alert(t("pdf_sent_successfully"));
     } catch (err) {
       console.error(err);
-      alert("❌ Gửi thất bại. Vui lòng thử lại.");
+      alert(t("pdf_send_failed"));
     }
   };
 
@@ -82,8 +84,8 @@ export default function StationDetailIndex() {
         setDetailIndex(res.latest_transaction || null);
       } catch (err) {
         console.error(err);
-        setError("Không thể tải thông tin giá trị các chỉ số 😥");
-        showError("Không thể kết nối server!");
+        setError(t("toast_login_fail"));
+        showError(showError(t("can_connect_to_server")));
       } finally {
         setLoading(false);
       }
@@ -91,15 +93,13 @@ export default function StationDetailIndex() {
 
     loadStations();
   }, [plantId, stationId]);
-  console.log("detailIndex", detailIndex);
-  console.log("stations", stations);
 
   return (
     <PageContainer>
       <Breadcrumb
         items={[
-          { label: "Trang chủ", path: "/home" },
-          { label: "Trạng thái", path: "/monitoring-station" },
+          { label: t("home_page"), path: "/home" },
+          { label: t("status"), path: "/monitoring-station" },
           {
             label: stations?.name,
             path: `/dashboard/plant/${plantId}/stations/${stationId}/detail-index-lastest`,
@@ -134,21 +134,19 @@ export default function StationDetailIndex() {
               <Box sx={{ fontSize: "24px" }}>{stations?.name}</Box>
               <Box
                 sx={{
-                  color:
-                    customColorStatus[detailIndex.status_summary.status]
-                      ?.color || "inherit",
+                  color: customColorStatus[status]?.color || "inherit",
                   fontSize: "16px",
                 }}
               >
-                • {detailIndex.status_summary.status}
-                {detailIndex.status_summary.status !== "normal" &&
-                  ` (${detailIndex.status_summary.count})`}
+                • {t(status)}
+                {status !== "normal" && ` (${count})`}
               </Box>
             </Box>
             <Box sx={{ display: "flex", gap: "16px", pt: "16px", pb: "32px" }}>
               <AccessTime sx={{ color: "#98A2B3" }} />
               <Box sx={{ color: "#98A2B3" }}>
-                Thời gian cập nhật mới nhất:{" "}
+                {t("the_last_time_update")}
+                {": "}
                 <FormattedTime isoString={detailIndex.time} />
               </Box>
             </Box>
@@ -188,11 +186,11 @@ export default function StationDetailIndex() {
                       flexWrap: "wrap",
                       "&:hover": {
                         boxShadow: "0px 4px 12px rgba(7, 78, 159, 0.3)",
-                        transform: "translateY(-2px)", // tạo cảm giác nổi lên
+                        transform: "translateY(-2px)",
                       },
                     }}
                   >
-                    {group}
+                    {t(group.toLowerCase())}
                     <Box
                       component="span"
                       sx={{
@@ -260,7 +258,10 @@ export default function StationDetailIndex() {
                 </Box>
               )}
             </Box>
-            <ExportButton onExport={() => setExportDialogEmailOpen(true)} />
+            <ExportButton
+              onExport={() => setExportDialogEmailOpen(true)}
+              text={t("expor_to_pdf")}
+            />
             <ExportDialogEmail
               open={exportDialogEmailOpen}
               onClose={() => setExportDialogEmailOpen(false)}

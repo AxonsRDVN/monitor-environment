@@ -8,18 +8,27 @@ import {
   TableRow,
   Paper,
   IconButton,
-  Typography,
   Chip,
 } from "@mui/material";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
+import { useTranslation } from "react-i18next";
 
 export default function HistoryMaintenanceTable({ sensor, onViewLocation }) {
+  const { t } = useTranslation("translation");
   let stt = 1;
   const API_BASE_URL = process.env.REACT_APP_API_URL; // hoặc lấy từ biến môi trường
 
   return (
     <TableContainer component={Paper}>
-      <Table>
+      <Table
+        sx={{
+          maxWidth: "100%",
+          "& td": {
+            whiteSpace: "normal",
+            wordBreak: "break-word",
+          },
+        }}
+      >
         <TableHead
           color="primary"
           sx={{ background: "#DEEDFE", color: "#0A6EE1" }}
@@ -28,16 +37,16 @@ export default function HistoryMaintenanceTable({ sensor, onViewLocation }) {
             color="primary"
             sx={{ background: "#DEEDFE", color: "#0A6EE1" }}
           >
-            <TableCell>STT</TableCell>
-            <TableCell>Ngày giờ</TableCell>
-            <TableCell>Ảnh trước</TableCell>
-            <TableCell>Ảnh sau</TableCell>
-            <TableCell>Tên người dùng</TableCell>
-            <TableCell>Hành động</TableCell>
-            <TableCell>Trạng thái</TableCell>
-            <TableCell>Moderator</TableCell>
-            <TableCell>Role</TableCell>
-            <TableCell>Định vị</TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>{t("index")}</TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>{t("datetime")}</TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>{t("before_image")}</TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>{t("after_image")}</TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>{t("username")}</TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>{t("action")}</TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>{t("status")}</TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>{t("moderator")}</TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>{t("role")}</TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>{t("coordinate")}</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -83,16 +92,18 @@ export default function HistoryMaintenanceTable({ sensor, onViewLocation }) {
               <TableCell>{item.user_name || "-"}</TableCell>
 
               <TableCell>
-                {item.action === "maintenance" ? "Bảo trì" : "Thay thế"}
+                {item.action === "maintenance"
+                  ? t("maintenance")
+                  : t("replacement")}
               </TableCell>
 
               <TableCell>
                 {item.status === "pending" ? (
-                  <Chip label="Chờ duyệt" color="warning" size="small" />
+                  <Chip label={t("pending")} color="warning" size="small" />
                 ) : item.status === "approved" ? (
-                  <Chip label="Đã duyệt" color="success" size="small" />
+                  <Chip label={t("approved")} color="success" size="small" />
                 ) : (
-                  <Chip label="Hủy bỏ" color="error" size="small" />
+                  <Chip label={t("rejected")} color="error" size="small" />
                 )}
               </TableCell>
 

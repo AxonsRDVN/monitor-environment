@@ -11,12 +11,14 @@ import {
 } from "@mui/material";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import { ContentPasteSearchOutlined } from "@mui/icons-material";
+import { useTranslation } from "react-i18next";
 
 export default function MaintenanceApprovalTabel({
   sensors,
   onViewDetail,
   onViewLocation,
 }) {
+  const { t } = useTranslation("translation");
   let stt = 1;
 
   return (
@@ -24,14 +26,14 @@ export default function MaintenanceApprovalTabel({
       <Table>
         <TableHead sx={{ background: "#DEEDFE" }}>
           <TableRow>
-            <TableCell>STT</TableCell>
-            <TableCell>Model thiết bị</TableCell>
-            <TableCell>Tên trạm</TableCell>
-            <TableCell>Vị trí</TableCell>
-            <TableCell>User</TableCell>
-            <TableCell>Hành động</TableCell>
-            <TableCell>Định vị</TableCell>
-            <TableCell>Chi tiết</TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>{t("index")}</TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>{t("device_model")}</TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>{t("station_name")}</TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>{t("location")}</TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>{t("username")}</TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>{t("action")}</TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>{t("coordinate")}</TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>{t("details")}</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -43,7 +45,9 @@ export default function MaintenanceApprovalTabel({
               <TableCell>{sensor.station_location || "-"}</TableCell>
               <TableCell>{sensor.user_name || "-"}</TableCell>
               <TableCell>
-                {sensor.action === "maintenance" ? "Bảo trì" : "Thay thế"}
+                {sensor.action === "maintenance"
+                  ? t("maintenance")
+                  : t("replacement")}
               </TableCell>
               <TableCell>
                 <IconButton

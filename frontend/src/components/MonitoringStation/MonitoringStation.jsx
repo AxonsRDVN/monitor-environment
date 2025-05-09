@@ -18,19 +18,19 @@ import {
 } from "@mui/material";
 import MonitoringStationTable from "../Table/MonitoringStationTable";
 import MapDialog from "../Dialog/MapDialog";
-import { useError } from "../../context/ErrorContext"; // ✅ Đúng rồi nè
+import { useError } from "../../context/ErrorContext";
 import AddButton from "../Button/AddButtons";
 import AddNewStationDialog from "../Dialog/AddNewStationDiaglog";
 import EditStationDialog from "../Dialog/EditStationDialog";
 
-const API_BASE = process.env.REACT_APP_API_URL; // Đổi theo server của bạn
+const API_BASE = process.env.REACT_APP_API_URL;
 
-export default function MonitoringStation({ station }) {
+export default function MonitoringStation() {
   const [plants, setPlants] = useState([]);
   const [stations, setStations] = useState([]);
   const [selectedPlant, setSelectedPlant] = useState("");
   const [loading, setLoading] = useState(false);
-  const { showError } = useError(); // ✅ Sửa lại đúng useError() (lúc trước bạn ghi nhầm useErrorr())
+  const { showError } = useError();
   const { t } = useTranslation("translation");
   const [mapDialogOpen, setMapDialogOpen] = useState(false);
   const [addNewDialogOpen, setAddNewDialogOpen] = useState(false);
@@ -43,33 +43,29 @@ export default function MonitoringStation({ station }) {
   const [successMessage, setSuccessMessage] = useState("");
   const [reloadFlag, setReloadFlag] = useState(false);
 
-  // Lấy danh sách plant
   useEffect(() => {
     async function fetchPlants() {
       try {
         const res = await axios.get(`${API_BASE}/monitor-environment/plants/`);
         const plantList = res.data || [];
         setPlants(plantList);
-
         if (plantList.length > 0) {
-          setSelectedPlant(plantList[0].id); // Chọn plant đầu tiên
+          setSelectedPlant(plantList[0].id);
         }
       } catch (error) {
-        console.error("Lỗi khi tải danh sách nhà máy:", error.message);
-        showError("Không thể tải danh sách nhà máy. Vui lòng thử lại sau.");
+        console.error(t("toast_login_fail"), error.message);
+        showError(t("toast_login_fail"));
       }
     }
     fetchPlants();
   }, []);
 
-  // Lấy danh sách station theo plant
   useEffect(() => {
     async function fetchStations() {
       if (!selectedPlant) {
         setStations([]);
         return;
       }
-
       try {
         setLoading(true);
         const res = await axios.get(
@@ -78,35 +74,27 @@ export default function MonitoringStation({ station }) {
         const stationList = res.data.stations || [];
         setStations(stationList);
       } catch (error) {
-        console.error("Lỗi khi tải danh sách trạm:", error.message);
-        showError("Không thể tải danh sách trạm. Vui lòng thử lại sau.");
-        setStations([]); // Reset trạm khi lỗi
+        console.error(t("toast_login_fail"), error.message);
+        showError(t("toast_login_fail"));
+        setStations([]);
       } finally {
         setLoading(false);
       }
     }
-
     fetchStations();
   }, [selectedPlant, reloadFlag]);
 
   const handleDeleteStation = async (station) => {
-    if (
-      !window.confirm(`Bạn có chắc chắn muốn xóa trạm "${station.name}" không?`)
-    ) {
-      return;
-    }
+    if (!window.confirm(t("delete_confirm", { name: station.name }))) return;
 
     try {
       await axios.delete(
         `${API_BASE}/monitor-environment/station/${station.id}/`
       );
-
       setStations((prevStations) =>
         prevStations
           .map((master) => {
-            if (master.id === station.id) {
-              return null;
-            }
+            if (master.id === station.id) return null;
             if (master.stations) {
               master.stations = master.stations.filter(
                 (s) => s.id !== station.id
@@ -116,15 +104,15 @@ export default function MonitoringStation({ station }) {
           })
           .filter((m) => m !== null)
       );
-
-      setSuccessMessage("✅ Xóa trạm thành công!");
+      setSuccessMessage(t("delete_success"));
     } catch (error) {
-      console.error("Lỗi khi xóa trạm:", error.message);
-      showError("Không thể xóa trạm. Vui lòng thử lại sau.");
+      console.error(t("toast_login_fail"), error.message);
+      showError(t("toast_login_fail"));
     }
   };
+
   const handleEdit = (station) => {
-    setEditingStation({ ...station }); // clone để tránh ảnh hưởng gốc
+    setEditingStation({ ...station });
     setEditDialogOpen(true);
   };
 
@@ -141,14 +129,9 @@ export default function MonitoringStation({ station }) {
     try {
       const response = await axios.put(
         `${API_BASE}/monitor-environment/station/${editingStation.id}/`,
-        {
-          ...editingStation,
-          plant: selectedPlant, // hoặc editingStation.plant nếu đã có
-        }
+        { ...editingStation, plant: selectedPlant }
       );
-      console.log("✅ Cập nhật thành công:", response.data);
-      setSuccessMessage("✅ Cập nhật trạm thành công!");
-      // Cập nhật lại danh sách trạm
+      setSuccessMessage(t("update_success"));
       setStations((prev) =>
         prev.map((master) => {
           if (master.id === editingStation.id) return editingStation;
@@ -160,20 +143,24 @@ export default function MonitoringStation({ station }) {
           return master;
         })
       );
-
       setEditDialogOpen(false);
     } catch (error) {
       console.error("❌ Lỗi khi cập nhật:", error);
-      showError("Cập nhật thất bại.");
+      showError(t("update_fail"));
     }
   };
 
   return (
     <PageContainer>
       <Breadcrumb
-        items={[{ label: "Trạm giám sát", path: "/setting/warning_threshold" }]}
+        items={[
+          {
+            label: t("monitoring_station"),
+            path: "/setting/warning_threshold",
+          },
+        ]}
       />
-      <PageTitle title={"Trạm giám sát"} />
+      <PageTitle title={t("monitoring_station")} />
       <PageContent sx={{ marginBottom: { xs: "100px", sm: "0" } }}>
         <Box
           sx={{
@@ -182,17 +169,14 @@ export default function MonitoringStation({ station }) {
             gap: "24px",
             mt: 2,
             justifyContent: "space-between",
-            flexDirection: {
-              xs: "column", // Màn nhỏ: dọc
-              sm: "row", // Từ sm trở lên: ngang
-            },
+            flexDirection: { xs: "column", sm: "row" },
           }}
         >
           <FormControl sx={{ maxWidth: 250, flex: 1 }}>
-            <InputLabel>Chọn nhà máy</InputLabel>
+            <InputLabel>{t("plant")}</InputLabel>
             <Select
               value={selectedPlant}
-              label="Chọn nhà máy"
+              label={t("plant")}
               onChange={(e) => setSelectedPlant(e.target.value)}
             >
               {plants.map((plant) => (
@@ -202,14 +186,18 @@ export default function MonitoringStation({ station }) {
               ))}
             </Select>
           </FormControl>
-          <AddButton onClick={() => setAddNewDialogOpen(true)} />
+
+          <AddButton
+            onClick={() => setAddNewDialogOpen(true)}
+            addText={t("add_new_station")}
+          />
         </Box>
 
         <Box sx={{ mt: 4 }}>
           {loading ? (
             <CircularProgress />
           ) : stations.length === 0 ? (
-            <Typography variant="body2">Không có trạm nào.</Typography>
+            <Typography variant="body2">{t("no_station")}</Typography>
           ) : (
             <>
               <MonitoringStationTable
@@ -232,7 +220,7 @@ export default function MonitoringStation({ station }) {
                 onClose={() => setAddNewDialogOpen(false)}
                 onSubmit={() => {
                   setAddNewDialogOpen(false);
-                  setReloadFlag((prev) => !prev); // Toggle flag để trigger reload
+                  setReloadFlag((prev) => !prev);
                 }}
               />
               <EditStationDialog
@@ -246,6 +234,7 @@ export default function MonitoringStation({ station }) {
           )}
         </Box>
       </PageContent>
+
       <Snackbar
         open={!!successMessage}
         autoHideDuration={3000}

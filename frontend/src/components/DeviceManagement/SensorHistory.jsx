@@ -1,12 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import {
-  Box,
-  Typography,
-  CircularProgress,
-  Button,
-  TextField,
-} from "@mui/material";
+import { Box, Typography, CircularProgress } from "@mui/material";
 import axios from "axios";
 import PageContainer from "../PageContainer/PageContainer";
 import Breadcrumb from "../Breadcrumb/Breadcrumb";
@@ -40,7 +34,7 @@ export default function SensorHistory() {
         setSensor(sensorRes.data);
       } catch (error) {
         console.error("Error fetching sensor:", error);
-        showError("Không thể kết nối server!");
+        showError(showError(t("can_connect_to_server")));
       } finally {
         setLoading(false);
       }
@@ -65,7 +59,7 @@ export default function SensorHistory() {
   if (!sensor) {
     return (
       <Box textAlign="center" mt={5}>
-        <Typography variant="h6">Không tìm thấy sensor.</Typography>
+        <Typography variant="h6">{t("no_sensor")}</Typography>
       </Box>
     );
   }
@@ -74,11 +68,11 @@ export default function SensorHistory() {
     <PageContainer>
       <Breadcrumb
         items={[
-          { label: "Quản lí thiết bị", path: "/setting/warning_threshold" },
-          { label: "Lịch sử bảo trì", path: "/setting/warning_threshold" },
+          { label: t("device_management"), path: "/device-management" },
+          { label: t("maintenance_history"), path: "/device-management" },
         ]}
       />
-      <PageTitle title={"Bảo trì"} />
+      <PageTitle title={t("maintenance_history")} />
       <PageContent>
         {sensor.length > 0 ? (
           <HistoryMaintenanceTable

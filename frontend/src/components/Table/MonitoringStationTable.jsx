@@ -12,6 +12,7 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
+import { useTranslation } from "react-i18next";
 
 export default function MonitoringStationTable({
   stations,
@@ -20,6 +21,7 @@ export default function MonitoringStationTable({
   onViewLocation,
 }) {
   let stt = 1;
+  const { t } = useTranslation("translation");
 
   return (
     <TableContainer component={Paper}>
@@ -32,14 +34,14 @@ export default function MonitoringStationTable({
             color="primary"
             sx={{ background: "#DEEDFE", color: "#0A6EE1" }}
           >
-            <TableCell>STT</TableCell>
-            <TableCell>Vị trí</TableCell>
-            <TableCell>Tên trạm</TableCell>
-            <TableCell>Mã trạm</TableCell>
-            <TableCell>Channel</TableCell>
-            <TableCell>Địa chỉ</TableCell>
-            <TableCell>Định vị</TableCell>
-            <TableCell>Hành động</TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>{t("index")}</TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>{t("location")}</TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>{t("station_name")}</TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>{t("station_code")}</TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>{t("channel")}</TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>{t("address")}</TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>{t("coordinate")}</TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>{t("action")}</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>

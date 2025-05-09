@@ -8,6 +8,7 @@ import {
   IconButton,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import { useTranslation } from "react-i18next";
 
 export default function EditStationDialog({
   open,
@@ -17,6 +18,7 @@ export default function EditStationDialog({
   onUpdate,
 }) {
   const [errors, setErrors] = useState({});
+  const { t } = useTranslation("translation");
 
   useEffect(() => {
     if (open) setErrors({});
@@ -31,16 +33,14 @@ export default function EditStationDialog({
 
   const validate = () => {
     const newErrors = {};
-    if (!station.name?.trim()) newErrors.name = "Tên trạm không được bỏ trống";
-    if (!station.code?.trim()) newErrors.code = "Mã trạm không được bỏ trống";
-    if (!station.location?.trim())
-      newErrors.location = "Vị trí không được bỏ trống";
-    if (!station.address?.trim())
-      newErrors.address = "Địa chỉ không được bỏ trống";
-    if (!station.channel?.trim())
-      newErrors.channel = "Channel không được bỏ trống";
-    if (!station.latitude?.trim()) newErrors.latitude = "Kinh độ bắt buộc";
-    if (!station.longitude?.trim()) newErrors.longitude = "Vĩ độ bắt buộc";
+    if (!station.name?.trim()) newErrors.name = t("station_name_required");
+    if (!station.code?.trim()) newErrors.code = t("station_code_required");
+    if (!station.location?.trim()) newErrors.location = t("location_required");
+    if (!station.address?.trim()) newErrors.address = t("address_required");
+    if (!station.channel?.trim()) newErrors.channel = t("channel_required");
+    if (!station.latitude?.trim()) newErrors.latitude = t("latitude_required");
+    if (!station.longitude?.trim())
+      newErrors.longitude = t("longitude_required");
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -68,7 +68,7 @@ export default function EditStationDialog({
             alignItems: "center",
           }}
         >
-          <Typography variant="h6">Chỉnh sửa trạm</Typography>
+          <Typography variant="h6">{t("edit_station")}</Typography>
           <IconButton onClick={onClose}>
             <CloseIcon />
           </IconButton>
@@ -77,7 +77,7 @@ export default function EditStationDialog({
         <Box sx={{ mt: 2, flexGrow: 1 }}>
           <TextField
             fullWidth
-            label="Tên trạm"
+            label={t("station_name")}
             margin="normal"
             value={station.name || ""}
             onChange={handleChange("name")}
@@ -86,7 +86,7 @@ export default function EditStationDialog({
           />
           <TextField
             fullWidth
-            label="Mã trạm"
+            label={t("station_code")}
             margin="normal"
             value={station.code || ""}
             onChange={handleChange("code")}
@@ -95,7 +95,7 @@ export default function EditStationDialog({
           />
           <TextField
             fullWidth
-            label="Vị trí"
+            label={t("location")}
             margin="normal"
             value={station.location || ""}
             onChange={handleChange("location")}
@@ -104,7 +104,7 @@ export default function EditStationDialog({
           />
           <TextField
             fullWidth
-            label="Channel"
+            label={t("channel")}
             margin="normal"
             value={station.channel || ""}
             onChange={handleChange("channel")}
@@ -113,7 +113,7 @@ export default function EditStationDialog({
           />
           <TextField
             fullWidth
-            label="Địa chỉ"
+            label={t("address")}
             margin="normal"
             value={station.address || ""}
             onChange={handleChange("address")}
@@ -122,7 +122,7 @@ export default function EditStationDialog({
           />
           <TextField
             fullWidth
-            label="Kinh độ"
+            label={t("longitude")}
             margin="normal"
             value={station.latitude || ""}
             onChange={handleChange("latitude")}
@@ -131,13 +131,14 @@ export default function EditStationDialog({
           />
           <TextField
             fullWidth
-            label="Vĩ độ"
+            label={t("latitude")}
             margin="normal"
             value={station.longitude || ""}
             onChange={handleChange("longitude")}
             error={!!errors.longitude}
             helperText={errors.longitude}
           />
+
           {station.latitude && station.longitude && (
             <iframe
               title="Google Map"
@@ -158,7 +159,7 @@ export default function EditStationDialog({
           onClick={handleSubmit}
           sx={{ marginBottom: "50px", marginTop: "20px" }}
         >
-          Cập nhật
+          {t("update")}
         </Button>
       </Box>
     </Drawer>

@@ -29,7 +29,7 @@ export default function DeviceStatus() {
         }
       } catch (error) {
         console.error("Lỗi khi load plants:", error);
-        showError("Không thể kết nối server!");
+        showError(showError(t("can_connect_to_server")));
       }
     }
     fetchPlants();
@@ -46,7 +46,7 @@ export default function DeviceStatus() {
           setSensors(res.data || []);
         } catch (error) {
           console.error("Lỗi khi load maintenance:", error);
-          showError("Không thể kết nối server!");
+          showError(showError(t("can_connect_to_server")));
         } finally {
           setLoading(false);
         }
@@ -59,15 +59,15 @@ export default function DeviceStatus() {
     <PageContainer>
       <Breadcrumb
         items={[
-          { label: "Báo cáo", path: "/setting/warning_threshold" },
-          { label: "Trạng thái thiết bị", path: "/setting/warning_threshold" },
+          { label: t("report"), path: "/report/device-status" },
+          { label: t("device_status"), path: "/report/device-status" },
         ]}
       />
-      <PageTitle title={"Trạng thái thiết bị"} />
+      <PageTitle title={t("device_status")} />
       <PageContent sx={{ marginBottom: { xs: "100px", sm: "0" } }}>
         <Box mb={6}>
           <FormControl sx={{ minWidth: 250 }}>
-            <InputLabel>Chọn nhà máy</InputLabel>
+            <InputLabel>{t("plant")}</InputLabel>
             <Select
               value={selectedPlant}
               label="Chọn nhà máy"

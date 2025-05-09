@@ -8,6 +8,7 @@ import { getDetailIndexLastest } from "../../api/detailIndexApi";
 import { ICON_MAP } from "../Icon/ParameterIcon"; // Đảm bảo đúng đường dẫn
 import ParameterChartSection from "../Chart/ParameterChartSection";
 import { useError } from "../../context/ErrorContext";
+import { useTranslation } from "react-i18next";
 
 export default function ParameterDetail() {
   const { plantId, stationId, parameterKey } = useParams();
@@ -15,6 +16,7 @@ export default function ParameterDetail() {
   const [station, setStation] = useState(null);
   const [error, setError] = useState("");
   const { showError } = useError();
+  const { t } = useTranslation("translation");
 
   useEffect(() => {
     const loadData = async () => {
@@ -24,8 +26,8 @@ export default function ParameterDetail() {
         setStation(res.station);
       } catch (err) {
         console.error(err);
-        setError("Không thể tải dữ liệu chỉ số 😥");
-        showError("Không thể kết nối server!");
+        setError(t("toast_login_fail"));
+        showError(showError(t("can_connect_to_server")));
       }
     };
 
@@ -43,8 +45,11 @@ export default function ParameterDetail() {
     <PageContainer>
       <Breadcrumb
         items={[
-          { label: "Trang chủ", path: "/home" },
-          { label: "Trạng thái", path: "/monitoring-station" },
+          { label: t("home_page"), path: "/home" },
+          {
+            label: t("status"),
+            path: `/home/plant/${plantId}/stations`,
+          },
           {
             label: station?.name || "",
             path: `/home/plant/${plantId}/stations/${stationId}/detail-index-lastest`,
@@ -80,7 +85,7 @@ export default function ParameterDetail() {
           </Box>
         ) : (
           <Typography color="text.secondary">
-            Không có dữ liệu cho chỉ số "{parameterKey}"
+            {t("no_data_for_indicator")} {parameterKey}
           </Typography>
         )}
       </PageContent>

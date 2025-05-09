@@ -5,8 +5,8 @@ import SaveIcon from "@mui/icons-material/Save";
 export default function ActionButtons({
   onSave,
   onCancel,
-  saveText = "Lưu",
-  cancelText = "Hủy",
+  saveText,
+  cancelText,
   saveDisabled = false,
   cancelDisabled = false,
   sx,
