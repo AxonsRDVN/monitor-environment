@@ -22,6 +22,7 @@ import { useError } from "../../context/ErrorContext";
 import AddButton from "../Button/AddButtons";
 import AddNewStationDialog from "../Dialog/AddNewStationDiaglog";
 import EditStationDialog from "../Dialog/EditStationDialog";
+import { getAllPlants } from "../../api/plantApi";
 
 const API_BASE = process.env.REACT_APP_API_URL;
 
@@ -46,11 +47,10 @@ export default function MonitoringStation() {
   useEffect(() => {
     async function fetchPlants() {
       try {
-        const res = await axios.get(`${API_BASE}/monitor-environment/plants/`);
-        const plantList = res.data || [];
-        setPlants(plantList);
-        if (plantList.length > 0) {
-          setSelectedPlant(plantList[0].id);
+        const res = await getAllPlants();
+        setPlants(res);
+        if (res.length > 0) {
+          setSelectedPlant(res[0].id);
         }
       } catch (error) {
         console.error(t("toast_login_fail"), error.message);

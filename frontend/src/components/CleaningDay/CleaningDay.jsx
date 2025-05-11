@@ -22,6 +22,7 @@ import ActionButtons from "../Button/ActionButtons";
 import axios from "axios";
 import dayjs from "dayjs";
 import { useError } from "../../context/ErrorContext";
+import { getAllPlants } from "../../api/plantApi";
 
 const API_BASE = process.env.REACT_APP_API_URL;
 
@@ -40,14 +41,14 @@ export default function CleaningDay() {
   useEffect(() => {
     async function fetchPlants() {
       try {
-        const res = await axios.get(`${API_BASE}/monitor-environment/plants/`);
-        setPlants(res.data || []);
-        if (res.data.length > 0) {
-          setSelectedPlant(res.data[0].id);
+        const res = await getAllPlants();
+        setPlants(res);
+        if (res.length > 0) {
+          setSelectedPlant(res[0].id);
         }
       } catch (error) {
-        console.error("error:", error.message);
-        showError("error");
+        console.error(t("toast_login_fail"), error.message);
+        showError(t("toast_login_fail"));
       }
     }
     fetchPlants();

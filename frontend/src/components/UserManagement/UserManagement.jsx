@@ -94,11 +94,16 @@ export default function UserManagement() {
       gender: data.gender.toLowerCase(),
       date_of_birth: data.date_of_birth,
       role: getRoleId(data.role),
+      plants: data.plants, // ✅ thêm dòng này
     };
 
     try {
       if (selectedUser) {
-        await axios.patch(
+        // await axios.patch(
+        //   `${API_BASE}/monitor-environment/user/${selectedUser.id}/`,
+        //   payload
+        // );
+        await axios.put(
           `${API_BASE}/monitor-environment/user/${selectedUser.id}/`,
           payload
         );

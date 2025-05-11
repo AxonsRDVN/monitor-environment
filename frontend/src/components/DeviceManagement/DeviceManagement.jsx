@@ -17,6 +17,7 @@ import {
 import DeviceManagementTable from "../Table/DeviceManagementTable";
 import { useNavigate } from "react-router-dom";
 import { useError } from "../../context/ErrorContext";
+import { getAllPlants } from "../../api/plantApi";
 
 const API_BASE = process.env.REACT_APP_API_URL;
 
@@ -34,15 +35,14 @@ export default function DeviceManagement() {
   useEffect(() => {
     async function fetchPlants() {
       try {
-        const res = await axios.get(`${API_BASE}/monitor-environment/plants/`);
-        const plantList = res.data || [];
-        setPlants(plantList);
-        if (plantList.length > 0) {
-          setSelectedPlant(plantList[0].id);
+        const res = await getAllPlants();
+        setPlants(res);
+        if (res.length > 0) {
+          setSelectedPlant(res[0].id);
         }
       } catch (error) {
-        console.error(t("load_plant_error"), error.message);
-        showError(t("load_plant_error"));
+        console.error(t("toast_login_fail"), error.message);
+        showError(t("toast_login_fail"));
       }
     }
     fetchPlants();

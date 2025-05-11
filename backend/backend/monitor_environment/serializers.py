@@ -30,13 +30,17 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True)
     role_name = serializers.CharField(source="role.role_name", read_only=True)  # ✅
-
+    plants = serializers.SerializerMethodField()
+    
     class Meta:
         model = User
         fields = "__all__"
         extra_kwargs = {
             "password": {"write_only": True},
         }
+        
+    def get_plants(self, user):
+        return list(PlantAccess.objects.filter(user=user).values_list('plant_id', flat=True))
 
     def create(self, validated_data):
         password = validated_data.pop("password")
@@ -101,6 +105,12 @@ class PlantSerializer(serializers.ModelSerializer):
         model = Plant
         fields = "__all__"  # hoặc liệt kê cụ thể các trường
 
+class PlantAccessSerializer(serializers.ModelSerializer):
+    plant = PlantSerializer(read_only=True)
+
+    class Meta:
+        model = PlantAccess
+        fields = ['id', 'plant', 'role', 'granted_at']
 
 class StationSerializer(serializers.ModelSerializer):
     class Meta:

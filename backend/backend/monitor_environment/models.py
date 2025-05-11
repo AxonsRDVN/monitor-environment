@@ -94,7 +94,18 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return f"{self.username} (ID: {self.id})"
+    
+class PlantAccess(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    plant = models.ForeignKey(Plant, on_delete=models.CASCADE)
+    role = models.CharField(max_length=50, blank=True, null=True)  # optional
+    granted_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        unique_together = ('user', 'plant')  # Tránh gán trùng
+        
+    def __str__(self):
+        return f"{self.user.username} → {self.plant.name}"
 
 class Station(models.Model):
     STATION_TYPE_CHOICES = [

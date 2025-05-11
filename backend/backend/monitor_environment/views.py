@@ -56,14 +56,25 @@ class UserListAPIView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
+        plant_ids = request.data.pop("plants", [])  # ✅ lấy danh sách plant ID từ request
+
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            user = serializer.save()  # ✅ tạo user
+
+            # ✅ gán quyền xem nhà máy
+            for plant_id in plant_ids:
+                try:
+                    plant = Plant.objects.get(id=plant_id)
+                    PlantAccess.objects.get_or_create(user=user, plant=plant)
+                except Plant.DoesNotExist:
+                    continue  # hoặc log lỗi nếu cần
+
             return Response(
                 {"message": "User created successfully"}, status=status.HTTP_201_CREATED
             )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class UserDetailAPIView(APIView):
     def get(self, request, pk):
@@ -85,6 +96,30 @@ class UserDetailAPIView(APIView):
             serializer.save()
             return Response({"message": "User updated successfully"})
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def put(self, request, pk):
+        plant_ids = request.data.pop("plants", [])
+
+        try:
+            user = User.objects.get(pk=pk)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=404)
+
+        serializer = UserSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+
+            # ✅ Cập nhật quyền
+            PlantAccess.objects.filter(user=user).delete()
+            for plant_id in plant_ids:
+                try:
+                    plant = Plant.objects.get(id=plant_id)
+                    PlantAccess.objects.get_or_create(user=user, plant=plant)
+                except Plant.DoesNotExist:
+                    continue
+
+            return Response({"message": "User updated"}, status=200)
+        return Response(serializer.errors, status=400)
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
@@ -100,8 +135,10 @@ class CurrentUserAPIView(APIView):
 
 
 class PlantListAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    
     def get(self, request):
-        plants = Plant.objects.all()
+        plants = Plant.objects.filter(plantaccess__user=request.user).distinct()
         result = []
 
         for plant in plants:

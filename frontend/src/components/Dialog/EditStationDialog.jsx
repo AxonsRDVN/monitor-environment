@@ -6,9 +6,15 @@ import {
   Box,
   Typography,
   IconButton,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { useTranslation } from "react-i18next";
+import axios from "axios";
+import { cloneSensor } from "../../api/sensorApi";
+
+const API_BASE = process.env.REACT_APP_API_URL;
 
 export default function EditStationDialog({
   open,
@@ -18,17 +24,72 @@ export default function EditStationDialog({
   onUpdate,
 }) {
   const [errors, setErrors] = useState({});
+  const [sensors, setSensors] = useState([]);
+  const [successMessage, setSuccessMessage] = useState("");
   const { t } = useTranslation("translation");
 
+  // Add state for selected sensors and parameters
+  const [selectedSensors, setSelectedSensors] = useState([]);
+  const [selectedParameters, setSelectedParameters] = useState([]);
+
   useEffect(() => {
-    if (open) setErrors({});
-  }, [open]);
+    if (open) {
+      setErrors({});
+      // Fetch sensors when dialog opens
+      fetchSensors();
+
+      // If station has selectedSensors and selectedParameters, initialize them
+      if (station.selectedSensors) {
+        setSelectedSensors(station.selectedSensors);
+      }
+      if (station.selectedParameters) {
+        setSelectedParameters(station.selectedParameters);
+      }
+    }
+  }, [open, station]);
+
+  const fetchSensors = async () => {
+    try {
+      const response = await axios.get(`${API_BASE}/sensor-manager/sensors/`);
+      setSensors(response.data);
+    } catch (error) {
+      console.error("Error fetching sensors:", error);
+    }
+  };
 
   if (!station) return null;
 
   const handleChange = (field) => (e) => {
     onChange({ ...station, [field]: e.target.value });
     setErrors((prev) => ({ ...prev, [field]: "" }));
+  };
+
+  const handleSensorChange = (sensorId, checked) => {
+    const updatedSelectedSensors = checked
+      ? [...selectedSensors, sensorId]
+      : selectedSensors.filter((id) => id !== sensorId);
+
+    setSelectedSensors(updatedSelectedSensors);
+
+    // Update the station object with new selected sensors
+    onChange({
+      ...station,
+      selectedSensors: updatedSelectedSensors,
+    });
+  };
+
+  const handleParameterChange = (paramId, checked) => {
+    const updatedSelectedParameters = checked
+      ? [...selectedParameters, paramId]
+      : selectedParameters.filter((id) => id !== paramId);
+
+    setSelectedParameters(updatedSelectedParameters);
+
+    // Update the station object with new selected parameters
+    onChange({
+      ...station,
+      selectedParameters: updatedSelectedParameters,
+    });
   };
 
   const validate = () => {
@@ -45,9 +106,31 @@ export default function EditStationDialog({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (validate()) {
-      onUpdate();
+      try {
+        // First update the station
+        await onUpdate();
+
+        // Then handle sensor changes if needed
+        const stationId = station.id;
+        const plantId = station.plant;
+
+        // Add logic for cloning new sensors if needed
+        for (const sensorId of selectedSensors) {
+          // Check if this is a newly selected sensor
+          if (
+            !station.originalSelectedSensors ||
+            !station.originalSelectedSensors.includes(sensorId)
+          ) {
+            await cloneSensor(sensorId, stationId, plantId);
+          }
+        }
+
+        setSuccessMessage(t("update_station_success"));
+      } catch (error) {
+        console.error("Error updating station or sensors:", error);
+      }
     }
   };
 
@@ -59,7 +142,14 @@ export default function EditStationDialog({
       PaperProps={{ sx: { width: "400px" } }}
     >
       <Box
-        sx={{ p: 2, display: "flex", flexDirection: "column", height: "100" }}
+        sx={{
+          p: 2,
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",
+          overflow: "auto",
+          pb: "50px",
+        }}
       >
         <Box
           sx={{
@@ -150,6 +240,65 @@ export default function EditStationDialog({
               allowFullScreen
             />
           )}
+
+          {/* Add Sensor Selection */}
+          <Box sx={{ mt: 2, mb: 2 }}>
+            <Typography variant="subtitle1">{t("select_sensor")}</Typography>
+            {sensors.map((sensor) => (
+              <Box
+                key={sensor.id}
+                sx={{ display: "flex", alignItems: "center" }}
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedSensors.includes(sensor.id)}
+                  onChange={(e) =>
+                    handleSensorChange(sensor.id, e.target.checked)
+                  }
+                />
+                <Typography sx={{ ml: 1 }}>{sensor.model_sensor}</Typography>
+              </Box>
+            ))}
+          </Box>
+
+          {/* Show parameters for selected sensors */}
+          {selectedSensors.map((sensorId) => {
+            const sensor = sensors.find((s) => s.id === sensorId);
+            return sensor ? (
+              <Box
+                key={sensorId}
+                sx={{
+                  mt: 2,
+                  mb: 2,
+                  p: 2,
+                  border: "1px solid #ccc",
+                  borderRadius: 2,
+                }}
+              >
+                <Typography variant="subtitle2" fontWeight="bold">
+                  {t("parameter_of_sensor")}: {sensor.model_sensor}
+                </Typography>
+                {sensor.parameters &&
+                  sensor.parameters.map((param) => (
+                    <Box
+                      key={param.id}
+                      sx={{ display: "flex", alignItems: "center" }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedParameters.includes(param.id)}
+                        onChange={(e) =>
+                          handleParameterChange(param.id, e.target.checked)
+                        }
+                      />
+                      <Typography sx={{ ml: 1 }}>
+                        {t(param.name)} ({param.unit})
+                      </Typography>
+                    </Box>
+                  ))}
+              </Box>
+            ) : null;
+          })}
         </Box>
 
         <Button
@@ -161,6 +310,21 @@ export default function EditStationDialog({
         >
           {t("update")}
         </Button>
+
+        <Snackbar
+          open={!!successMessage}
+          autoHideDuration={3000}
+          onClose={() => setSuccessMessage("")}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        >
+          <Alert
+            onClose={() => setSuccessMessage("")}
+            severity="success"
+            sx={{ width: "100%" }}
+          >
+            {successMessage}
+          </Alert>
+        </Snackbar>
       </Box>
     </Drawer>
   );

@@ -9,6 +9,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 urlpatterns = [
     # ví dụ:
     path("user/", UserListAPIView.as_view(), name="user-detail"),
+    # path("user/<int:pk>/", UserDetailAPIView.as_view(), name="user-detail"),
     path("user/<int:pk>/", UserDetailAPIView.as_view(), name="user-detail"),
     path("token/", MyTokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),

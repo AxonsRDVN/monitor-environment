@@ -48,7 +48,7 @@ const getWindDirectionLabel = (degree) => {
 export const statusColors = {
   normal: {
     bg: "#DEEDFE",
-    text: "#22AB67",
+    text: "#0A6EE1",
     iconColor: "#0A6EE1",
     icon: (
       <svg

@@ -23,6 +23,7 @@ import DetailWarningIndicatorTable from "../Table/DetailWarningIndicatorTable";
 import GeneralWarningIndicatorTable from "../Table/GeneralWarningIncaditor";
 import { CalendarToday } from "@mui/icons-material";
 import Pagination from "@mui/material/Pagination"; // ✅ nhớ import Pagination
+import { getAllPlants } from "../../api/plantApi";
 
 const API_BASE = process.env.REACT_APP_API_URL;
 
@@ -46,14 +47,14 @@ export default function WarningIndicator() {
   useEffect(() => {
     async function fetchPlants() {
       try {
-        const res = await axios.get(`${API_BASE}/monitor-environment/plants/`);
-        setPlants(res.data || []);
-        if (res.data.length > 0) {
-          setSelectedPlant(res.data[0].id);
+        const res = await getAllPlants();
+        setPlants(res);
+        if (res.length > 0) {
+          setSelectedPlant(res[0].id);
         }
       } catch (error) {
-        console.error("Lỗi khi load plants:", error.message);
-        showError("Không thể tải danh sách nhà máy. Vui lòng thử lại sau!");
+        console.error(t("toast_login_fail"), error.message);
+        showError(t("toast_login_fail"));
       }
     }
     fetchPlants();

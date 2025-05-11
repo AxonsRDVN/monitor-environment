@@ -28,6 +28,12 @@ class PlantAdmin(admin.ModelAdmin):
     list_display = ("name", "org_code", "status", "is_active", "created_at")
     search_fields = ("name", "org_code", "location")
     list_filter = ("status", "is_active")
+    
+@admin.register(PlantAccess)
+class PlantAdmin(admin.ModelAdmin):
+    list_display = ("user", "plant", "role", "granted_at")
+    search_fields = ("user", "plant", "role")
+    list_filter = ("user", "plant", "granted_at")
 
 @admin.register(Station)
 class StationAdmin(admin.ModelAdmin):

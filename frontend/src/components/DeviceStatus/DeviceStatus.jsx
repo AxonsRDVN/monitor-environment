@@ -8,6 +8,7 @@ import axios from "axios";
 import { useError } from "../../context/ErrorContext";
 import DeviceStatusTabel from "../Table/DeviceStatusTable";
 import { Box, FormControl, InputLabel, MenuItem, Select } from "@mui/material";
+import { getAllPlants } from "../../api/plantApi";
 
 const API_BASE = process.env.REACT_APP_API_URL;
 
@@ -22,14 +23,14 @@ export default function DeviceStatus() {
   useEffect(() => {
     async function fetchPlants() {
       try {
-        const res = await axios.get(`${API_BASE}/monitor-environment/plants/`);
-        setPlants(res.data || []);
-        if (res.data.length > 0) {
-          setSelectedPlant(res.data[0].id);
+        const res = await getAllPlants();
+        setPlants(res);
+        if (res.length > 0) {
+          setSelectedPlant(res[0].id);
         }
       } catch (error) {
-        console.error("Lỗi khi load plants:", error);
-        showError(showError(t("can_connect_to_server")));
+        console.error(t("toast_login_fail"), error.message);
+        showError(t("toast_login_fail"));
       }
     }
     fetchPlants();

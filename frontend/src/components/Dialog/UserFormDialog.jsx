@@ -12,6 +12,8 @@ import {
   Box,
   OutlinedInput,
   InputAdornment,
+  Checkbox,
+  ListItemText,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
@@ -19,6 +21,8 @@ import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
+import { getAllPlants } from "../../api/plantApi";
+import { useError } from "../../context/ErrorContext";
 
 const ROLES = {
   1: "admin",
@@ -42,11 +46,30 @@ export default function UserFormDialog({
     role: "user",
     gender: "Male",
     date_of_birth: dayjs().format("YYYY-MM-DD"),
+    plants: [], // ✅ thêm dòng này
   };
   const { t } = useTranslation("translation");
   const [formData, setFormData] = useState(defaultFormData);
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const { showError } = useError();
+  const [plants, setPlants] = useState([]);
+
+  useEffect(() => {
+    const fetchPlants = async () => {
+      try {
+        const res = await getAllPlants();
+        setPlants(res);
+      } catch (err) {
+        showError(showError(t("can_connect_to_server")));
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPlants();
+  }, []);
 
   useEffect(() => {
     setFormData(
@@ -62,6 +85,7 @@ export default function UserFormDialog({
             role: ROLES[initialData.role],
             date_of_birth:
               initialData.date_of_birth || dayjs().format("YYYY-MM-DD"),
+            plants: initialData.plants || [], // ✅ Gán giá trị đã phân quyền
           }
         : defaultFormData
     );
@@ -96,6 +120,7 @@ export default function UserFormDialog({
     }
   };
 
+  console.log("✅ Selected plants:", formData.plants);
   return (
     <Drawer
       anchor="right"
@@ -237,6 +262,28 @@ export default function UserFormDialog({
             <MenuItem value="admin">{t("admin")}</MenuItem>
             <MenuItem value="manager">{t("user")}</MenuItem>
             <MenuItem value="user">{t("manager")}</MenuItem>
+          </Select>
+        </FormControl>
+        <FormControl fullWidth margin="normal">
+          <InputLabel>{t("plant_access")}</InputLabel>
+          <Select
+            multiple
+            value={formData.plants || []}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, plants: e.target.value }))
+            }
+            renderValue={(selected) =>
+              selected
+                .map((id) => plants.find((p) => p.id === id)?.name || id)
+                .join(", ")
+            }
+          >
+            {plants.map((plant) => (
+              <MenuItem key={plant.id} value={plant.id}>
+                <Checkbox checked={formData.plants.includes(plant.id)} />
+                <ListItemText primary={plant.name} />
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
 
