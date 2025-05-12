@@ -750,13 +750,27 @@ class SensorByStationView(APIView):
             sensor.pop("station", None)
 
             # Tính longevity
-            create_at = sensors[i].create_at  # Lấy từ queryset gốc để tránh lỗi
+            create_at = sensors[i].create_at
             if create_at:
                 longevity_days = (today - create_at).days
             else:
                 longevity_days = None
 
             sensor["longevity"] = longevity_days
+
+            # ✅ Thêm ngày bảo trì gần nhất đã được duyệt
+            last_maintenance = (
+                Maintenance.objects
+                .filter(sensor=sensors[i], status="approved")
+                .order_by("-update_at")
+                .only("update_at")
+                .first()
+            )
+
+            sensor["last_maintenance"] = (
+                last_maintenance.update_at.date() if last_maintenance else None
+            )
+
             filtered_data.append(sensor)
 
         return Response(

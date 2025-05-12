@@ -314,5 +314,7 @@
   "loading": "Đang tải ...",
   "male": "Nam",
   "female": "Nữ",
-  "plant_access": "Nhà máy được phân quyền"
+  "plant_access": "Nhà máy được phân quyền",
+  "fill_all_fields": "Vui lòng điền tất cả các trường bắt buộc",
+  "day_has_not_come_or_not_update": "Ngày chưa đến hoặc chưa cập nhật ngày vệ sinh"
 }

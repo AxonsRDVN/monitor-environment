@@ -141,7 +141,7 @@ function App() {
             </PrivateRoute>
           }
         />
-        <Route path="/not-found" element={<NoPermissionPage/>} />
+        <Route path="/not-found" element={<NoPermissionPage />} />
       </Routes>
     </BrowserRouter>
   );
