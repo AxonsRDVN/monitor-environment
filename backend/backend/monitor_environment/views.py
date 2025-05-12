@@ -1584,6 +1584,20 @@ class CloneSensorAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # ✅ Kiểm tra sensor cùng model đã tồn tại tại station+plant
+        existing_sensor = Sensor.objects.filter(
+            model_sensor=original_sensor.model_sensor,
+            station_id=station_id,
+            plant_id=plant_id
+        ).first()
+
+        if existing_sensor:
+            return Response(
+                {"error": "Sensor đã tồn tại ở station và plant này."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # ✅ Clone sensor
         clone_sensor = Sensor(
             model_sensor=original_sensor.model_sensor,
             manufacturer=original_sensor.manufacturer,
@@ -1610,9 +1624,18 @@ class CloneSensorAPIView(APIView):
 
         clone_sensor.save()
 
-        # Clone các parameters (gán sensor_id và station_id mới)
+        # ✅ Clone các parameters nếu chưa tồn tại (cùng name)
         original_parameters = Parameter.objects.filter(sensor=original_sensor)
         for param in original_parameters:
+            exists = Parameter.objects.filter(
+                name=param.name,
+                sensor__station_id=station_id,
+                sensor__plant_id=plant_id
+            ).exists()
+
+            if exists:
+                continue  # bỏ qua nếu đã có
+
             Parameter.objects.create(
                 sensor=clone_sensor,
                 station_id=station_id,
@@ -1633,7 +1656,6 @@ class CloneSensorAPIView(APIView):
             {"message": "Clone sensor thành công!", "new_sensor_id": clone_sensor.id},
             status=status.HTTP_201_CREATED,
         )
-
 
 class ExportPdfEmailAPIView(APIView):
     def post(self, request):

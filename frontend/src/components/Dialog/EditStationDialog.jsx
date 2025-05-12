@@ -27,7 +27,10 @@ export default function EditStationDialog({
   const [sensors, setSensors] = useState([]);
   const [successMessage, setSuccessMessage] = useState("");
   const { t } = useTranslation("translation");
-  console.log(station);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState("success"); // or "error"
+
   useEffect(() => {
     if (open) {
       setErrors({});
@@ -78,27 +81,42 @@ export default function EditStationDialog({
   const handleSubmit = async () => {
     if (validate()) {
       try {
-        // First update the station
         await onUpdate();
 
-        // Then handle sensor changes if needed
         const stationId = station.id;
         const plantId = 1;
 
-        // Add logic for cloning new sensors if needed
+        // ✅ cloneSensor: gom lỗi nếu có
         for (const sensorId of station.selectedSensors) {
-          // Check if this is a newly selected sensor
           if (
             !station.originalSelectedSensors ||
             !station.originalSelectedSensors.includes(sensorId)
           ) {
-            await cloneSensor(sensorId, stationId, plantId);
+            try {
+              const response = await cloneSensor(sensorId, stationId, plantId);
+              if (response?.data?.error) {
+                throw new Error(response.data.error);
+              }
+            } catch (cloneError) {
+              // ✅ Nếu bất kỳ sensor nào lỗi → hiện lỗi và dừng
+              setAlertType("error");
+              setAlertMessage(
+                cloneError?.response?.data?.error || "Lỗi khi nhân bản sensor."
+              );
+              return; // ⛔ Dừng luôn, không set thành công
+            }
           }
         }
-        console.log(stationId, plantId);
-        setSuccessMessage(t("update_station_success"));
+
+        // ✅ Nếu tất cả đều ok → báo thành công
+        setAlertType("success");
+        setAlertMessage(t("update_station_success"));
       } catch (error) {
         console.error("Error updating station or sensors:", error);
+        setAlertType("error");
+        setAlertMessage(
+          error?.response?.data?.error || t("update_station_failed")
+        );
       }
     }
   };
@@ -300,17 +318,17 @@ export default function EditStationDialog({
         </Button>
 
         <Snackbar
-          open={!!successMessage}
+          open={!!alertMessage}
           autoHideDuration={3000}
-          onClose={() => setSuccessMessage("")}
+          onClose={() => setAlertMessage("")}
           anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
         >
           <Alert
-            onClose={() => setSuccessMessage("")}
-            severity="success"
+            onClose={() => setAlertMessage("")}
+            severity={alertType}
             sx={{ width: "100%" }}
           >
-            {successMessage}
+            {alertMessage}
           </Alert>
         </Snackbar>
       </Box>
