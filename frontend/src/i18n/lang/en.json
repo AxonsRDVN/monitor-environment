@@ -315,5 +315,7 @@
   "male": "Male",
   "female": "Female",
   "plant_access": "Plant Access",
+  "fill_all_fields": "Please fill in all fields",
+  "day_has_not_come_or_not_update": "The day has not come or has not been updated",
   "your_cordinate": "Your coordinate"
 }

@@ -20,6 +20,7 @@ export default function DeviceManagementTable({
   const { t } = useTranslation("translation");
   let stt = 1;
   const API_BASE_URL = process.env.REACT_APP_API_URL; // hoặc lấy từ biến môi trường
+  const today = new Date(); // ngày hôm nay
   return (
     <TableContainer component={Paper}>
       <Table>
@@ -80,12 +81,38 @@ export default function DeviceManagementTable({
                     style={{ width: 35, height: 35, objectFit: "cover" }}
                   />
                 </TableCell>
-                <TableCell>{sensor.expiry || "-"}</TableCell>
-                <TableCell>{sensor.longevity || "-"}</TableCell>
+                <TableCell>
+                  {sensor.expiry || "-"} {t("month")}
+                </TableCell>
+                <TableCell>
+                  {(() => {
+                    const today = new Date();
+                    const startDate = new Date(sensor.create_at);
+                    const diffDays = Math.ceil(
+                      (today - startDate) / (1000 * 60 * 60 * 24)
+                    );
+
+                    return `${diffDays} ${t("day")}`;
+                  })()}
+                </TableCell>
                 <TableCell>{sensor.create_at || "-"}</TableCell>
-                <TableCell>{sensor.create_at || "-"}</TableCell>
-                <TableCell>{sensor.create_at || "-"}</TableCell>
-                <TableCell>{sensor.expiry || "-"}</TableCell>
+                <TableCell>
+                  {sensor.last_maintenance || sensor.create_at || "-"}
+                </TableCell>
+                <TableCell>{sensor.day_clean || "-"}</TableCell>
+                <TableCell>
+                  {(() => {
+                    const today = new Date();
+                    const cleanDate = new Date(sensor.day_clean);
+                    const diffDays = Math.ceil(
+                      (today - cleanDate) / (1000 * 60 * 60 * 24)
+                    );
+
+                    return diffDays >= 0
+                      ? `${diffDays} ngày`
+                      : `${t("day_has_not_come_or_not_update")}`;
+                  })()}
+                </TableCell>
                 <TableCell sx={{ display: "flex" }}>
                   <IconButton
                     color="primary"

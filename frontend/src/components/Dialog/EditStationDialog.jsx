@@ -27,10 +27,9 @@ export default function EditStationDialog({
   const [sensors, setSensors] = useState([]);
   const [successMessage, setSuccessMessage] = useState("");
   const { t } = useTranslation("translation");
-
-  // Add state for selected sensors and parameters
-  const [selectedSensors, setSelectedSensors] = useState([]);
-  const [selectedParameters, setSelectedParameters] = useState([]);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState("success"); // or "error"
 
   useEffect(() => {
     if (open) {
@@ -38,12 +37,13 @@ export default function EditStationDialog({
       // Fetch sensors when dialog opens
       fetchSensors();
 
-      // If station has selectedSensors and selectedParameters, initialize them
-      if (station.selectedSensors) {
-        setSelectedSensors(station.selectedSensors);
-      }
-      if (station.selectedParameters) {
-        setSelectedParameters(station.selectedParameters);
+      // Initialize selectedSensors and selectedParameters if not already set
+      if (!station.selectedSensors) {
+        onChange({
+          ...station,
+          selectedSensors: [],
+          selectedParameters: [],
+        });
       }
     }
   }, [open, station]);
@@ -64,34 +64,6 @@ export default function EditStationDialog({
     setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
-  const handleSensorChange = (sensorId, checked) => {
-    const updatedSelectedSensors = checked
-      ? [...selectedSensors, sensorId]
-      : selectedSensors.filter((id) => id !== sensorId);
-
-    setSelectedSensors(updatedSelectedSensors);
-
-    // Update the station object with new selected sensors
-    onChange({
-      ...station,
-      selectedSensors: updatedSelectedSensors,
-    });
-  };
-
-  const handleParameterChange = (paramId, checked) => {
-    const updatedSelectedParameters = checked
-      ? [...selectedParameters, paramId]
-      : selectedParameters.filter((id) => id !== paramId);
-
-    setSelectedParameters(updatedSelectedParameters);
-
-    // Update the station object with new selected parameters
-    onChange({
-      ...station,
-      selectedParameters: updatedSelectedParameters,
-    });
-  };
-
   const validate = () => {
     const newErrors = {};
     if (!station.name?.trim()) newErrors.name = t("station_name_required");
@@ -109,27 +81,42 @@ export default function EditStationDialog({
   const handleSubmit = async () => {
     if (validate()) {
       try {
-        // First update the station
         await onUpdate();
 
-        // Then handle sensor changes if needed
         const stationId = station.id;
-        const plantId = station.plant;
+        const plantId = 1;
 
-        // Add logic for cloning new sensors if needed
-        for (const sensorId of selectedSensors) {
-          // Check if this is a newly selected sensor
+        // ✅ cloneSensor: gom lỗi nếu có
+        for (const sensorId of station.selectedSensors) {
           if (
             !station.originalSelectedSensors ||
             !station.originalSelectedSensors.includes(sensorId)
           ) {
-            await cloneSensor(sensorId, stationId, plantId);
+            try {
+              const response = await cloneSensor(sensorId, stationId, plantId);
+              if (response?.data?.error) {
+                throw new Error(response.data.error);
+              }
+            } catch (cloneError) {
+              // ✅ Nếu bất kỳ sensor nào lỗi → hiện lỗi và dừng
+              setAlertType("error");
+              setAlertMessage(
+                cloneError?.response?.data?.error || "Lỗi khi nhân bản sensor."
+              );
+              return; // ⛔ Dừng luôn, không set thành công
+            }
           }
         }
 
-        setSuccessMessage(t("update_station_success"));
+        // ✅ Nếu tất cả đều ok → báo thành công
+        setAlertType("success");
+        setAlertMessage(t("update_station_success"));
       } catch (error) {
         console.error("Error updating station or sensors:", error);
+        setAlertType("error");
+        setAlertMessage(
+          error?.response?.data?.error || t("update_station_failed")
+        );
       }
     }
   };
@@ -241,7 +228,7 @@ export default function EditStationDialog({
             />
           )}
 
-          {/* Add Sensor Selection */}
+          {/* Add Sensor Selection - Updated to match AddNewStationDialog */}
           <Box sx={{ mt: 2, mb: 2 }}>
             <Typography variant="subtitle1">{t("select_sensor")}</Typography>
             {sensors.map((sensor) => (
@@ -251,18 +238,26 @@ export default function EditStationDialog({
               >
                 <input
                   type="checkbox"
-                  checked={selectedSensors.includes(sensor.id)}
-                  onChange={(e) =>
-                    handleSensorChange(sensor.id, e.target.checked)
-                  }
+                  checked={station.selectedSensors?.includes(sensor.id)}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    onChange({
+                      ...station,
+                      selectedSensors: checked
+                        ? [...(station.selectedSensors || []), sensor.id]
+                        : (station.selectedSensors || []).filter(
+                            (id) => id !== sensor.id
+                          ),
+                    });
+                  }}
                 />
                 <Typography sx={{ ml: 1 }}>{sensor.model_sensor}</Typography>
               </Box>
             ))}
           </Box>
 
-          {/* Show parameters for selected sensors */}
-          {selectedSensors.map((sensorId) => {
+          {/* Show parameters for selected sensors - Updated to match AddNewStationDialog */}
+          {station.selectedSensors?.map((sensorId) => {
             const sensor = sensors.find((s) => s.id === sensorId);
             return sensor ? (
               <Box
@@ -286,10 +281,21 @@ export default function EditStationDialog({
                     >
                       <input
                         type="checkbox"
-                        checked={selectedParameters.includes(param.id)}
-                        onChange={(e) =>
-                          handleParameterChange(param.id, e.target.checked)
-                        }
+                        checked={station.selectedParameters?.includes(param.id)}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          onChange({
+                            ...station,
+                            selectedParameters: checked
+                              ? [
+                                  ...(station.selectedParameters || []),
+                                  param.id,
+                                ]
+                              : (station.selectedParameters || []).filter(
+                                  (id) => id !== param.id
+                                ),
+                          });
+                        }}
                       />
                       <Typography sx={{ ml: 1 }}>
                         {t(param.name)} ({param.unit})
@@ -312,17 +318,17 @@ export default function EditStationDialog({
         </Button>
 
         <Snackbar
-          open={!!successMessage}
+          open={!!alertMessage}
           autoHideDuration={3000}
-          onClose={() => setSuccessMessage("")}
+          onClose={() => setAlertMessage("")}
           anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
         >
           <Alert
-            onClose={() => setSuccessMessage("")}
-            severity="success"
+            onClose={() => setAlertMessage("")}
+            severity={alertType}
             sx={{ width: "100%" }}
           >
-            {successMessage}
+            {alertMessage}
           </Alert>
         </Snackbar>
       </Box>
