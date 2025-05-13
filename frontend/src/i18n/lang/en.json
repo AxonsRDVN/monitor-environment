@@ -314,5 +314,6 @@
   "loading": "Loading ...",
   "male": "Male",
   "female": "Female",
-  "plant_access": "Plant Access"
+  "plant_access": "Plant Access",
+  "your_cordinate": "Your coordinate"
 }

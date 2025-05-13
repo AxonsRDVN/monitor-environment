@@ -314,5 +314,6 @@
   "loading": "Đang tải ...",
   "male": "Nam",
   "female": "Nữ",
-  "plant_access": "Nhà máy được phân quyền"
+  "plant_access": "Nhà máy được phân quyền",
+  "your_cordinate": "Tọa độ của bạn"
 }

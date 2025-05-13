@@ -34,7 +34,7 @@ export default function SensorMaintenance() {
   const { t } = useTranslation("translation");
   const [action, setAction] = useState("maintenance");
   const navigate = useNavigate();
-  const user = localStorage.getItem("username");
+  const user = localStorage.getItem("fullName");
   const role = localStorage.getItem("role");
 
   useEffect(() => {
@@ -170,166 +170,173 @@ export default function SensorMaintenance() {
             borderBottom={"1px solid #E4E7EC"}
             textAlign={"center"}
           >
-            <Box sx={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-              {/* Ảnh trước bảo trì */}
-              <Box sx={{ position: "relative", width: 240, height: 240 }}>
-                {/* Nếu có ảnh thì hiện ảnh, ngược lại hiện Box upload */}
-                {imageBefore ? (
-                  <img
-                    src={URL.createObjectURL(imageBefore)}
-                    alt="Ảnh trước"
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                      borderRadius: "8px",
-                    }}
-                  />
-                ) : (
-                  <Box
-                    sx={{
-                      background: "#DEEDFE",
-                      alignItems: "center",
-                      textAlign: "center",
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "center",
-                      p: "20px",
-                      borderRadius: "8px",
-                      border: "1px dashed #0086C9",
-                      width: "100%",
-                      height: "100%",
-                    }}
-                  >
-                    <AddPhotoAlternate
-                      sx={{
-                        fontSize: "54px",
-                        color: "#0086C9",
-                        mb: 1,
+            <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+              <Box sx={{ display: "flex", gap: 4 }}>
+                {/* Ảnh trước bảo trì */}
+                <Box sx={{ position: "relative", width: 240, height: 240 }}>
+                  {/* Nếu có ảnh thì hiện ảnh, ngược lại hiện Box upload */}
+                  {imageBefore ? (
+                    <img
+                      src={URL.createObjectURL(imageBefore)}
+                      alt="Ảnh trước"
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        borderRadius: "8px",
                       }}
                     />
-                    <Typography
+                  ) : (
+                    <Box
                       sx={{
-                        color: "#0086C9",
-                        fontWeight: "600",
-                        fontSize: "16px",
+                        background: "#DEEDFE",
+                        alignItems: "center",
+                        textAlign: "center",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
+                        p: "20px",
+                        borderRadius: "8px",
+                        border: "1px dashed #0086C9",
+                        width: "100%",
+                        height: "100%",
                       }}
                     >
-                      {t("click_to_upload")}
-                    </Typography>
-                    <Typography sx={{ color: "#344054", fontSize: "14px" }}>
-                      {t("or_drag_and_drop")}
-                    </Typography>
-                  </Box>
-                )}
+                      <AddPhotoAlternate
+                        sx={{
+                          fontSize: "54px",
+                          color: "#0086C9",
+                          mb: 1,
+                        }}
+                      />
+                      <Typography
+                        sx={{
+                          color: "#0086C9",
+                          fontWeight: "600",
+                          fontSize: "16px",
+                        }}
+                      >
+                        {t("click_to_upload")}
+                      </Typography>
+                      <Typography sx={{ color: "#344054", fontSize: "14px" }}>
+                        {t("or_drag_and_drop")}
+                      </Typography>
+                    </Box>
+                  )}
 
-                {/* Ô chọn file luôn đè lên toàn bộ */}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    if (e.target.files[0]) setImageBefore(e.target.files[0]);
-                  }}
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    height: "100%",
-                    opacity: 0,
-                    cursor: "pointer",
-                  }}
-                />
-                <Box mt={1} fontSize={"16px"} color={"#344054"}>
-                  {t("before_image")}
+                  {/* Ô chọn file luôn đè lên toàn bộ */}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      if (e.target.files[0]) setImageBefore(e.target.files[0]);
+                    }}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: "100%",
+                      opacity: 0,
+                      cursor: "pointer",
+                    }}
+                  />
+                  <Box mt={1} fontSize={"16px"} color={"#344054"}>
+                    {t("before_image")}
+                  </Box>
+                </Box>
+
+                {/* Ảnh sau bảo trì */}
+                <Box sx={{ position: "relative", width: 240, height: 240 }}>
+                  {/* Nếu có ảnh thì hiện ảnh, ngược lại hiện Box upload */}
+                  {imageAfter ? (
+                    <img
+                      src={URL.createObjectURL(imageAfter)}
+                      alt="Ảnh sau"
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        borderRadius: "8px",
+                      }}
+                    />
+                  ) : (
+                    <Box
+                      sx={{
+                        background: "#DEEDFE",
+                        alignItems: "center",
+                        textAlign: "center",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
+                        p: "20px",
+                        borderRadius: "8px",
+                        border: "1px dashed #0086C9",
+                        width: "100%",
+                        height: "100%",
+                      }}
+                    >
+                      <AddPhotoAlternate
+                        sx={{
+                          fontSize: "54px",
+                          color: "#0086C9",
+                          mb: 1,
+                        }}
+                      />
+                      <Typography
+                        sx={{
+                          color: "#0086C9",
+                          fontWeight: "600",
+                          fontSize: "16px",
+                        }}
+                      >
+                        {t("click_to_upload")}
+                      </Typography>
+                      <Typography sx={{ color: "#344054", fontSize: "14px" }}>
+                        {t("or_drag_and_drop")}
+                      </Typography>
+                    </Box>
+                  )}
+
+                  {/* Ô chọn file luôn đè lên toàn bộ */}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      if (e.target.files[0]) setImageAfter(e.target.files[0]);
+                    }}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: "100%",
+                      opacity: 0,
+                      cursor: "pointer",
+                    }}
+                  />
+                  <Box mt={1} fontSize={"16px"} color={"#344054"}>
+                    {t("after_image")}
+                  </Box>
                 </Box>
               </Box>
-
-              {/* Ảnh sau bảo trì */}
-              <Box sx={{ position: "relative", width: 240, height: 240 }}>
-                {/* Nếu có ảnh thì hiện ảnh, ngược lại hiện Box upload */}
-                {imageAfter ? (
-                  <img
-                    src={URL.createObjectURL(imageAfter)}
-                    alt="Ảnh sau"
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                      borderRadius: "8px",
-                    }}
-                  />
-                ) : (
-                  <Box
-                    sx={{
-                      background: "#DEEDFE",
-                      alignItems: "center",
-                      textAlign: "center",
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "center",
-                      p: "20px",
-                      borderRadius: "8px",
-                      border: "1px dashed #0086C9",
-                      width: "100%",
-                      height: "100%",
-                    }}
-                  >
-                    <AddPhotoAlternate
-                      sx={{
-                        fontSize: "54px",
-                        color: "#0086C9",
-                        mb: 1,
-                      }}
-                    />
-                    <Typography
-                      sx={{
-                        color: "#0086C9",
-                        fontWeight: "600",
-                        fontSize: "16px",
-                      }}
-                    >
-                      {t("click_to_upload")}
-                    </Typography>
-                    <Typography sx={{ color: "#344054", fontSize: "14px" }}>
-                      {t("or_drag_and_drop")}
-                    </Typography>
-                  </Box>
+              <Box>
+                <Typography>
+                  <strong>{t("your_cordinate")}:</strong>{" "}
+                </Typography>
+                {latitude && longitude && (
+                  <iframe
+                    title="Google Map"
+                    width="100%"
+                    height="auto"
+                    frameBorder="0"
+                    style={{ border: 0 }}
+                    src={`https://www.google.com/maps?q=${latitude},${longitude}&hl=vi&z=16&output=embed`}
+                    allowFullScreen
+                  ></iframe>
                 )}
-
-                {/* Ô chọn file luôn đè lên toàn bộ */}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    if (e.target.files[0]) setImageAfter(e.target.files[0]);
-                  }}
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    height: "100%",
-                    opacity: 0,
-                    cursor: "pointer",
-                  }}
-                />
-                <Box mt={1} fontSize={"16px"} color={"#344054"}>
-                  {t("after_image")}
-                </Box>
               </Box>
             </Box>
-          </Box>
-
-          <Box mt={4}>
-            <Typography>
-              <strong>{t("longitude")}:</strong>{" "}
-              {longitude || "Đang lấy vị trí..."}
-            </Typography>
-            <Typography>
-              <strong>{t("latitude")}:</strong>{" "}
-              {latitude || "Đang lấy vị trí..."}
-            </Typography>
           </Box>
 
           {/* <Button

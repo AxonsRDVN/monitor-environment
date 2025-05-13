@@ -25,6 +25,7 @@ from io import BytesIO
 from xhtml2pdf import pisa
 from django.core.mail import EmailMessage
 from rest_framework.permissions import IsAuthenticated
+from django.utils import timezone
 
 
 def get_wind_direction_label(degree):
@@ -721,9 +722,6 @@ class ParameterTrendView(APIView):
             )
 
 
-from django.utils import timezone
-
-
 class SensorByStationView(APIView):
     def get(self, request, station_id):
         sensors = Sensor.objects.filter(station_id=station_id)
@@ -749,12 +747,24 @@ class SensorByStationView(APIView):
             sensor.pop("plant", None)
             sensor.pop("station", None)
 
-            # Tính longevity
-            create_at = sensors[i].create_at  # Lấy từ queryset gốc để tránh lỗi
-            if create_at:
-                longevity_days = (today - create_at).days
+            # Kiểm tra bảng maintenance cho sensor này
+            latest_approved_maintenance = Maintenance.objects.filter(
+                sensor_id=sensors[i].id,
+                status='approved'  # Giả sử trạng thái 'approved' là trạng thái đã duyệt
+            ).order_by('-update_at').first()
+
+            # Tính longevity dựa vào maintenance hoặc ngày tạo sensor
+            if latest_approved_maintenance:
+                # Lấy ngày từ update_at của maintenance
+                maintenance_date = latest_approved_maintenance.update_at.date()
+                longevity_days = (today - maintenance_date).days
             else:
-                longevity_days = None
+                # Logic cũ: sử dụng ngày tạo sensor
+                create_at = sensors[i].create_at
+                if create_at:
+                    longevity_days = (today - create_at).days
+                else:
+                    longevity_days = None
 
             sensor["longevity"] = longevity_days
             filtered_data.append(sensor)
