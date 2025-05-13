@@ -85,20 +85,10 @@ export default function DeviceManagementTable({
                   {sensor.expiry || "-"} {t("month")}
                 </TableCell>
                 <TableCell>
-                  {(() => {
-                    const today = new Date();
-                    const startDate = new Date(sensor.create_at);
-                    const diffDays = Math.ceil(
-                      (today - startDate) / (1000 * 60 * 60 * 24)
-                    );
-
-                    return `${diffDays} ${t("day")}`;
-                  })()}
+                  {sensor.longevity} {t("day")}
                 </TableCell>
                 <TableCell>{sensor.create_at || "-"}</TableCell>
-                <TableCell>
-                  {sensor.last_maintenance || sensor.create_at || "-"}
-                </TableCell>
+                <TableCell>{sensor.maintenance_date}</TableCell>
                 <TableCell>{sensor.day_clean || "-"}</TableCell>
                 <TableCell>
                   {(() => {
