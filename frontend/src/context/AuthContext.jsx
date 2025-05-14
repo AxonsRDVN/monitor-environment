@@ -11,10 +11,12 @@ export const AuthProvider = ({ children }) => {
   const [accessToken, setAccessToken] = useState(
     localStorage.getItem("accessToken") || ""
   );
+  const [authChecked, setAuthChecked] = useState(false); // Thêm state để đánh dấu đã kiểm tra auth
 
   const fetchUserInfo = async (token) => {
     if (!token) {
       setLoading(false);
+      setAuthChecked(true);
       return;
     }
 
@@ -26,36 +28,43 @@ export const AuthProvider = ({ children }) => {
       if (res.data) {
         setUser(res.data);
         // Đảm bảo thông tin người dùng được lưu trữ khi refresh
-        const { email, username, role_name } = res.data;
+        const { email, username, role_name, full_name } = res.data;
         localStorage.setItem("userEmail", email);
         localStorage.setItem("username", username);
         localStorage.setItem("role", role_name);
+        if (full_name) localStorage.setItem("fullName", full_name);
       }
     } catch (error) {
       console.error("❌ Lỗi lấy thông tin người dùng:", error);
 
       // Nếu token hết hạn hoặc lỗi 401 → xóa token
       if (error.response?.status === 401) {
-        setUser(null);
-        setAccessToken("");
-        localStorage.removeItem("accessToken");
+        logout();
       }
-
       // Nếu lỗi khác (network, server...) thì không nên xóa vội
+      // Xem xét thêm logic retry ở đây nếu cần thiết
     } finally {
       setLoading(false);
+      setAuthChecked(true); // Đánh dấu đã kiểm tra xong
     }
   };
 
-  // Thêm useEffect với dependency accessToken
+  // useEffect với dependency là empty array để chỉ chạy 1 lần khi mount
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    if (token) {
-      setAccessToken(token);
-      fetchUserInfo(token);
-    } else {
-      setLoading(false);
-    }
+    const initAuth = async () => {
+      setLoading(true);
+      const token = localStorage.getItem("accessToken");
+
+      if (token) {
+        setAccessToken(token);
+        await fetchUserInfo(token);
+      } else {
+        setLoading(false);
+        setAuthChecked(true);
+      }
+    };
+
+    initAuth();
   }, []);
 
   const login = async (token) => {
@@ -73,7 +82,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem("userEmail", email);
         localStorage.setItem("username", username);
         localStorage.setItem("role", role_name);
-        localStorage.setItem("fullName", full_name);
+        if (full_name) localStorage.setItem("fullName", full_name);
         setUser(res.data);
       } catch (err) {
         console.error("❌ Lấy thông tin người dùng thất bại:", err);
@@ -85,12 +94,13 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   };
-  console.log("🚀 ~ file: AuthContext.jsx:56 ~ login ~ user:", user);
+
   const logout = () => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("userEmail");
     localStorage.removeItem("username");
     localStorage.removeItem("role");
+    localStorage.removeItem("fullName");
     setAccessToken("");
     setUser(null);
   };
@@ -109,6 +119,7 @@ export const AuthProvider = ({ children }) => {
         logout,
         loading,
         isAuthenticated,
+        authChecked, // Xuất state mới
       }}
     >
       {children}
