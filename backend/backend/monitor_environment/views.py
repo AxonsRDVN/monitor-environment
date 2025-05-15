@@ -1,5 +1,6 @@
 # monitor_environment/views.py
 
+from venv import logger
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -139,114 +140,174 @@ class PlantListAPIView(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
-        plants = Plant.objects.filter(plantaccess__user=request.user).distinct()
-        result = []
+        try:
+            # Lấy tất cả các plants mà user có quyền truy cập
+            plants = Plant.objects.filter(plantaccess__user=request.user).distinct()
+            result = []
 
-        for plant in plants:
-            # ✅ Bước 1: lấy toàn bộ station thuộc plant
-            stations = Station.objects.filter(plant=plant, is_active=True)
-
-            # ✅ Bước 2: lấy tất cả transaction mới nhất của từng station
-            latest_transactions = []
-            for station in stations:
-                latest_tx = (
-                    Transaction.objects.filter(station=station)
-                    .order_by("-time")
-                    .first()
-                )
-                if latest_tx:
-                    latest_transactions.append(latest_tx)
-
-            # Nếu không có transaction nào
-            if not latest_transactions:
-                result.append(
-                    {"id": plant.id, "name": plant.name, "status": "normal", "count": 0}
-                )
-                continue
-
-            param_keys = [
-                "temperature",
-                "humidity",
-                "pm25",
-                "pm10",
-                "airpressure",
-                "noise",
-                "rain",
-                "radiation",
-                "lux",
-                "windspeed",
-                "wind_direction",
-            ]
-
-            level_count = {
-                "normal": 0,
-                "caution": 0,
-                "danger": 0,
-                "unknown": 0,
-            }
-
-            added_params = set()
-
-            for tx in latest_transactions:
-                parameters = Parameter.objects.filter(
-                    station=tx.station, has_threshold=True, name__in=param_keys
-                )
-
-                for param in parameters:
-                    key = f"{tx.station.id}-{param.name}"
-                    if key in added_params:
+            for plant in plants:
+                try:
+                    # ✅ Bước 1: lấy toàn bộ station thuộc plant
+                    stations = Station.objects.filter(plant=plant, is_active=True)
+                    
+                    # ✅ Nếu không có station → trả về plant với status "normal"
+                    if not stations.exists():
+                        result.append({
+                            "id": plant.id,
+                            "name": plant.name,
+                            "status": "normal",
+                            "count": 0,
+                            "station_count": 0,
+                        })
                         continue
 
-                    value = getattr(tx, param.name, None)
-                    if value is None:
+                    # ✅ Bước 2: lấy tất cả transaction mới nhất của từng station
+                    latest_transactions = []
+                    for station in stations:
+                        try:
+                            latest_tx = (
+                                Transaction.objects.filter(station=station)
+                                .order_by("-time")
+                                .first()
+                            )
+                            if latest_tx:
+                                latest_transactions.append(latest_tx)
+                        except Exception as e:
+                            logger.error(f"Error getting latest transaction for station {station.id}: {str(e)}")
+                            # Tiếp tục xử lý các station khác
+
+                    # Nếu không có transaction nào
+                    if not latest_transactions:
+                        result.append({
+                            "id": plant.id, 
+                            "name": plant.name, 
+                            "status": "normal", 
+                            "count": 0,
+                            "station_count": stations.count(),
+                        })
                         continue
 
-                    if (
-                        param.normal_min is not None
-                        and param.normal_max is not None
-                        and param.normal_min <= value <= param.normal_max
-                    ):
-                        level = "normal"
-                    elif (
-                        param.caution_min is not None
-                        and param.caution_max is not None
-                        and param.caution_min <= value <= param.caution_max
-                    ):
-                        level = "caution"
-                    elif (
-                        param.danger_min is not None
-                        and param.danger_max is not None
-                        and param.danger_min <= value <= param.danger_max
-                    ):
-                        level = "danger"
+                    param_keys = [
+                        "temperature",
+                        "humidity",
+                        "pm25",
+                        "pm10",
+                        "airpressure",
+                        "noise",
+                        "rain",
+                        "radiation",
+                        "lux",
+                        "windspeed",
+                        "wind_direction",
+                    ]
+
+                    level_count = {
+                        "normal": 0,
+                        "caution": 0,
+                        "danger": 0,
+                        "unknown": 0,
+                    }
+
+                    added_params = set()
+
+                    for tx in latest_transactions:
+                        try:
+                            parameters = Parameter.objects.filter(
+                                station=tx.station, has_threshold=True, name__in=param_keys
+                            )
+
+                            for param in parameters:
+                                key = f"{tx.station.id}-{param.name}"
+                                if key in added_params:
+                                    continue
+
+                                value = getattr(tx, param.name, None)
+                                if value is None:
+                                    continue
+
+                                if (
+                                    param.normal_min is not None
+                                    and param.normal_max is not None
+                                    and param.normal_min <= value <= param.normal_max
+                                ):
+                                    level = "normal"
+                                elif (
+                                    param.caution_min is not None
+                                    and param.caution_max is not None
+                                    and param.caution_min <= value <= param.caution_max
+                                ):
+                                    level = "caution"
+                                elif (
+                                    param.danger_min is not None
+                                    and param.danger_max is not None
+                                    and param.danger_min <= value <= param.danger_max
+                                ):
+                                    level = "danger"
+                                else:
+                                    level = "unknown"
+
+                                level_count[level] += 1
+                                added_params.add(key)
+                        except Exception as e:
+                            logger.error(f"Error processing transaction {tx.id}: {str(e)}")
+                            # Tiếp tục xử lý các transaction khác
+
+                    # ✅ Bước 3: Ưu tiên mức cao nhất
+                    if level_count["danger"] > 0:
+                        highest_level = "danger"
+                        count = level_count["danger"]
+                    elif level_count["caution"] > 0:
+                        highest_level = "caution"
+                        count = level_count["caution"]
                     else:
-                        level = "unknown"
+                        highest_level = "normal"
+                        count = 0
 
-                    level_count[level] += 1
-                    added_params.add(key)
+                    result.append({
+                        "id": plant.id,
+                        "name": plant.name,
+                        "status": highest_level,
+                        "count": count,
+                        "station_count": stations.count(),
+                    })
+                except Exception as e:
+                    # Nếu có lỗi khi xử lý một plant, vẫn thêm plant đó vào kết quả với thông tin cơ bản
+                    logger.error(f"Error processing plant {plant.id}: {str(e)}")
+                    result.append({
+                        "id": plant.id,
+                        "name": plant.name,
+                        "status": "unknown",
+                        "count": 0,
+                        "station_count": 0,
+                        "error": "Could not process plant data"
+                    })
 
-            # ✅ Bước 3: Ưu tiên mức cao nhất
-            if level_count["danger"] > 0:
-                highest_level = "danger"
-                count = level_count["danger"]
-            elif level_count["caution"] > 0:
-                highest_level = "caution"
-                count = level_count["caution"]
-            else:
-                highest_level = "normal"
-                count = 0
-
-            result.append(
-                {
-                    "id": plant.id,
-                    "name": plant.name,
-                    "status": highest_level,
-                    "count": count,
-                    "station_count": stations.count(),
-                }
-            )
-
-        return Response(result, status=status.HTTP_200_OK)
+            # Đảm bảo luôn trả về kết quả, dù có rỗng
+            return Response(result, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            # Trường hợp có lỗi nghiêm trọng, vẫn cố gắng trả về danh sách các nhà máy cơ bản
+            logger.error(f"Critical error in PlantListAPIView: {str(e)}")
+            try:
+                # Cố gắng lấy danh sách plants một cách đơn giản nhất
+                plants = Plant.objects.filter(plantaccess__user=request.user).distinct()
+                basic_result = []
+                
+                for plant in plants:
+                    basic_result.append({
+                        "id": plant.id,
+                        "name": plant.name,
+                        "status": "unknown",
+                        "count": 0,
+                        "station_count": 0,
+                        "error": "System error occurred"
+                    })
+                    
+                return Response(basic_result, status=status.HTTP_200_OK)
+            except Exception as inner_e:
+                # Thực sự không thể trả về danh sách nhà máy, trả về danh sách rỗng
+                logger.critical(f"Failed to retrieve basic plant list: {str(inner_e)}")
+                return Response([], status=status.HTTP_200_OK)
 
 
 class StationListView(APIView):
@@ -739,7 +800,6 @@ class SensorByStationView(APIView):
 
         serializer = SensorSerializer(sensors, many=True)
         plant_id = sensors.first().plant_id
-
         filtered_data = []
         today = timezone.now().date()
 
@@ -747,27 +807,45 @@ class SensorByStationView(APIView):
             sensor.pop("plant", None)
             sensor.pop("station", None)
 
-            # Kiểm tra bảng maintenance cho sensor này
-            latest_approved_maintenance = Maintenance.objects.filter(
-                sensor_id=sensors[i].id,
-                status='approved'  # Giả sử trạng thái 'approved' là trạng thái đã duyệt
-            ).order_by('-update_at').first()
+            today = timezone.now().date()
+            create_at = sensors[i].create_at
+            longevity_days = None
+            create_at_date = None
+            maintenance_date = None
 
-            # Tính longevity dựa vào maintenance hoặc ngày tạo sensor
-            if latest_approved_maintenance:
-                # Lấy ngày từ update_at của maintenance
-                maintenance_date = latest_approved_maintenance.update_at.date()
-                longevity_days = (today - maintenance_date).days
-                # Thêm maintenance_date vào dữ liệu trả về
-                sensor["maintenance_date"] = maintenance_date.isoformat()
+            # Tìm replacement đã duyệt
+            replacement_maintenance = Maintenance.objects.filter(
+                sensor_id=sensors[i].id,
+                status="approved",
+                action="replacement"
+            ).order_by("-update_at").first()
+
+            if replacement_maintenance:
+                replacement_date = replacement_maintenance.update_at.date()
+                longevity_days = (today - replacement_date).days
+                sensor["create_at"] = replacement_date.isoformat()
+                sensor["maintenance_date"] = replacement_date.isoformat()
+
             else:
-                # Logic cũ: sử dụng ngày tạo sensor
-                create_at = sensors[i].create_at
+                # Tìm maintenance bất kỳ đã duyệt (dù không phải replacement)
+                latest_maintenance = Maintenance.objects.filter(
+                    sensor_id=sensors[i].id,
+                    status="approved"
+                ).order_by("-update_at").first()
+
+                # Xử lý ngày tạo
                 if create_at:
-                    longevity_days = (today - create_at).days
+                    create_at_date = create_at.date() if isinstance(create_at, datetime) else create_at
+                    sensor["create_at"] = create_at_date.isoformat()
+                    longevity_days = (today - create_at_date).days
                 else:
-                    longevity_days = None
-                sensor["maintenance_date"] = None
+                    sensor["create_at"] = None
+
+                if latest_maintenance:
+                    maintenance_date = latest_maintenance.update_at.date()
+                    sensor["maintenance_date"] = maintenance_date.isoformat()
+                else:
+                    sensor["maintenance_date"] = None
 
             sensor["longevity"] = longevity_days
             filtered_data.append(sensor)

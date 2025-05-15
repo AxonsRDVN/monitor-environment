@@ -39,7 +39,9 @@ export default function DeviceManagementTable({
             <TableCell sx={{ color: "#0A6EE1" }}>
               {t("current_lifespan")}
             </TableCell>
-            <TableCell sx={{ color: "#0A6EE1" }}>{t("start_date")}</TableCell>
+            <TableCell sx={{ color: "#0A6EE1" }}>
+              {t("last_replacement")}
+            </TableCell>
             <TableCell sx={{ color: "#0A6EE1" }}>
               {t("last_maintenance")}
             </TableCell>

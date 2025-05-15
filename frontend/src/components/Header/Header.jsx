@@ -43,8 +43,8 @@ const Header = (props) => {
   };
 
   // Dữ liệu giả (bạn có thể lấy từ localStorage, context, v.v.)
-  const userName = localStorage.getItem("username") || "";
-  const userRole = localStorage.getItem("role") || "";
+  const userName = JSON.parse(localStorage.getItem("user"))?.username;
+  const userRole = JSON.parse(localStorage.getItem("user"))?.role_name;
 
   const handleOpenMenu = (event) => {
     setAnchorEl(event.currentTarget);

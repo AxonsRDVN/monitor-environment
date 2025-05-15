@@ -4,7 +4,6 @@ class Sensor(models.Model):
     image = models.ImageField(upload_to="sensor_images/", null=True)
     model_sensor = models.CharField(max_length=100, null=True)
     expiry = models.IntegerField(blank=True, null=True)
-    expiry_date = models.DateTimeField(blank=True, null=True)
     manufacturer = models.CharField(max_length=100, null=True)
     create_at = models.DateField(auto_now_add=True)
 

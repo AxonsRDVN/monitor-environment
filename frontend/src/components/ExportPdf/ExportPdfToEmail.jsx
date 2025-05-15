@@ -25,14 +25,14 @@ export default function ExportDialog({ open, onClose, onConfirm }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const email = localStorage.getItem("userEmail");
+    const email = JSON.parse(localStorage.getItem("user"))?.email;
     if (email) setDefaultEmail(email);
   }, []);
 
   // Reset state khi dialog mở lại
   useEffect(() => {
     if (open) {
-      const email = localStorage.getItem("email");
+      const email = JSON.parse(localStorage.getItem("user"))?.email;
       if (email) setDefaultEmail(email);
     }
   }, [open]);

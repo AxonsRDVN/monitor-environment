@@ -1,4 +1,3 @@
-import React from "react";
 import { Box } from "@mui/material";
 import ThermostatIcon from "@mui/icons-material/Thermostat";
 import OpacityIcon from "@mui/icons-material/Opacity";

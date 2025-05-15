@@ -5,7 +5,9 @@ from django.contrib.auth.models import (
     PermissionsMixin,
     BaseUserManager,
 )
-
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+import logging
 
 class Plant(models.Model):
     name = models.CharField(max_length=100)
@@ -14,27 +16,23 @@ class Plant(models.Model):
     contact_name = models.CharField(max_length=100)
     phone_number = models.CharField(max_length=100, blank=True, null=True)
     email = models.EmailField(max_length=100, blank=True, null=True)
-
     STATUS_CHOICES = [
         ("active", "Active"),
         ("inactive", "Inactive"),
     ]
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="active")
     is_active = models.BooleanField(default=True)
-
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"Nhà máy: {self.name} - Mã tổ chức: {self.org_code}"
 
-
 class Function(models.Model):
     function_code = models.CharField(
         max_length=100, blank=True, null=True
     )  # Field name made lowercase.
     description = models.TextField(blank=True, null=True)  # Field name made lowercase.
-
     def __str__(self):
         return self.function_code + " " + str(self.id)
 
@@ -43,7 +41,6 @@ class Role(models.Model):
     role_name = models.CharField(max_length=100, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     functions = models.ManyToManyField("Function", blank=True)
-
     def __str__(self):
         return f"{self.role_name} (ID: {self.id})"
 
@@ -60,7 +57,6 @@ class CustomUserManager(BaseUserManager):
         user.set_password(password)
         user.save()
         return user
-
     def create_superuser(self, username, email, password=None, **extra_fields):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
@@ -69,7 +65,6 @@ class CustomUserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     GENDER_CHOICES = [("male", "Male"), ("female", "Female")]
-
     full_name = models.CharField(max_length=100, blank=True, null=True)
     username = models.CharField(max_length=100, unique=True)
     email = models.EmailField(max_length=100, unique=True)
@@ -86,12 +81,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     access_times = models.IntegerField(default=0)
-
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = ["email"]
-
     objects = CustomUserManager()
-
     def __str__(self):
         return f"{self.username} (ID: {self.id})"
     
@@ -100,23 +92,47 @@ class PlantAccess(models.Model):
     plant = models.ForeignKey(Plant, on_delete=models.CASCADE)
     role = models.CharField(max_length=50, blank=True, null=True)  # optional
     granted_at = models.DateTimeField(auto_now_add=True)
-
     class Meta:
         unique_together = ('user', 'plant')  # Tránh gán trùng
-        
     def __str__(self):
         return f"{self.user.username} → {self.plant.name}"
+
+@receiver(post_save, sender=Plant)
+def auto_add_admin_access(sender, instance, created, **kwargs):
+    if created:
+        try:
+            # Lấy tất cả người dùng có role là 'admin'
+            admin_role = Role.objects.filter(role_name__iexact='admin').first()
+            if admin_role:
+                admin_users = User.objects.filter(role=admin_role)
+                for user in admin_users:
+                    PlantAccess.objects.get_or_create(user=user, plant=instance)
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Lỗi khi thêm quyền truy cập plant cho admin: {str(e)}")
+
+# ✅ Khi tạo mới User có role admin → gán toàn bộ Plant cho user này
+@receiver(post_save, sender=User)
+def auto_grant_admin_access_to_existing_plants(sender, instance, created, **kwargs):
+    try:
+        admin_role = Role.objects.filter(role_name__iexact='admin').first()
+        if created and instance.role == admin_role:
+            all_plants = Plant.objects.all()
+            for plant in all_plants:
+                PlantAccess.objects.get_or_create(user=instance, plant=plant)
+    except Exception as e:
+        logger.error(f"[PlantAccess] Error granting admin access to existing plants: {str(e)}")
+
 
 class Station(models.Model):
     STATION_TYPE_CHOICES = [
         (1, "Station"),  # Trạm con
         (2, "Master"),  # Trạm chính
     ]
-
     plant = models.ForeignKey(
         "Plant", on_delete=models.CASCADE, related_name="stations"
     )
-
     name = models.CharField(max_length=100)
     code = models.CharField(max_length=50, unique=True)
     location = models.CharField(max_length=255, blank=True, null=True)
@@ -125,7 +141,6 @@ class Station(models.Model):
     channel = models.CharField(max_length=255, blank=True, null=True)
     address = models.CharField(max_length=255, blank=True, null=True)
     type = models.IntegerField(choices=STATION_TYPE_CHOICES, default=1)
-
     # Liên kết đến Master (nếu đây là Station)
     master = models.ForeignKey(
         "self",
@@ -135,21 +150,16 @@ class Station(models.Model):
         related_name="sub_stations",
         limit_choices_to={"type": 2},
     )
-
     is_active = models.BooleanField(default=True)
-
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
     def clean(self):
         if self.type == 1 and self.master is None:
             raise ValidationError("Station phải được gán cho một Master.")
         if self.type == 2 and self.master is not None:
             raise ValidationError("Master không được gán cho Master khác.")
-
     def __str__(self):
         return f"{self.name} ({self.get_type_display()}) - {self.code}"
-
 
 class Transaction(models.Model):
     plant = models.ForeignKey(
@@ -173,7 +183,6 @@ class Transaction(models.Model):
     rain = models.FloatField(blank=True, null=True)
     radiation = models.FloatField(blank=True, null=True)
     time = models.DateTimeField(blank=True, null=True)
-
     def save(self, *args, **kwargs):
         if self.station:
             self.device_code = self.station.code  # 🧠 gán code từ station
@@ -200,7 +209,6 @@ class Threshold(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-
 # Create your models here.
 class Sensor(models.Model):
     plant = models.ForeignKey(Plant, on_delete=models.CASCADE, related_name="sensors")
@@ -218,10 +226,8 @@ class Sensor(models.Model):
     manufacturer = models.CharField(max_length=100, null=True)
     day_clean = models.DateField(blank=True, null=True)
     create_at = models.DateField(auto_now_add=True)
-
     def __str__(self):
         return f"{self.model_sensor}"
-
 
 class Parameter(models.Model):
     sensor = models.ForeignKey(
@@ -241,32 +247,24 @@ class Parameter(models.Model):
     caution_max = models.FloatField(blank=True, null=True)
     danger_min = models.FloatField(blank=True, null=True)
     danger_max = models.FloatField(blank=True, null=True)
-
     def __str__(self):
         return f"{self.name} ({self.sensor})"
-
-
-from django.db import models
-
 
 class Maintenance(models.Model):
     ACTION_CHOICES = [
         ("maintenance", "Bảo trì"),
         ("replacement", "Thay thế"),
     ]
-
     STATUS_CHOICES = [
         ("pending", "Chờ duyệt"),
         ("approved", "Đã duyệt"),
         ("rejected", "Hủy bỏ"),
     ]
-
     ROLE_CHOICES = [
         ("user", "Người dùng"),
         ("Management", "Người quản lí"),
         ("admin", "Quản trị viên"),
     ]
-
     sensor = models.ForeignKey(
         Sensor, on_delete=models.CASCADE, related_name="maintenances"
     )
@@ -288,6 +286,5 @@ class Maintenance(models.Model):
     longitude = models.DecimalField(
         max_digits=9, decimal_places=6, null=True, blank=True
     )  # kinh độ
-
     def __str__(self):
         return f"Maintenance for {self.sensor.model_sensor} - {self.get_action_display()} ({self.get_status_display()})"

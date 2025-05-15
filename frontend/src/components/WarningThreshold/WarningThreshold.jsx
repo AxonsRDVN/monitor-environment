@@ -23,6 +23,7 @@ import axios from "axios";
 import { useError } from "../../context/ErrorContext"; // ✅ Import useError
 import ActionButtons from "../Button/ActionButtons";
 import { getAllPlants } from "../../api/plantApi";
+import { getParameterIcon } from "../Icon/WarningThresholdIcon";
 
 const API_BASE = process.env.REACT_APP_API_URL;
 
@@ -36,7 +37,7 @@ export default function WarningThreshold() {
   const [loading, setLoading] = useState(false);
   const { showError } = useError();
   const { t } = useTranslation("translation");
-
+  console.log(editableData);
   useEffect(() => {
     async function fetchPlants() {
       try {
@@ -224,6 +225,7 @@ export default function WarningThreshold() {
                           fontSize: "24px",
                         }}
                       >
+                        {getParameterIcon(param.name)}
                         {t(param.name)} ({param.min_value}-{param.max_value}){" "}
                         {param.unit || "-"}
                       </Typography>

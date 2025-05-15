@@ -118,7 +118,6 @@ export default function DeviceManagement() {
     }
     fetchSensors();
   }, [selectedStation]);
-
   return (
     <PageContainer>
       <Breadcrumb
@@ -175,6 +174,8 @@ export default function DeviceManagement() {
             <CircularProgress />
           ) : stations.length === 0 ? (
             <Typography variant="body2">{t("no_station")}</Typography>
+          ) : sensors.length === 0 ? (
+            <Typography variant="body2">{t("no_sensor")}</Typography>
           ) : (
             <DeviceManagementTable
               sensors={sensors}

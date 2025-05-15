@@ -264,29 +264,30 @@ export default function UserFormDialog({
             <MenuItem value="user">{t("manager")}</MenuItem>
           </Select>
         </FormControl>
-        <FormControl fullWidth margin="normal">
-          <InputLabel>{t("plant_access")}</InputLabel>
-          <Select
-            multiple
-            value={formData.plants || []}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, plants: e.target.value }))
-            }
-            renderValue={(selected) =>
-              selected
-                .map((id) => plants.find((p) => p.id === id)?.name || id)
-                .join(", ")
-            }
-          >
-            {plants.map((plant) => (
-              <MenuItem key={plant.id} value={plant.id}>
-                <Checkbox checked={formData.plants.includes(plant.id)} />
-                <ListItemText primary={plant.name} />
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
+        {formData.role !== "admin" && (
+          <FormControl fullWidth margin="normal">
+            <InputLabel>{t("plant_access")}</InputLabel>
+            <Select
+              multiple
+              value={formData.plants || []}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, plants: e.target.value }))
+              }
+              renderValue={(selected) =>
+                selected
+                  .map((id) => plants.find((p) => p.id === id)?.name || id)
+                  .join(", ")
+              }
+            >
+              {plants.map((plant) => (
+                <MenuItem key={plant.id} value={plant.id}>
+                  <Checkbox checked={formData.plants.includes(plant.id)} />
+                  <ListItemText primary={plant.name} />
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        )}
         <Button
           variant="contained"
           onClick={handleSubmit}

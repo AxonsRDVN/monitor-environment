@@ -11,4 +11,4 @@ class SensorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Sensor
-        fields = ['id', 'model_sensor', 'image', 'expiry', 'expiry_date', 'manufacturer', 'create_at', 'parameters']
+        fields = ['id', 'model_sensor', 'image', 'expiry', 'manufacturer', 'create_at', 'parameters']

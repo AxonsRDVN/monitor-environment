@@ -17,7 +17,7 @@ import {
   TextField,
   InputAdornment,
 } from "@mui/material";
-import { Sensors } from "@mui/icons-material";
+import { Router } from "@mui/icons-material";
 import ActionButtons from "../Button/ActionButtons";
 import axios from "axios";
 import dayjs from "dayjs";
@@ -110,7 +110,10 @@ export default function CleaningDay() {
         const daysData = {};
         sensorList.forEach((sensor) => {
           if (sensor.day_clean) {
-            const days = dayjs(sensor.day_clean).diff(dayjs(), "day");
+            const days = dayjs(sensor.day_clean).diff(
+              dayjs().startOf("day"),
+              "day"
+            );
             daysData[sensor.id] = days;
           }
         });
@@ -235,7 +238,7 @@ export default function CleaningDay() {
                         height: "100%",
                       }}
                     >
-                      <Sensors color="primary" sx={{ fontSize: 40 }} />
+                      <Router color="primary" sx={{ fontSize: 40 }} />
                     </Box>
 
                     {/* Tên sensor + hãng */}

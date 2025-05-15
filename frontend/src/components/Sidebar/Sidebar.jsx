@@ -26,7 +26,7 @@ const Sidebar = () => {
   const { isMenuOpen, setIsMenuOpen } = useContext(AppContext);
   const { t } = useTranslation("translation");
   const isSmallScreen = useMediaQuery("(max-width:1050px)");
-  const role = localStorage.getItem("role");
+  const role = JSON.parse(localStorage.getItem("user"))?.role_name;
 
   useEffect(() => {
     menuItems.forEach((item) => {

@@ -20,8 +20,18 @@ const Header = (props) => {
   const [displayHeader, setDisplayHeader] = useState(
     !isAuthen && window.innerWidth <= 600 ? "none" : "flex"
   );
-
-  const userName = localStorage.getItem("userName");
+  const [userName, setUserName] = useState("");
+  useEffect(() => {
+    const userRaw = localStorage.getItem("user");
+    if (userRaw) {
+      try {
+        const parsed = JSON.parse(userRaw);
+        setUserName(parsed.username || "");
+      } catch (e) {
+        console.error("❌ Lỗi khi parse user:", e);
+      }
+    }
+  }, []);
 
   const handleChangeLanguage = (lang) => {
     i18n.changeLanguage(lang);

@@ -34,8 +34,8 @@ export default function SensorMaintenance() {
   const { t } = useTranslation("translation");
   const [action, setAction] = useState("maintenance");
   const navigate = useNavigate();
-  const user = localStorage.getItem("fullName");
-  const role = localStorage.getItem("role");
+  const user = JSON.parse(localStorage.getItem("user"))?.full_name;
+  const role = JSON.parse(localStorage.getItem("user"))?.role;
 
   useEffect(() => {
     async function fetchData() {
