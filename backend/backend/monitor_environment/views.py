@@ -1266,7 +1266,6 @@ class WarningDetailByPlantView(APIView):
     def get(self, request, plant_id):
         from_date = request.GET.get("from_date")
         to_date = request.GET.get("to_date")
-
         today = timezone.now().date()
 
         try:
@@ -1283,7 +1282,6 @@ class WarningDetailByPlantView(APIView):
                 )
             else:
                 to_datetime = datetime.combine(today, datetime.max.time())
-
         except ValueError:
             return Response(
                 {"error": "Định dạng ngày không hợp lệ (YYYY-MM-DD)."},
@@ -1300,86 +1298,67 @@ class WarningDetailByPlantView(APIView):
                 status=http_status.HTTP_404_NOT_FOUND,
             )
 
-        # Lấy Parameter và map theo station_id và parameter name
+        # Lấy Parameter và map theo station_id + param name
         parameters = Parameter.objects.filter(
             station_id__in=station_ids, has_threshold=True
         )
         parameter_map = {}
         for param in parameters:
-            if param.station_id not in parameter_map:
-                parameter_map[param.station_id] = {}
-            parameter_map[param.station_id][param.name] = param
+            parameter_map.setdefault(param.station_id, {})[param.name] = param
 
         # Lấy các Transaction trong khoảng thời gian
         transactions = Transaction.objects.filter(
             station_id__in=station_ids, time__range=[from_datetime, to_datetime]
         ).order_by("-time")
 
+        param_keys = [
+            "temperature", "humidity", "pm25", "pm10",
+            "airpressure", "noise", "rain", "radiation",
+            "lux", "windspeed", "wind_direction", "co2",
+        ]
+
         results = []
 
-        # Duyệt từng transaction
         for tx in transactions:
-            param_keys = [
-                "temperature",
-                "humidity",
-                "pm25",
-                "pm10",
-                "airpressure",
-                "noise",
-                "rain",
-                "radiation",
-                "lux",
-                "windspeed",
-                "wind_direction",
-                "co2",
-            ]
             for key in param_keys:
                 value = getattr(tx, key, None)
-                if value is not None:
-                    param_obj = parameter_map.get(tx.station_id, {}).get(key)
-                    if not param_obj:
-                        continue
+                if value is None:
+                    continue
 
-                    # So sánh ngưỡng để xác định trạng thái
-                    status_ = None
-                    if (
-                        param_obj.danger_min is not None
-                        and value < param_obj.danger_min
-                    ):
-                        status_ = "danger"
-                    elif (
-                        param_obj.danger_max is not None
-                        and value > param_obj.danger_max
-                    ):
-                        status_ = "danger"
-                    elif (
-                        param_obj.caution_min is not None
-                        and value < param_obj.caution_min
-                    ):
-                        status_ = "warning"
-                    elif (
-                        param_obj.caution_max is not None
-                        and value > param_obj.caution_max
-                    ):
-                        status_ = "warning"
+                param_obj = parameter_map.get(tx.station_id, {}).get(key)
+                if not param_obj:
+                    continue
 
-                    if status_:
-                        results.append(
-                            {
-                                "station_id": tx.station_id,
-                                "station_name": tx.station.name,
-                                "parameter_name": key,
-                                "value": value,
-                                "unit": param_obj.unit or "",
-                                "status": status_,
-                                "time": tx.time,
-                            }
-                        )
+                status_ = None
 
-        # Phân trang kết quả
+                # Ưu tiên xác định mức nguy hiểm và cảnh báo
+                if (
+                    param_obj.danger_min is not None
+                    and param_obj.danger_max is not None
+                    and param_obj.danger_min <= value <= param_obj.danger_max
+                ):
+                    status_ = "danger"
+                elif (
+                    param_obj.caution_min is not None
+                    and param_obj.caution_max is not None
+                    and param_obj.caution_min <= value <= param_obj.caution_max
+                ):
+                    status_ = "warning"
+
+                if status_:
+                    results.append({
+                        "station_id": tx.station_id,
+                        "station_name": tx.station.name,
+                        "parameter_name": key,
+                        "value": value,
+                        "unit": param_obj.unit or "",
+                        "status": status_,
+                        "time": tx.time,
+                    })
+
+        # Phân trang
         paginator = WarningDetailPagination()
         paginated_results = paginator.paginate_queryset(results, request)
-
         serializer = TransactionWarningDetailSerializer(paginated_results, many=True)
         return paginator.get_paginated_response(serializer.data)
 

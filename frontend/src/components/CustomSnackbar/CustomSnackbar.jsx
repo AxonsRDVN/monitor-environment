@@ -14,6 +14,7 @@ export default function CustomSnackbar({ open, onClose, message, severity }) {
       autoHideDuration={3000}
       onClose={onClose}
       anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      sx={{ zIndex: 1500 }} // cao hơn modal bootstrap
     >
       <Alert onClose={onClose} severity={severity} sx={{ width: "100%" }}>
         {message}

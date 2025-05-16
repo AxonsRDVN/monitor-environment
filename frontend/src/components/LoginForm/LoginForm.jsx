@@ -100,16 +100,17 @@ const LoginForm = () => {
       showSnackbar("Đăng nhập thành công!", "success");
       setTimeout(() => {
         navigate(ROUTE_PATH.HOME);
-      }, 200);
-      navigate(ROUTE_PATH.HOME); // hoặc bất kỳ trang nào bạn muốn chuyển đến sau khi đăng nhập
+      }, 1000); // Tăng delay để user kịp nhìn thấy thông báo
     } catch (error) {
       console.error("Lỗi đăng nhập:", error);
 
       if (error.response) {
-        if (error.response.status === 401 || error.response.status === 400) {
+        if (error.response?.status === 401 || error.response?.status === 400) {
           showSnackbar("Sai thông tin đăng nhập!", "error");
-        } else if (error.response.status >= 500) {
+        } else if (error.response?.status >= 500) {
           showSnackbar("Lỗi máy chủ!", "error");
+        } else {
+          showSnackbar("Không thể kết nối đến máy chủ!", "error");
         }
       } else {
         showSnackbar("Không thể kết nối đến máy chủ!", "error");
@@ -243,14 +244,14 @@ const LoginForm = () => {
             </div>
           </div>
           <div className="login-form-padding-bottom"></div>
-          <CustomSnackbar
-            open={snackbar.open}
-            onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
-            message={snackbar.message}
-            severity={snackbar.severity}
-          />
         </Modal.Body>
       </Modal>
+      <CustomSnackbar
+        open={snackbar.open}
+        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+        message={snackbar.message}
+        severity={snackbar.severity}
+      />
     </div>
   );
 };

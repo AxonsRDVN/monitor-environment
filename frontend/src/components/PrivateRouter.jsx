@@ -7,8 +7,8 @@ const PrivateRoute = ({ children, allowedRoles }) => {
   const { accessToken, user, loading, authChecked } = useAuth();
   const { t } = useTranslation("translation");
 
-  // Chỉ hiển thị loading khi đang xác thực và chưa hoàn thành kiểm tra
-  if (loading || !authChecked) {
+  // Chỉ hiển thị loading khi chưa hoàn thành xác thực
+  if (!authChecked) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -21,18 +21,19 @@ const PrivateRoute = ({ children, allowedRoles }) => {
     );
   }
 
-  // Kiểm tra accessToken và user sau khi đã hoàn thành kiểm tra xác thực
+  // ✅ Sau khi authChecked mới kiểm tra các điều kiện
   if (!accessToken || !user) {
-    console.log("Chuyển hướng về trang login: token hoặc user không tồn tại");
+    console.warn("🔒 Chuyển hướng về /login: thiếu token hoặc user");
     return <Navigate to="/login" replace />;
   }
 
-  // Kiểm tra quyền truy cập
+  // ✅ Kiểm tra quyền
   if (allowedRoles && !allowedRoles.includes(user.role_name)) {
-    console.log("Chuyển hướng đến not-found: không có quyền truy cập");
+    console.warn("🚫 Không có quyền truy cập: chuyển hướng /not-found");
     return <Navigate to="/not-found" replace />;
   }
 
+  // ✅ Passed all checks
   return children;
 };
 

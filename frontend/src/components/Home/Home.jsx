@@ -13,7 +13,7 @@ import PageContent from "../PageContent/PageContent";
 import { statusColors } from "../Icon/ParameterIcon";
 
 const Item = styled(Paper)(({ status }) => ({
-  padding: "24px",
+  padding: "20px",
   borderRadius: "16px",
   transition: "0.3s",
   height: "100%",
@@ -21,7 +21,7 @@ const Item = styled(Paper)(({ status }) => ({
   boxShadow: "0px 2px 10px rgba(0,0,0,0.1)",
   display: "flex",
   flexDirection: "column",
-  justifyContent: "space-between",
+  justifyContent: "center",
   cursor: "pointer",
   "&:hover": {
     transform: "scale(1.03)",
@@ -93,7 +93,7 @@ export default function Home() {
 
                   <Box sx={{ flex: 1 }}>
                     <Typography
-                      fontSize="18px"
+                      fontSize="16px"
                       fontWeight={600}
                       color="#344054"
                       sx={{ wordBreak: "break-word" }}
