@@ -43,7 +43,7 @@ export default function UserTable({
               {t("index")}
             </TableCell>
             <TableCell sx={{ color: "#0A6EE1", fontWeight: 600, fontSize: 16 }}>
-              {t("username")}
+              {t("login_email")}
             </TableCell>
             <TableCell sx={{ color: "#0A6EE1", fontWeight: 600, fontSize: 16 }}>
               {t("full_name")}
@@ -76,7 +76,7 @@ export default function UserTable({
               <TableCell>{user.full_name}</TableCell>
               <TableCell>{user.email}</TableCell>
               <TableCell>{t(getRoleName(user.role))}</TableCell>
-              <TableCell align="center">{user.session_time || 0}</TableCell>
+              <TableCell align="center">{user.access_times || 0}</TableCell>
               <TableCell align="center">
                 {user.is_active ? (
                   <ToggleOn sx={{ color: "#22AB68", fontSize: 50 }} />

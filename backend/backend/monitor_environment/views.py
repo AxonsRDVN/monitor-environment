@@ -1427,8 +1427,32 @@ class Plant24hOverallStatusView(APIView):
     (chỉ lấy từ đầu ngày đến giờ hiện tại)
     """
 
+    def get_param_status(self, value, threshold):
+        """Xác định trạng thái theo khoảng: danger > warning > normal"""
+        if (
+            threshold["danger_min"] is not None and
+            threshold["danger_max"] is not None and
+            threshold["danger_min"] <= value <= threshold["danger_max"]
+        ):
+            return "danger"
+
+        if (
+            threshold["caution_min"] is not None and
+            threshold["caution_max"] is not None and
+            threshold["caution_min"] <= value <= threshold["caution_max"]
+        ):
+            return "warning"
+
+        if (
+            threshold.get("normal_min") is not None and
+            threshold.get("normal_max") is not None and
+            threshold["normal_min"] <= value <= threshold["normal_max"]
+        ):
+            return "normal"
+
+        return "unknown"
+
     def get(self, request, plant_id):
-        # Lấy thời gian hiện tại và giờ hiện tại
         now = timezone.now()
         today = now.date()
         current_hour = now.hour
@@ -1436,82 +1460,50 @@ class Plant24hOverallStatusView(APIView):
         try:
             plant = Plant.objects.get(id=plant_id)
         except Plant.DoesNotExist:
-            return Response(
-                {"error": "Không tìm thấy nhà máy"}, status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"error": "Không tìm thấy nhà máy"}, status=status.HTTP_404_NOT_FOUND)
 
-        # Lấy toàn bộ station thuộc plant
         stations = Station.objects.filter(plant_id=plant.id)
         station_ids = stations.values_list("id", flat=True)
 
         if not station_ids:
-            return Response(
-                {"error": "Nhà máy này không có trạm nào."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return Response({"error": "Nhà máy này không có trạm nào."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Lấy threshold cho các station
-        parameters = Parameter.objects.filter(
-            station_id__in=station_ids, has_threshold=True
-        )
+        parameters = Parameter.objects.filter(station_id__in=station_ids, has_threshold=True)
         threshold_map = {}
         for param in parameters:
-            if param.station_id not in threshold_map:
-                threshold_map[param.station_id] = {}
-            threshold_map[param.station_id][param.name] = {
+            threshold_map.setdefault(param.station_id, {})[param.name] = {
+                "normal_min": param.normal_min,
+                "normal_max": param.normal_max,
                 "caution_min": param.caution_min,
                 "caution_max": param.caution_max,
                 "danger_min": param.danger_min,
                 "danger_max": param.danger_max,
             }
 
-        # Lấy tất cả transaction hôm nay
         transactions = Transaction.objects.filter(
             station_id__in=station_ids,
             time__date=today,
         )
 
         if not transactions.exists():
-            return Response(
-                {"message": "Không có dữ liệu giao dịch hôm nay."},
-                status=status.HTTP_200_OK,
-            )
+            return Response({"message": "Không có dữ liệu giao dịch hôm nay."}, status=status.HTTP_200_OK)
 
-        # Kết quả cuối cùng
+        param_keys = [
+            "temperature", "humidity", "pm25", "pm10", "airpressure", "noise", "rain",
+            "radiation", "lux", "windspeed", "wind_direction", "co2"
+        ]
+
         hourly_status = {}
 
-        # Chỉ xử lý từ giờ 0 đến giờ hiện tại
         for hour in range(current_hour + 1):
-            # Tạo giờ bắt đầu và kết thúc của mỗi giờ
-            hour_start = timezone.datetime.combine(
-                today, datetime.min.time()
-            ) + timedelta(hours=hour)
+            hour_start = timezone.datetime.combine(today, datetime.min.time()) + timedelta(hours=hour)
             hour_end = hour_start + timedelta(hours=1)
 
-            hour_transactions = transactions.filter(
-                time__gte=hour_start, time__lt=hour_end
-            )
+            hour_transactions = transactions.filter(time__gte=hour_start, time__lt=hour_end)
 
-            danger_found = False
-            warning_found = False
+            highest_status = "normal"
 
             for tx in hour_transactions:
-                # Check toàn bộ chỉ số cần kiểm tra
-                param_keys = [
-                    "temperature",
-                    "humidity",
-                    "pm25",
-                    "pm10",
-                    "airpressure",
-                    "noise",
-                    "rain",
-                    "radiation",
-                    "lux",
-                    "windspeed",
-                    "wind_direction",
-                    "co2",
-                ]
-
                 for key in param_keys:
                     value = getattr(tx, key, None)
                     if value is None:
@@ -1521,35 +1513,18 @@ class Plant24hOverallStatusView(APIView):
                     if not param_threshold:
                         continue
 
-                    if (
-                        param_threshold["danger_min"] is not None
-                        and value < param_threshold["danger_min"]
-                    ):
-                        danger_found = True
-                    if (
-                        param_threshold["danger_max"] is not None
-                        and value > param_threshold["danger_max"]
-                    ):
-                        danger_found = True
+                    status_result = self.get_param_status(value, param_threshold)
 
-                    if (
-                        param_threshold["caution_min"] is not None
-                        and value < param_threshold["caution_min"]
-                    ):
-                        warning_found = True
-                    if (
-                        param_threshold["caution_max"] is not None
-                        and value > param_threshold["caution_max"]
-                    ):
-                        warning_found = True
+                    if status_result == "danger":
+                        highest_status = "danger"
+                        break
+                    elif status_result == "warning" and highest_status != "danger":
+                        highest_status = "warning"
 
-            # Xác định mức cao nhất
-            if danger_found:
-                hourly_status[hour] = "danger"
-            elif warning_found:
-                hourly_status[hour] = "warning"
-            else:
-                hourly_status[hour] = "normal"
+                if highest_status == "danger":
+                    break
+
+            hourly_status[hour] = highest_status
 
         return Response(hourly_status, status=status.HTTP_200_OK)
     

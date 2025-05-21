@@ -46,7 +46,8 @@ export default function UserFormDialog({
     role: "user",
     gender: "Male",
     date_of_birth: dayjs().format("YYYY-MM-DD"),
-    plants: [], // ✅ thêm dòng này
+    is_active: true,
+    plants: [],
   };
   const { t } = useTranslation("translation");
   const [formData, setFormData] = useState(defaultFormData);
@@ -62,7 +63,7 @@ export default function UserFormDialog({
         const res = await getAllPlants();
         setPlants(res);
       } catch (err) {
-        showError(showError(t("can_connect_to_server")));
+        showError(t("can_connect_to_server"));
         console.error(err);
       } finally {
         setLoading(false);
@@ -72,23 +73,28 @@ export default function UserFormDialog({
   }, []);
 
   useEffect(() => {
-    setFormData(
-      initialData
-        ? {
-            ...defaultFormData,
-            ...initialData,
-            password: "", // Không hiển thị mật khẩu khi chỉnh sửa
-            gender:
-              initialData.gender?.toLowerCase() === "female"
-                ? "Female"
-                : "Male",
-            role: ROLES[initialData.role],
-            date_of_birth:
-              initialData.date_of_birth || dayjs().format("YYYY-MM-DD"),
-            plants: initialData.plants || [], // ✅ Gán giá trị đã phân quyền
-          }
-        : defaultFormData
-    );
+    if (initialData) {
+      // Đảm bảo is_active là boolean
+      const isActive =
+        initialData.is_active !== undefined
+          ? Boolean(initialData.is_active)
+          : true;
+
+      setFormData({
+        ...defaultFormData,
+        ...initialData,
+        password: "", // Không hiển thị mật khẩu khi chỉnh sửa
+        gender:
+          initialData.gender?.toLowerCase() === "female" ? "Female" : "Male",
+        role: ROLES[initialData.role] || "user",
+        is_active: isActive,
+        date_of_birth:
+          initialData.date_of_birth || dayjs().format("YYYY-MM-DD"),
+        plants: initialData.plants || [],
+      });
+    } else {
+      setFormData(defaultFormData);
+    }
   }, [initialData, open]);
 
   const handleChange = (e) => {
@@ -107,7 +113,15 @@ export default function UserFormDialog({
 
   const handleSubmit = async () => {
     try {
-      const res = await onSubmit(formData);
+      // Đảm bảo dữ liệu đúng định dạng trước khi gửi
+      const dataToSubmit = {
+        ...formData,
+        is_active: Boolean(formData.is_active),
+      };
+
+      console.log("🚀 Form data being submitted:", dataToSubmit);
+
+      const res = await onSubmit(dataToSubmit);
       if (res?.errors) {
         setErrors(res.errors);
       } else {
@@ -120,7 +134,6 @@ export default function UserFormDialog({
     }
   };
 
-  console.log("✅ Selected plants:", formData.plants);
   return (
     <Drawer
       anchor="right"
@@ -288,6 +301,25 @@ export default function UserFormDialog({
             </Select>
           </FormControl>
         )}
+        <FormControl fullWidth margin="normal">
+          <InputLabel>{t("status")}</InputLabel>
+          <Select
+            name="is_active"
+            value={formData.is_active}
+            onChange={(e) => {
+              // Chuyển đổi trực tiếp thành boolean và gán vào state
+              setFormData((prev) => ({
+                ...prev,
+                is_active: e.target.value === true || e.target.value === "true",
+              }));
+            }}
+            label={t("status")}
+          >
+            <MenuItem value={true}>{t("active")}</MenuItem>
+            <MenuItem value={false}>{t("inactive")}</MenuItem>
+          </Select>
+        </FormControl>
+
         <Button
           variant="contained"
           onClick={handleSubmit}

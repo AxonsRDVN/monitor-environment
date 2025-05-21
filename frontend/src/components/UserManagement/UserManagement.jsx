@@ -95,6 +95,7 @@ export default function UserManagement() {
       date_of_birth: data.date_of_birth,
       role: getRoleId(data.role),
       plants: data.plants, // ✅ thêm dòng này
+      is_active: data.is_active,
     };
 
     try {

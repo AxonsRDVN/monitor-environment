@@ -318,5 +318,7 @@
   "fill_all_fields": "Please fill in all fields",
   "day_has_not_come_or_not_update": "The day has not come or has not been updated",
   "your_cordinate": "Your coordinate",
-  "last_replacement": "Last replacement"
+  "last_replacement": "Last replacement",
+  "active": "Active",
+  "inactive": "Inactive"
 }

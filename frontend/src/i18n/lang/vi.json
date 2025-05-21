@@ -318,5 +318,7 @@
   "fill_all_fields": "Vui lòng điền tất cả các trường bắt buộc",
   "day_has_not_come_or_not_update": "Ngày chưa đến hoặc chưa cập nhật",
   "your_cordinate": "Tọa độ của bạn",
-  "last_replacement": "Thay thế gần nhất"
+  "last_replacement": "Thay thế gần nhất",
+  "active": "Hoạt động",
+  "inactive": "Không hoạt động"
 }

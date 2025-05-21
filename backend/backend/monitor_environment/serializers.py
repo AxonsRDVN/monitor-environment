@@ -51,10 +51,17 @@ class UserSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         password = validated_data.pop("password", None)
+
+        # ✅ Xử lý rõ ràng cho is_active nếu có truyền từ frontend
+        if 'is_active' in validated_data:
+            instance.is_active = validated_data.pop("is_active")
+
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
+
         if password:
             instance.set_password(password)
+
         instance.save()
         return instance
 
@@ -64,11 +71,14 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         data = super().validate(attrs)
         user = self.user
 
+        # ✅ Tăng số lần đăng nhập
+        user.access_times += 1
+        user.save(update_fields=["access_times"])
+
         role_name = user.role.role_name if user.role else None
         function_codes = (
             list(user.role.functions.values_list("function_code", flat=True))
-            if user.role
-            else []
+            if user.role else []
         )
 
         data["user"] = {
@@ -77,8 +87,11 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
             "email": user.email,
             "role": role_name,
             "functions": function_codes,
+            "access_times": user.access_times,  # ✅ Tuỳ chọn: trả về để frontend dùng
         }
+
         return data
+
 
 
 GROUP_MAP = {
