@@ -90,6 +90,7 @@ export default function StationStatus() {
     }
     fetch24hAverage();
   }, []);
+  console.log(lineData);
 
   const filteredStations = stations
     .map((master) => {

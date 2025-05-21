@@ -1441,7 +1441,7 @@ class Plant24hOverallStatusView(APIView):
             threshold["caution_max"] is not None and
             threshold["caution_min"] <= value <= threshold["caution_max"]
         ):
-            return "warning"
+            return "caution"
 
         if (
             threshold.get("normal_min") is not None and
@@ -1518,8 +1518,8 @@ class Plant24hOverallStatusView(APIView):
                     if status_result == "danger":
                         highest_status = "danger"
                         break
-                    elif status_result == "warning" and highest_status != "danger":
-                        highest_status = "warning"
+                    elif status_result == "caution" and highest_status != "danger":
+                        highest_status = "caution"
 
                 if highest_status == "danger":
                     break
