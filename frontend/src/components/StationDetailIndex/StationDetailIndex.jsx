@@ -12,6 +12,7 @@ import ParameterCard from "../Icon/ParameterIcon";
 import { useError } from "../../context/ErrorContext";
 import ExportButton from "../Button/ExportButton";
 import ExportDialogEmail from "../ExportPdf/ExportPdfToEmail";
+import { differenceInMinutes, parseISO } from "date-fns";
 
 const customColorStatus = {
   normal: {
@@ -40,6 +41,11 @@ export default function StationDetailIndex() {
   const [exportDialogEmailOpen, setExportDialogEmailOpen] = useState(false);
   const status = detailIndex?.status_summary.status;
   const count = detailIndex?.status_summary.count;
+
+  // Kiểm tra xem dữ liệu có cũ hơn 30 phút không
+  const isDataOld = detailIndex?.time
+    ? differenceInMinutes(new Date(), parseISO(detailIndex.time)) > 30
+    : false;
 
   const handleExportEmailConfirm = async ({ fromDate, toDate, email }) => {
     console.log(
@@ -108,10 +114,6 @@ export default function StationDetailIndex() {
       />
       <PageContent
         sx={{
-          marginBottom: {
-            xs: "100px",
-            sm: "0",
-          },
           mt: "16px",
         }}
       >
@@ -148,13 +150,18 @@ export default function StationDetailIndex() {
                 {t("the_last_time_update")}
                 {": "}
                 <FormattedTime isoString={detailIndex.time} />
+                {isDataOld && (
+                  <Box component="span" sx={{ color: "red", ml: 1 }}>
+                    ({t("no_new_data_over_30_min")})
+                  </Box>
+                )}
               </Box>
             </Box>
             <Box
               sx={{
                 display: {
-                  xs: "block", // 👈 màn nhỏ
-                  sm: "flex", // 👈 từ màn vừa trở lên
+                  xs: "block",
+                  sm: "flex",
                 },
                 gap: 3,
                 mb: 2,
@@ -224,10 +231,7 @@ export default function StationDetailIndex() {
             >
               {detailIndex?.groups?.[selectedGroup] &&
               Object.keys(detailIndex.groups[selectedGroup]).length > 0 ? (
-                <Grid
-                  container
-                  spacing={4} // Tăng spacing từ 3 lên 4 để có thêm khoảng cách giữa các hàng
-                >
+                <Grid container spacing={4}>
                   {Object.entries(detailIndex.groups[selectedGroup]).map(
                     ([param, valueObj]) => (
                       <Grid
@@ -247,6 +251,7 @@ export default function StationDetailIndex() {
                           plantId={plantId}
                           stationId={stationId}
                           navigate={navigate}
+                          isDataOld={isDataOld} // Truyền thông tin dữ liệu cũ
                         />
                       </Grid>
                     )

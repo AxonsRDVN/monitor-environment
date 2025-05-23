@@ -141,7 +141,7 @@ export default function UserFormDialog({
       onClose={onClose}
       PaperProps={{ sx: { width: "400px" } }}
     >
-      <Box sx={{ p: 2, display: "flex", flexDirection: "column", pb: "50px" }}>
+      <Box sx={{ p: 2, display: "flex", flexDirection: "column", pb: "100px" }}>
         <Box
           sx={{
             display: "flex",
@@ -325,7 +325,7 @@ export default function UserFormDialog({
           onClick={handleSubmit}
           sx={{ background: "#074E9F", color: "#ffffff", mt: 3 }}
         >
-          {initialData ? t("update") : t("create")}
+          {initialData ? t("update") : t("admin_page_add_new_btn")}
         </Button>
       </Box>
     </Drawer>

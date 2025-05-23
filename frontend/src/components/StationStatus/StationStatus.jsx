@@ -152,21 +152,14 @@ export default function StationStatus() {
         ]}
       />
       <PageTitle title={plantName} />
-      <PageContent
-        sx={{
-          marginBottom: {
-            xs: "100px",
-            sm: "0",
-          },
-        }}
-      >
+      <PageContent>
         <TextField
           label={t("search")}
           variant="outlined"
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
           fullWidth
-          sx={{ marginBottom: 2, width: "340px" }}
+          sx={{ marginBottom: 2, width: "250px" }}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">

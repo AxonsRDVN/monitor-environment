@@ -24,6 +24,7 @@ import { useError } from "../../context/ErrorContext"; // ✅ Import useError
 import ActionButtons from "../Button/ActionButtons";
 import { getAllPlants } from "../../api/plantApi";
 import { getParameterIcon } from "../Icon/WarningThresholdIcon";
+import FormattedTime from "../FormatTime/FormatDateTime";
 
 const API_BASE = process.env.REACT_APP_API_URL;
 
@@ -154,15 +155,15 @@ export default function WarningThreshold() {
         ]}
       />
       <PageTitle title={t("warning_threshhold")} />
-      <PageContent sx={{ marginBottom: { xs: "100px", sm: "0" } }}>
+      <PageContent>
         <Box sx={{ mt: 3 }}>
           {/* Select Plant & Station */}
           <Box
             sx={{
               display: "flex",
               gap: 2,
-              flexWrap: "wrap",
               mb: 3,
+              width: { xs: "100%", sm: "50%" },
               flexDirection: { xs: "column", sm: "row" },
             }}
           >
@@ -226,8 +227,12 @@ export default function WarningThreshold() {
                         }}
                       >
                         {getParameterIcon(param.name)}
-                        {t(param.name)} ({param.min_value}-{param.max_value}){" "}
-                        {param.unit || "-"}
+                        {t(param.name)} (( {param.min_value}-{param.max_value})
+                        {param.unit || "-"})
+                        <span style={{ color: "#FF6B6B", fontSize: "14px" }}>
+                          {" "}
+                          (<FormattedTime isoString={param.updated_at} />)
+                        </span>
                       </Typography>
 
                       <Box

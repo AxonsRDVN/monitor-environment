@@ -8,19 +8,110 @@ import {
   TableRow,
   Paper,
   IconButton,
+  Card,
+  CardContent,
+  Typography,
+  Stack,
+  Box,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import { ContentPasteSearchOutlined } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 
-export default function MaintenanceApprovalTabel({
+export default function MaintenanceApprovalTable({
   sensors,
   onViewDetail,
   onViewLocation,
 }) {
   const { t } = useTranslation("translation");
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
   let stt = 1;
 
+  if (isSmallScreen) {
+    return (
+      <Stack spacing={2}>
+        {sensors.map((sensor) => (
+          <Card key={sensor.id} variant="outlined">
+            <CardContent>
+              <Stack spacing={1}>
+                <Box display="flex" justifyContent="space-between">
+                  <Typography fontWeight={500}>{t("index")}:</Typography>
+                  <Typography>{stt++}</Typography>
+                </Box>
+
+                <Box display="flex" justifyContent="space-between">
+                  <Typography fontWeight={500}>{t("device_model")}:</Typography>
+                  <Typography
+                    sx={{ wordBreak: "break-word", color: "text.secondary" }}
+                  >
+                    {sensor.sensor_model || "-"}
+                  </Typography>
+                </Box>
+
+                <Box display="flex" justifyContent="space-between">
+                  <Typography fontWeight={500}>{t("station_name")}:</Typography>
+                  <Typography sx={{ color: "text.secondary" }}>
+                    {sensor.station_name || "-"}
+                  </Typography>
+                </Box>
+
+                <Box display="flex" justifyContent="space-between">
+                  <Typography fontWeight={500}>{t("location")}:</Typography>
+                  <Typography sx={{ color: "text.secondary" }}>
+                    {sensor.station_location || "-"}
+                  </Typography>
+                </Box>
+
+                <Box display="flex" justifyContent="space-between">
+                  <Typography fontWeight={500}>{t("username")}:</Typography>
+                  <Typography sx={{ color: "text.secondary" }}>
+                    {sensor.user_name || "-"}
+                  </Typography>
+                </Box>
+
+                <Box display="flex" justifyContent="space-between">
+                  <Typography fontWeight={500}>{t("action")}:</Typography>
+                  <Typography sx={{ color: "text.secondary" }}>
+                    {sensor.action === "maintenance"
+                      ? t("maintenance")
+                      : t("replacement")}
+                  </Typography>
+                </Box>
+
+                <Box display="flex" justifyContent="space-between">
+                  <Typography fontWeight={500}>{t("coordinate")}:</Typography>
+                  <IconButton
+                    color="primary"
+                    onClick={() =>
+                      onViewLocation(sensor.latitude, sensor.longitude)
+                    }
+                    disabled={!sensor.latitude || !sensor.longitude}
+                  >
+                    <LocationOnIcon />
+                  </IconButton>
+                </Box>
+
+                <Box display="flex" justifyContent="space-between">
+                  <Typography fontWeight={500}>{t("details")}:</Typography>
+                  <IconButton
+                    color="primary"
+                    onClick={() => onViewDetail(sensor.id)}
+                  >
+                    <ContentPasteSearchOutlined />
+                  </IconButton>
+                </Box>
+              </Stack>
+            </CardContent>
+          </Card>
+        ))}
+      </Stack>
+    );
+  }
+
+  // ✅ Màn hình lớn: giữ nguyên dạng bảng
   return (
     <TableContainer component={Paper}>
       <Table>

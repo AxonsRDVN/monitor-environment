@@ -15,6 +15,10 @@ const PageContainer = ({ children }) => {
         minHeight: "100vh",
         backgroundColor: "#F8F9FA",
         transition: "margin-left 0.3s ease",
+        mb: {
+          xs: "100px",
+          sm: "0",
+        },
       }}
     >
       {children}

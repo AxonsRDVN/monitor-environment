@@ -320,5 +320,9 @@
   "your_cordinate": "Tọa độ của bạn",
   "last_replacement": "Thay thế gần nhất",
   "active": "Hoạt động",
-  "inactive": "Không hoạt động"
+  "inactive": "Không hoạt động",
+  "no_new_data_over_30_min": "Không có dữ liệu mới trong 30 phút qua",
+  "no_data_to_display_for": "Không có dữ liệu để hiển thị cho",
+  "getting_location": "Đang lấy vị trí...",
+  "pending": "Chờ duyệt"
 }

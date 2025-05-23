@@ -182,7 +182,7 @@ export default function AddNewStationDialog({ open, onClose, onSubmit }) {
           height: "auto",
           display: "flex",
           flexDirection: "column",
-          pb: "50px",
+          pb: "100px",
         }}
       >
         {/* Header */}

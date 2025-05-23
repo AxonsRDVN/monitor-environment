@@ -164,13 +164,26 @@ export default function WarningIndicator() {
         ]}
       />
       <PageTitle title={t("report")} />
-      <PageContent sx={{ marginBottom: { xs: "100px", sm: "0" } }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <FormControl sx={{ maxWidth: 250, flex: 1 }}>
+      <PageContent>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
+            flexWrap: { xs: "wrap", sm: "nowrap" },
+            width: { xs: "100%", sm: "75%", md: "75%" }, // 👈 tổng cụm chiếm 50% màn lớn
+            gap: 2,
+            alignItems: "center",
+            justifyContent: "center",
+            alignSelf: "center",
+            mb: 3,
+          }}
+        >
+          {/* Dropdown chọn nhà máy */}
+          <FormControl fullWidth>
             <InputLabel>{t("plant")}</InputLabel>
             <Select
               value={selectedPlant}
-              label="Chọn nhà máy"
+              label={t("plant")}
               onChange={(e) => setSelectedPlant(e.target.value)}
             >
               {plants.map((plant) => (
@@ -180,17 +193,18 @@ export default function WarningIndicator() {
               ))}
             </Select>
           </FormControl>
+
+          {/* Ngày bắt đầu & kết thúc */}
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             <Box
               sx={{
                 display: "flex",
+                flexDirection: { xs: "column", sm: "row" },
+                width: "100%",
                 gap: 2,
-                alignItems: "center",
-                mb: 3,
-                flexWrap: "wrap",
               }}
             >
-              <Box>
+              <Box sx={{ width: "100%" }}>
                 <Typography>{t("report_dropdown_from_date_label")}</Typography>
                 <DatePicker
                   value={fromDate}
@@ -201,12 +215,13 @@ export default function WarningIndicator() {
                     <TextField
                       {...params}
                       size="small"
+                      fullWidth
                       error={error && error.includes("Ngày bắt đầu")}
                     />
                   )}
                 />
               </Box>
-              <Box>
+              <Box sx={{ width: "100%" }}>
                 <Typography>{t("report_dropdown_to_date_label")}</Typography>
                 <DatePicker
                   value={toDate}
@@ -215,13 +230,14 @@ export default function WarningIndicator() {
                   inputFormat="DD/MM/YYYY"
                   maxDate={dayjs()}
                   renderInput={(params) => (
-                    <TextField {...params} size="small" />
+                    <TextField {...params} size="small" fullWidth />
                   )}
                 />
               </Box>
             </Box>
           </LocalizationProvider>
         </Box>
+
         <Box>
           {/* Phần bảng tổng quát */}
           <Box

@@ -161,7 +161,7 @@ export default function MonitoringStation() {
         ]}
       />
       <PageTitle title={t("monitoring_station")} />
-      <PageContent sx={{ marginBottom: { xs: "100px", sm: "0" } }}>
+      <PageContent>
         <Box
           sx={{
             display: "flex",

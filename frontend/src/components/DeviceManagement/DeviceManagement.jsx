@@ -126,13 +126,14 @@ export default function DeviceManagement() {
         ]}
       />
       <PageTitle title={t("device_management")} />
-      <PageContent sx={{ marginBottom: { xs: "100px", sm: "0" } }}>
+      <PageContent>
         <Box
           sx={{
             display: "flex",
-            flexWrap: "wrap",
             gap: 2,
-            mt: 2,
+            mb: 3,
+            width: { xs: "100%", sm: "50%" },
+            flexDirection: { xs: "column", sm: "row" },
           }}
         >
           <FormControl sx={{ width: { xs: "100%", sm: "50%" } }}>

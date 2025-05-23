@@ -65,7 +65,7 @@ export default function DeviceStatus() {
         ]}
       />
       <PageTitle title={t("device_status")} />
-      <PageContent sx={{ marginBottom: { xs: "100px", sm: "0" } }}>
+      <PageContent>
         <Box mb={6}>
           <FormControl sx={{ minWidth: 250 }}>
             <InputLabel>{t("plant")}</InputLabel>

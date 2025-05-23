@@ -128,7 +128,7 @@ export default function MaintenanceApproval() {
         ]}
       />
       <PageTitle title={t("approve_maintenance")} />
-      <PageContent sx={{ marginBottom: { xs: "100px", sm: "0" } }}>
+      <PageContent>
         {!isMaintenanceDetailPage ? (
           // Trang danh sách Maintenance
           <>
@@ -181,7 +181,7 @@ export default function MaintenanceApproval() {
               <CircularProgress />
             ) : selectedDetail ? (
               <>
-                <Typography>
+                <Typography sx={{ wordBreak: "break-word" }}>
                   <strong>{t("device_model")}:</strong>{" "}
                   {selectedDetail.sensor_model}
                 </Typography>
@@ -193,10 +193,10 @@ export default function MaintenanceApproval() {
                   {selectedDetail.station_location}
                 </Typography>
                 <Typography>
-                  <strong>{t("action")}:</strong> {selectedDetail.action}
+                  <strong>{t("action")}:</strong> {t(selectedDetail.action)}
                 </Typography>
                 <Typography>
-                  <strong>{t("status")}:</strong> {selectedDetail.status}
+                  <strong>{t("status")}:</strong> {t(selectedDetail.status)}
                 </Typography>
                 <Typography>
                   <strong>{t("requested_by")}:</strong>{" "}
@@ -206,7 +206,7 @@ export default function MaintenanceApproval() {
                   <strong>{t("moderator")}:</strong> {selectedDetail.moderator}
                 </Typography>
                 <Typography>
-                  <strong>{t("role")}:</strong> {selectedDetail.role}
+                  <strong>{t("role")}:</strong> {t(selectedDetail.role)}
                 </Typography>
                 <Typography>
                   <strong>{t("updated_at")}:</strong>{" "}
@@ -214,16 +214,20 @@ export default function MaintenanceApproval() {
                 </Typography>
                 <Box
                   sx={{
-                    display: "flex",
+                    display: {
+                      xs: "block",
+                      sm: "flex",
+                    },
                     gap: "114px",
                     alignItems: "center",
                     borderBottom: "1px solid #E4E7EC",
                     pb: 5,
+                    pt: 2,
                   }}
                 >
                   <iframe
-                    width="50%"
-                    height="300"
+                    width="100%"
+                    height="300px"
                     frameBorder="0"
                     style={{ border: 0 }}
                     referrerPolicy="no-referrer-when-downgrade"

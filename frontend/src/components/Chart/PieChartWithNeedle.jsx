@@ -1,7 +1,7 @@
 /* eslint-disable no-shadow */
-import React from "react";
 import { useTranslation } from "react-i18next";
 import { PieChart, Pie, Cell } from "recharts";
+import { useTheme, useMediaQuery } from "@mui/material";
 
 const RADIAN = Math.PI / 180;
 
@@ -11,12 +11,6 @@ const data = [
   { name: "normal", value: 1, color: "#70DF00" },
 ];
 
-const cx = 150;
-const cy = 120;
-const iR = 50;
-const oR = 120;
-
-// 👉 Hàm tính vị trí kim dựa trên status
 const getNeedleValueFromStatus = (status) => {
   switch (status?.toLowerCase()) {
     case "danger":
@@ -30,7 +24,6 @@ const getNeedleValueFromStatus = (status) => {
   }
 };
 
-// 👉 Hàm vẽ kim
 const needle = (value, data, cx, cy, iR, oR, color) => {
   const total = data.reduce((sum, entry) => sum + entry.value, 0);
   const ang = 180.0 * (1 - value / total);
@@ -67,6 +60,19 @@ const needle = (value, data, cx, cy, iR, oR, color) => {
 
 export default function PieChartWithNeedle({ status = "normal" }) {
   const { t } = useTranslation();
+
+  // ✅ Hook phải ở đây
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
+
+  // Responsive width & height
+  const chartWidth = isSmallScreen ? 220 : 320;
+  const chartHeight = isSmallScreen ? 100 : 150;
+  const cx = chartWidth / 2;
+  const cy = chartHeight;
+  const iR = 50;
+  const oR = isSmallScreen ? 100 : 120;
+
   const value = getNeedleValueFromStatus(status);
 
   const renderCustomizedLabel = ({
@@ -96,7 +102,7 @@ export default function PieChartWithNeedle({ status = "normal" }) {
   };
 
   return (
-    <PieChart width={300} height={150}>
+    <PieChart width={chartWidth} height={chartHeight}>
       <Pie
         dataKey="value"
         startAngle={180}

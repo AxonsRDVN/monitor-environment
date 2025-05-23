@@ -8,6 +8,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Grid,
 } from "@mui/material";
 import axios from "axios";
 import PageContainer from "../PageContainer/PageContainer";
@@ -35,7 +36,7 @@ export default function SensorMaintenance() {
   const [action, setAction] = useState("maintenance");
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"))?.full_name;
-  const role = JSON.parse(localStorage.getItem("user"))?.role;
+  const role = JSON.parse(localStorage.getItem("user"))?.role_name;
 
   useEffect(() => {
     async function fetchData() {
@@ -74,12 +75,12 @@ export default function SensorMaintenance() {
 
     const formData = new FormData();
     formData.append("sensor", sensorId);
-    formData.append("action", action); // Mặc định là bảo trì, nếu có thêm thay thế sau này thì sửa
+    formData.append("action", action);
     formData.append("image_before", imageBefore);
     formData.append("image_after", imageAfter);
-    formData.append("user_name", user); // Nếu có user đăng nhập thì thay bằng tên user thực tế
-    formData.append("moderator", "Admin"); // Nếu cần chọn thì thêm input, hiện hardcode
-    formData.append("role", role); // Lắp đặt, hoặc lấy từ login
+    formData.append("user_name", user);
+    formData.append("moderator", "Admin");
+    formData.append("role", role);
     formData.append("latitude", fixedLatitude);
     formData.append("longitude", fixedLongitude);
 
@@ -104,6 +105,104 @@ export default function SensorMaintenance() {
     }
   };
 
+  const renderImageUpload = (image, setImage, labelKey) => (
+    <Box
+      sx={{
+        position: "relative",
+        width: "100%",
+        maxWidth: 280,
+        height: 240,
+        mx: "auto",
+        mb: 2,
+      }}
+    >
+      {image ? (
+        <img
+          src={URL.createObjectURL(image)}
+          alt={t(labelKey)}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            borderRadius: "8px",
+            border: "1px solid #E4E7EC",
+          }}
+        />
+      ) : (
+        <Box
+          sx={{
+            background: "#DEEDFE",
+            alignItems: "center",
+            textAlign: "center",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            p: 3,
+            borderRadius: "8px",
+            border: "2px dashed #0086C9",
+            width: "100%",
+            height: "100%",
+            transition: "all 0.3s ease",
+            "&:hover": {
+              background: "#D6E8FD",
+              borderColor: "#0074B7",
+            },
+          }}
+        >
+          <AddPhotoAlternate
+            sx={{
+              fontSize: "48px",
+              color: "#0086C9",
+              mb: 2,
+            }}
+          />
+          <Typography
+            sx={{
+              color: "#0086C9",
+              fontWeight: "600",
+              fontSize: "16px",
+              mb: 1,
+            }}
+          >
+            {t("click_to_upload")}
+          </Typography>
+          <Typography sx={{ color: "#667085", fontSize: "14px" }}>
+            {t("or_drag_and_drop")}
+          </Typography>
+        </Box>
+      )}
+
+      <input
+        type="file"
+        accept="image/*"
+        onChange={(e) => {
+          if (e.target.files[0]) setImage(e.target.files[0]);
+        }}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          opacity: 0,
+          cursor: "pointer",
+        }}
+      />
+
+      <Typography
+        sx={{
+          mt: 2,
+          fontSize: "16px",
+          color: "#344054",
+          fontWeight: 500,
+          textAlign: "center",
+        }}
+      >
+        {t(labelKey)}
+      </Typography>
+    </Box>
+  );
+
   if (loading) {
     return (
       <Box
@@ -126,7 +225,7 @@ export default function SensorMaintenance() {
   }
 
   const handleBack = () => {
-    navigate(-1); // Quay về trang trước
+    navigate(-1);
   };
 
   return (
@@ -139,22 +238,44 @@ export default function SensorMaintenance() {
       />
       <PageTitle title={t("maintenance")} />
       <PageContent>
-        <Box mb={2} color={"#344054"} fontWeight={"700"} fontSize={"22px"}>
-          {sensor.model_sensor}
+        {/* Thông tin sensor */}
+        <Box
+          sx={{
+            mb: 4,
+            p: 2,
+            borderRadius: 2,
+            border: "1px solid #E4E7EC",
+            backgroundColor: "#FAFBFC",
+            wordBreak: "break-word", // 👈 THÊM DÒNG NÀY
+          }}
+        >
+          <Typography
+            sx={{
+              mb: 2,
+              color: "#344054",
+              fontWeight: 700,
+              fontSize: { xs: "20px", sm: "22px" },
+            }}
+          >
+            {sensor.model_sensor}
+          </Typography>
+
+          <Typography sx={{ fontSize: "16px", color: "#667085" }}>
+            {t("factory_farm")}: <strong>{sensor.plant_name}</strong>
+          </Typography>
+          <Typography sx={{ fontSize: "16px", color: "#667085" }}>
+            {t("station")}: <strong>{sensor.station_name}</strong>
+          </Typography>
         </Box>
-        <Box mb={2}>
-          {t("factory_farm")}: <strong>{sensor.plant_name}</strong>
-        </Box>
-        <Box mb={2}>
-          {t("station")}: <strong>{sensor.station_name}</strong>
-        </Box>
-        <Box mt={2}>
-          <FormControl sx={{ mt: 2, width: "334px" }}>
+
+        {/* Select action */}
+        <Box sx={{ mb: 4 }}>
+          <FormControl sx={{ width: { xs: "100%", sm: "334px" } }}>
             <InputLabel id="action-select-label">{t("action")}</InputLabel>
             <Select
               labelId="action-select-label"
               value={action}
-              label="Hành động"
+              label={t("action")}
               onChange={(e) => setAction(e.target.value)}
             >
               <MenuItem value="maintenance">{t("maintenance")}</MenuItem>
@@ -162,197 +283,95 @@ export default function SensorMaintenance() {
             </Select>
           </FormControl>
         </Box>
-        <Box mt={4}>
-          <Box
-            pt={4}
-            pb={6}
-            borderTop={"1px solid #E4E7EC"}
-            borderBottom={"1px solid #E4E7EC"}
-            textAlign={"center"}
-          >
-            <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-              <Box sx={{ display: "flex", gap: 4 }}>
-                {/* Ảnh trước bảo trì */}
-                <Box sx={{ position: "relative", width: 240, height: 240 }}>
-                  {/* Nếu có ảnh thì hiện ảnh, ngược lại hiện Box upload */}
-                  {imageBefore ? (
-                    <img
-                      src={URL.createObjectURL(imageBefore)}
-                      alt="Ảnh trước"
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                        borderRadius: "8px",
-                      }}
-                    />
-                  ) : (
-                    <Box
-                      sx={{
-                        background: "#DEEDFE",
-                        alignItems: "center",
-                        textAlign: "center",
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "center",
-                        p: "20px",
-                        borderRadius: "8px",
-                        border: "1px dashed #0086C9",
-                        width: "100%",
-                        height: "100%",
-                      }}
-                    >
-                      <AddPhotoAlternate
-                        sx={{
-                          fontSize: "54px",
-                          color: "#0086C9",
-                          mb: 1,
-                        }}
-                      />
-                      <Typography
-                        sx={{
-                          color: "#0086C9",
-                          fontWeight: "600",
-                          fontSize: "16px",
-                        }}
-                      >
-                        {t("click_to_upload")}
-                      </Typography>
-                      <Typography sx={{ color: "#344054", fontSize: "14px" }}>
-                        {t("or_drag_and_drop")}
-                      </Typography>
-                    </Box>
-                  )}
 
-                  {/* Ô chọn file luôn đè lên toàn bộ */}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      if (e.target.files[0]) setImageBefore(e.target.files[0]);
-                    }}
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      width: "100%",
-                      height: "100%",
-                      opacity: 0,
-                      cursor: "pointer",
-                    }}
-                  />
-                  <Box mt={1} fontSize={"16px"} color={"#344054"}>
-                    {t("before_image")}
-                  </Box>
-                </Box>
+        {/* Upload images và map */}
+        <Box
+          sx={{
+            py: { xs: 3, sm: 4 },
+            borderTop: "1px solid #E4E7EC",
+            borderBottom: "1px solid #E4E7EC",
+          }}
+        >
+          <Grid container spacing={4} alignItems="flex-start">
+            {/* Upload ảnh trước */}
+            <Grid item xs={12} sm={6} lg={4}>
+              {renderImageUpload(imageBefore, setImageBefore, "before_image")}
+            </Grid>
 
-                {/* Ảnh sau bảo trì */}
-                <Box sx={{ position: "relative", width: 240, height: 240 }}>
-                  {/* Nếu có ảnh thì hiện ảnh, ngược lại hiện Box upload */}
-                  {imageAfter ? (
-                    <img
-                      src={URL.createObjectURL(imageAfter)}
-                      alt="Ảnh sau"
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                        borderRadius: "8px",
-                      }}
-                    />
-                  ) : (
-                    <Box
-                      sx={{
-                        background: "#DEEDFE",
-                        alignItems: "center",
-                        textAlign: "center",
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "center",
-                        p: "20px",
-                        borderRadius: "8px",
-                        border: "1px dashed #0086C9",
-                        width: "100%",
-                        height: "100%",
-                      }}
-                    >
-                      <AddPhotoAlternate
-                        sx={{
-                          fontSize: "54px",
-                          color: "#0086C9",
-                          mb: 1,
-                        }}
-                      />
-                      <Typography
-                        sx={{
-                          color: "#0086C9",
-                          fontWeight: "600",
-                          fontSize: "16px",
-                        }}
-                      >
-                        {t("click_to_upload")}
-                      </Typography>
-                      <Typography sx={{ color: "#344054", fontSize: "14px" }}>
-                        {t("or_drag_and_drop")}
-                      </Typography>
-                    </Box>
-                  )}
+            {/* Upload ảnh sau */}
+            <Grid item xs={12} sm={6} lg={4}>
+              {renderImageUpload(imageAfter, setImageAfter, "after_image")}
+            </Grid>
 
-                  {/* Ô chọn file luôn đè lên toàn bộ */}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      if (e.target.files[0]) setImageAfter(e.target.files[0]);
-                    }}
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      width: "100%",
-                      height: "100%",
-                      opacity: 0,
-                      cursor: "pointer",
-                    }}
-                  />
-                  <Box mt={1} fontSize={"16px"} color={"#344054"}>
-                    {t("after_image")}
-                  </Box>
-                </Box>
-              </Box>
-              <Box>
-                <Typography>
-                  <strong>{t("your_cordinate")}:</strong>{" "}
+            {/* Bản đồ */}
+            <Grid item xs={12} lg={4}>
+              <Box
+                sx={{
+                  textAlign: "center",
+                  maxWidth: 320,
+                  mx: "auto",
+                }}
+              >
+                <Typography
+                  sx={{
+                    mb: 2,
+                    fontSize: "16px",
+                    fontWeight: 500,
+                    color: "#344054",
+                  }}
+                >
+                  <strong>{t("your_cordinate")}:</strong>
                 </Typography>
-                {latitude && longitude && (
-                  <iframe
-                    title="Google Map"
-                    width="100%"
-                    height="auto"
-                    frameBorder="0"
-                    style={{ border: 0 }}
-                    src={`https://www.google.com/maps?q=${latitude},${longitude}&hl=vi&z=16&output=embed`}
-                    allowFullScreen
-                  ></iframe>
+
+                {latitude && longitude ? (
+                  <Box
+                    sx={{
+                      borderRadius: 2,
+                      overflow: "hidden",
+                      border: "1px solid #E4E7EC",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                    }}
+                  >
+                    <iframe
+                      title="Google Map"
+                      width="100%"
+                      height="240"
+                      frameBorder="0"
+                      style={{ border: 0 }}
+                      src={`https://www.google.com/maps?q=${latitude},${longitude}&hl=vi&z=16&output=embed`}
+                      allowFullScreen
+                    />
+                  </Box>
+                ) : (
+                  <Box
+                    sx={{
+                      height: 240,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      border: "2px dashed #D0D5DD",
+                      borderRadius: 2,
+                      backgroundColor: "#F9FAFB",
+                    }}
+                  >
+                    <Typography sx={{ color: "#667085" }}>
+                      {t("getting_location")}...
+                    </Typography>
+                  </Box>
                 )}
               </Box>
-            </Box>
-          </Box>
+            </Grid>
+          </Grid>
+        </Box>
 
-          {/* <Button
-            variant="contained"
-            color="primary"
-            sx={{ mt: 3 }}
-            onClick={handleSubmit}
-            disabled={loadingSubmit}
-          >
-            {loadingSubmit ? "Đang gửi..." : "Gửi yêu cầu bảo trì"}
-          </Button> */}
+        {/* Action buttons */}
+        <Box sx={{ mt: 4 }}>
           <ActionButtons
             onSave={handleSubmit}
             onCancel={handleBack}
             saveText={t("save")}
             cancelText={t("cancel")}
+            loading={loadingSubmit}
           />
         </Box>
       </PageContent>

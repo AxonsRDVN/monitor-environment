@@ -143,6 +143,31 @@ export const statusColors = {
       </svg>
     ),
   },
+  // Thêm style cho dữ liệu cũ (màu xám)
+  old_data: {
+    bg: "#F5F5F5",
+    text: "#8B8B8B",
+    iconColor: "#8B8B8B",
+    icon: (
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <circle cx="12" cy="12" r="11.6667" fill="#CCCCCC" />
+        <circle cx="8.5" cy="9.1" r="1.5" fill="#666666" />
+        <circle cx="15.5" cy="9.1" r="1.5" fill="#666666" />
+        <path
+          d="M7 14.3C8.1 15.8 9.9 16.7 12 16.7C14.1 16.7 15.9 15.8 17 14.3"
+          stroke="#666666"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+        />
+      </svg>
+    ),
+  },
 };
 
 export default function ParameterCard({
@@ -152,6 +177,7 @@ export default function ParameterCard({
   plantId,
   stationId,
   navigate,
+  isDataOld = false, // Prop mới để kiểm tra dữ liệu cũ
 }) {
   const handleClick = () => {
     navigate(
@@ -159,8 +185,11 @@ export default function ParameterCard({
     );
   };
 
-  const status = paramData?.status || "unknown"; // nếu thiếu thì cho unknown
-  const colorConfig = statusColors[status] || statusColors["unknown"];
+  // Nếu dữ liệu cũ thì sử dụng style old_data, nếu không thì sử dụng status gốc
+  const effectiveStatus = isDataOld
+    ? "old_data"
+    : paramData?.status || "unknown";
+  const colorConfig = statusColors[effectiveStatus] || statusColors["unknown"];
   const Icon = ICON_MAP[paramKey] || BlurOnIcon;
   const { t } = useTranslation("translation");
 
@@ -178,6 +207,8 @@ export default function ParameterCard({
         justifyContent: "space-between",
         boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
         height: "100%",
+        // Giảm opacity nếu dữ liệu cũ để tạo hiệu ứng mờ
+        opacity: isDataOld ? 0.7 : 1,
         "&:hover": {
           boxShadow: "0px 4px 12px rgba(7, 78, 159, 0.3)",
           transform: "translateY(-2px)",
@@ -206,7 +237,22 @@ export default function ParameterCard({
             {t(label)}
           </Box>
         </Box>
-        <Box sx={{ ml: "auto" }}>{colorConfig.icon}</Box>
+        <Box sx={{ ml: "auto" }}>
+          {colorConfig.icon}
+          {/* Hiển thị dấu chấm than nhỏ nếu dữ liệu cũ */}
+          {isDataOld && (
+            <Box
+              sx={{
+                ml: 1,
+                fontSize: "12px",
+                color: "#FF6B6B",
+                fontWeight: "bold",
+              }}
+            >
+              ⚠
+            </Box>
+          )}
+        </Box>
       </Box>
 
       {/* Value */}

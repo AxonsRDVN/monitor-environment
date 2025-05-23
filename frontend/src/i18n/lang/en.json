@@ -320,5 +320,9 @@
   "your_cordinate": "Your coordinate",
   "last_replacement": "Last replacement",
   "active": "Active",
-  "inactive": "Inactive"
+  "inactive": "Inactive",
+  "no_new_data_over_30_min": "No new data over 30 minutes",
+  "no_data_to_display_for": "No data to display for",
+  "getting_location": "Getting location...",
+  "pending": "Pending"
 }

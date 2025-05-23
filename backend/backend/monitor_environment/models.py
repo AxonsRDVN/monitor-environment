@@ -36,14 +36,12 @@ class Function(models.Model):
     def __str__(self):
         return self.function_code + " " + str(self.id)
 
-
 class Role(models.Model):
     role_name = models.CharField(max_length=100, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     functions = models.ManyToManyField("Function", blank=True)
     def __str__(self):
         return f"{self.role_name} (ID: {self.id})"
-
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, username, email, password=None, **extra_fields):
@@ -61,7 +59,6 @@ class CustomUserManager(BaseUserManager):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
         return self.create_user(username, email, password, **extra_fields)
-
 
 class User(AbstractBaseUser, PermissionsMixin):
     GENDER_CHOICES = [("male", "Male"), ("female", "Female")]
@@ -123,7 +120,6 @@ def auto_grant_admin_access_to_existing_plants(sender, instance, created, **kwar
                 PlantAccess.objects.get_or_create(user=instance, plant=plant)
     except Exception as e:
         logger.error(f"[PlantAccess] Error granting admin access to existing plants: {str(e)}")
-
 
 class Station(models.Model):
     STATION_TYPE_CHOICES = [
@@ -188,7 +184,6 @@ class Transaction(models.Model):
             self.device_code = self.station.code  # 🧠 gán code từ station
         super().save(*args, **kwargs)
 
-
 class Threshold(models.Model):
     plant = models.ForeignKey(
         Plant, on_delete=models.CASCADE, related_name="thresholds"
@@ -247,6 +242,8 @@ class Parameter(models.Model):
     caution_max = models.FloatField(blank=True, null=True)
     danger_min = models.FloatField(blank=True, null=True)
     danger_max = models.FloatField(blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
     def __str__(self):
         return f"{self.name} ({self.sensor})"
 
