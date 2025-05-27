@@ -285,7 +285,12 @@ export default function CleaningDay() {
                           </InputAdornment>
                         ),
                       }}
-                      sx={{ width: 220 }}
+                      sx={{
+                        width: {
+                          xs: "100%",
+                          sm: "220px",
+                        },
+                      }}
                     />
                   </ListItem>
                 ))}

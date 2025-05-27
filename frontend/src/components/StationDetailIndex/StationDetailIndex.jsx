@@ -133,7 +133,9 @@ export default function StationDetailIndex() {
                   <Router fontSize="large" />
                 )}
               </Box>
-              <Box sx={{ fontSize: "24px" }}>{stations?.name}</Box>
+              <Box sx={{ fontSize: "24px", color: "#667085" }}>
+                {stations?.name}
+              </Box>
               <Box
                 sx={{
                   color: customColorStatus[status]?.color || "inherit",
@@ -159,10 +161,7 @@ export default function StationDetailIndex() {
             </Box>
             <Box
               sx={{
-                display: {
-                  xs: "block",
-                  sm: "flex",
-                },
+                display: "flex",
                 gap: 3,
                 mb: 2,
                 alignItems: "center",
@@ -179,22 +178,37 @@ export default function StationDetailIndex() {
                     key={group}
                     onClick={() => setSelectedGroup(group)}
                     sx={{
-                      px: 2,
-                      py: 1,
+                      px: {
+                        xs: 0,
+                        sm: 2,
+                      },
+                      py: {
+                        xs: 0,
+                        sm: 1,
+                      },
                       cursor: "pointer",
                       color: selectedGroup === group ? "#074E9F" : "#344054",
                       borderBottom:
                         selectedGroup === group ? "4px solid #074E9F" : "none",
-                      fontSize: 20,
+                      fontSize: {
+                        xs: "14px",
+                        sm: "16px",
+                        md: "18px",
+                        lg: "20px",
+                      },
                       fontWeight: 500,
                       display: "flex",
                       alignItems: "center",
-                      gap: 1,
+                      gap: {
+                        xs: 0,
+                        sm: 1,
+                      },
                       flexWrap: "wrap",
                       "&:hover": {
                         boxShadow: "0px 4px 12px rgba(7, 78, 159, 0.3)",
                         transform: "translateY(-2px)",
                       },
+                      justifyContent: "center",
                     }}
                   >
                     {t(group.toLowerCase())}
@@ -207,11 +221,17 @@ export default function StationDetailIndex() {
                         background:
                           selectedGroup === group ? "#0086C9" : "#E4E7EC",
                         color: selectedGroup === group ? "#fff" : "#98A2B3",
-                        fontSize: "13px",
+                        fontSize: {
+                          xs: "10px",
+                          sm: "13px",
+                        },
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        ml: 1,
+                        ml: {
+                          xs: 0,
+                          sm: 1,
+                        },
                       }}
                     >
                       {count}

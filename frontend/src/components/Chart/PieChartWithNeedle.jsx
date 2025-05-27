@@ -94,7 +94,7 @@ export default function PieChartWithNeedle({ status = "normal" }) {
         fill="white"
         textAnchor="middle"
         dominantBaseline="central"
-        fontSize={14}
+        fontSize={isSmallScreen ? 10 : 14}
       >
         {t(data[index].name)}
       </text>

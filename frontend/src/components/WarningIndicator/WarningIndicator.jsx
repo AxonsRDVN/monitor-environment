@@ -259,8 +259,10 @@ export default function WarningIndicator() {
             <Box display="flex" justifyContent="center" mt={4}>
               <CircularProgress />
             </Box>
-          ) : (
+          ) : sensors && sensors.length > 0 ? (
             <GeneralWarningIndicatorTable sensors={sensors} />
+          ) : (
+            <div>{t("no_data_to_display")}</div>
           )}
 
           {/* Phần bảng chi tiết */}
@@ -282,8 +284,10 @@ export default function WarningIndicator() {
             <Box display="flex" justifyContent="center" mt={4}>
               <CircularProgress />
             </Box>
-          ) : (
+          ) : data && data.length > 0 ? (
             <DetailWarningIndicatorTable dataApi={data} />
+          ) : (
+            <div>{t("no_data_to_display")}</div>
           )}
 
           {/* Pagination */}

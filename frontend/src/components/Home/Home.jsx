@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Box, Grid, Paper, Typography } from "@mui/material";
+import { Box, CircularProgress, Grid, Paper, Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import HomeWorkOutlinedIcon from "@mui/icons-material/HomeWorkOutlined";
 import { useNavigate } from "react-router-dom";
@@ -55,77 +55,81 @@ export default function Home() {
     <PageContainer>
       <Breadcrumb items={[{ label: t("home_page"), path: "/home" }]} />
       <PageTitle title={t("home_page")} />
-      <PageContent sx={{ background: "#F8F9FA", padding: 0 }}>
-        <Grid container spacing={3} alignItems="stretch">
-          {plants.map((plant) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={plant.id}>
-              <Item
-                status={plant.status}
-                onClick={() => navigate(`/home/plant/${plant.id}/stations`)}
-              >
-                {/* Icon trạng thái ở góc */}
-                <Box
-                  sx={{
-                    position: "absolute",
-                    top: 12,
-                    right: 12,
-                    color: statusColors[plant.status]?.text,
-                  }}
+      {loading ? (
+        <CircularProgress />
+      ) : (
+        <PageContent sx={{ background: "#F8F9FA", padding: 0 }}>
+          <Grid container spacing={3} alignItems="stretch">
+            {plants.map((plant) => (
+              <Grid item xs={12} sm={6} md={4} lg={3} key={plant.id}>
+                <Item
+                  status={plant.status}
+                  onClick={() => navigate(`/home/plant/${plant.id}/stations`)}
                 >
-                  {statusColors[plant.status]?.icon}
-                </Box>
-
-                {/* Nội dung chính */}
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                  {/* Icon trạng thái ở góc */}
                   <Box
                     sx={{
-                      backgroundColor: statusColors[plant.status]?.bg,
-                      color: statusColors[plant.status]?.iconColor,
-                      p: 1,
-                      borderRadius: "10px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
+                      position: "absolute",
+                      top: 12,
+                      right: 12,
+                      color: statusColors[plant.status]?.text,
                     }}
                   >
-                    <HomeWorkOutlinedIcon sx={{ fontSize: 48 }} />
+                    {statusColors[plant.status]?.icon}
                   </Box>
 
-                  <Box sx={{ flex: 1 }}>
-                    <Typography
-                      fontSize="16px"
-                      fontWeight={600}
-                      color="#344054"
-                      sx={{ wordBreak: "break-word" }}
-                    >
-                      {plant.name}
-                    </Typography>
+                  {/* Nội dung chính */}
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                     <Box
                       sx={{
+                        backgroundColor: statusColors[plant.status]?.bg,
+                        color: statusColors[plant.status]?.iconColor,
+                        p: 1,
+                        borderRadius: "10px",
                         display: "flex",
                         alignItems: "center",
-                        gap: 1,
-                        flexWrap: "wrap",
+                        justifyContent: "center",
                       }}
                     >
-                      <Typography fontSize="14px" color="#667085">
-                        {t("stations")}: {t(plant.station_count) || 0}
-                      </Typography>
+                      <HomeWorkOutlinedIcon sx={{ fontSize: 48 }} />
+                    </Box>
+
+                    <Box sx={{ flex: 1 }}>
                       <Typography
-                        fontSize="14px"
-                        color={statusColors[plant.status]?.text}
+                        fontSize="16px"
+                        fontWeight={600}
+                        color="#344054"
+                        sx={{ wordBreak: "break-word" }}
                       >
-                        • {t(plant.status)}
-                        {plant.count > 0 && ` (${plant.count})`}
+                        {plant.name}
                       </Typography>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <Typography fontSize="14px" color="#667085">
+                          {t("stations")}: {t(plant.station_count) || 0}
+                        </Typography>
+                        <Typography
+                          fontSize="14px"
+                          color={statusColors[plant.status]?.text}
+                        >
+                          • {t(plant.status)}
+                          {plant.count > 0 && ` (${plant.count})`}
+                        </Typography>
+                      </Box>
                     </Box>
                   </Box>
-                </Box>
-              </Item>
-            </Grid>
-          ))}
-        </Grid>
-      </PageContent>
+                </Item>
+              </Grid>
+            ))}
+          </Grid>
+        </PageContent>
+      )}
     </PageContainer>
   );
 }

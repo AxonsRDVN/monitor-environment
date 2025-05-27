@@ -384,10 +384,16 @@ export default function StationStatus() {
           >
             <Box
               sx={{
-                display: "flex",
+                display: {
+                  xs: "grid",
+                  sm: "flex",
+                },
                 gap: 2,
                 alignItems: "center",
-                justifyContent: "space-between",
+                justifyContent: {
+                  xs: "none",
+                  sm: "space-between",
+                },
               }}
             >
               <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
@@ -403,7 +409,11 @@ export default function StationStatus() {
                     fill="#667085"
                   />
                 </svg>
-                <Typography>{t("chart_status")}</Typography>
+                <Typography
+                  sx={{ fontWeight: "600", fontSize: 24, color: "#667085" }}
+                >
+                  {t("chart_status")}
+                </Typography>
               </Box>
               <ExportButton
                 onExport={handleExport}

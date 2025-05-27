@@ -22,7 +22,21 @@ export default function LineChartHorizontal({ data = [] }) {
 
   return (
     <Box sx={{ ml: "-40px" }}>
-      <Box sx={{ ml: "30px", color: "#667085" }}>{t("status")}</Box>
+      <Box
+        sx={{
+          ml: "30px",
+          mt: 2,
+          color: "#667085",
+          fontSize: {
+            xs: "14px",
+            sm: "16px",
+            md: "18px",
+            lg: "20px",
+          },
+        }}
+      >
+        {t("status")}
+      </Box>
       <ResponsiveContainer width="100%" height={220}>
         <LineChart
           data={mappedData}
