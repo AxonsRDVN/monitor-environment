@@ -32,28 +32,31 @@ export default function EditStationDialog({
   const [alertType, setAlertType] = useState("success"); // or "error"
 
   useEffect(() => {
-    if (open) {
+    if (open && station?.id) {
       setErrors({});
-      // Fetch sensors when dialog opens
-      fetchSensors();
-
-      // Initialize selectedSensors and selectedParameters if not already set
-      if (!station.selectedSensors) {
-        onChange({
-          ...station,
-          selectedSensors: [],
-          selectedParameters: [],
-        });
-      }
+      fetchSensors(); // gọi API mới
     }
-  }, [open, station]);
+  }, [open, station?.id]);
 
   const fetchSensors = async () => {
     try {
-      const response = await axios.get(`${API_BASE}/sensor-manager/sensors/`);
-      setSensors(response.data);
+      const response = await axios.get(
+        `${API_BASE}/monitor-environment/station-all/${station.id}/`
+      );
+      const data = response.data;
+
+      // Cập nhật toàn bộ sensors từ API trả về
+      setSensors(data.sensors || []);
+
+      // Lưu selected sensors và parameters đã chọn
+      onChange({
+        ...station,
+        selectedSensors: data.selectedSensors || [],
+        selectedParameters: data.selectedParameters || [],
+        originalSelectedSensors: data.originalSelectedSensors || [],
+      });
     } catch (error) {
-      console.error("Error fetching sensors:", error);
+      console.error("Error fetching station data:", error);
     }
   };
 
@@ -256,55 +259,49 @@ export default function EditStationDialog({
             ))}
           </Box>
 
-          {/* Show parameters for selected sensors - Updated to match AddNewStationDialog */}
-          {station.selectedSensors?.map((sensorId) => {
-            const sensor = sensors.find((s) => s.id === sensorId);
-            return sensor ? (
-              <Box
-                key={sensorId}
-                sx={{
-                  mt: 2,
-                  mb: 2,
-                  p: 2,
-                  border: "1px solid #ccc",
-                  borderRadius: 2,
-                }}
-              >
-                <Typography variant="subtitle2" fontWeight="bold">
-                  {t("parameter_of_sensor")}: {sensor.model_sensor}
-                </Typography>
-                {sensor.parameters &&
-                  sensor.parameters.map((param) => (
-                    <Box
-                      key={param.id}
-                      sx={{ display: "flex", alignItems: "center" }}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={station.selectedParameters?.includes(param.id)}
-                        onChange={(e) => {
-                          const checked = e.target.checked;
-                          onChange({
-                            ...station,
-                            selectedParameters: checked
-                              ? [
-                                  ...(station.selectedParameters || []),
-                                  param.id,
-                                ]
-                              : (station.selectedParameters || []).filter(
-                                  (id) => id !== param.id
-                                ),
-                          });
-                        }}
-                      />
-                      <Typography sx={{ ml: 1 }}>
-                        {t(param.name)} ({param.unit})
-                      </Typography>
-                    </Box>
-                  ))}
-              </Box>
-            ) : null;
-          })}
+          {/* HIỂN THỊ TẤT CẢ PARAMETERS CỦA SENSOR */}
+          {sensors.map((sensor) => (
+            <Box
+              key={sensor.id}
+              sx={{
+                mt: 2,
+                mb: 2,
+                p: 2,
+                border: "1px solid #ccc",
+                borderRadius: 2,
+              }}
+            >
+              <Typography variant="subtitle2" fontWeight="bold">
+                {t("parameter_of_sensor")}: {sensor.model_sensor}
+              </Typography>
+              {sensor.parameters &&
+                sensor.parameters.map((param) => (
+                  <Box
+                    key={param.id}
+                    sx={{ display: "flex", alignItems: "center" }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={station.selectedParameters?.includes(param.id)}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        onChange({
+                          ...station,
+                          selectedParameters: checked
+                            ? [...(station.selectedParameters || []), param.id]
+                            : (station.selectedParameters || []).filter(
+                                (id) => id !== param.id
+                              ),
+                        });
+                      }}
+                    />
+                    <Typography sx={{ ml: 1 }}>
+                      {t(param.name)} ({param.unit})
+                    </Typography>
+                  </Box>
+                ))}
+            </Box>
+          ))}
         </Box>
 
         <Button

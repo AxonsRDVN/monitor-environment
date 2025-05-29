@@ -1784,3 +1784,66 @@ class ExportPdfEmailAPIView(APIView):
         message.send()
 
         return Response({"message": "Đã gửi thành công!"}, status=200)
+
+
+class StationSensorAndParameterAPIView(APIView):
+    """
+    Lấy thông tin chi tiết station bao gồm sensors và parameters
+    """
+
+    def get(self, request, station_id):
+        try:
+            station = get_object_or_404(Station, id=station_id)
+            
+            # Lấy sensors với parameters
+            sensors = Sensor.objects.filter(station=station).prefetch_related('parameters')
+            
+            sensors_data = []
+            selected_sensor_ids = []
+            selected_parameter_ids = []
+
+            for sensor in sensors:
+                parameters = sensor.parameters.all()
+                parameters_data = []
+
+                for param in parameters:
+                    parameters_data.append({
+                        'id': param.id,
+                        'name': param.name,
+                        'unit': param.unit,
+                        'min_value': param.min_value,
+                        'max_value': param.max_value,
+                        'has_threshold': param.has_threshold,
+                    })
+                    selected_parameter_ids.append(param.id)
+
+                sensors_data.append({
+                    'id': sensor.id,
+                    'model_sensor': sensor.model_sensor,
+                    'manufacturer': sensor.manufacturer,
+                    'expiry': sensor.expiry,
+                    'parameters': parameters_data
+                })
+                selected_sensor_ids.append(sensor.id)
+
+            return Response({
+                'id': station.id,
+                'name': station.name,
+                'code': station.code,
+                'location': station.location,
+                'latitude': station.latitude,
+                'longitude': station.longitude,
+                'channel': station.channel,
+                'address': station.address,
+                'type': station.type,
+                'plant': station.plant.id,
+                'sensors': sensors_data,
+                'selectedSensors': selected_sensor_ids,
+                'selectedParameters': selected_parameter_ids,
+                'originalSelectedSensors': selected_sensor_ids,
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({
+                'error': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

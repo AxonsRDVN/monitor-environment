@@ -112,6 +112,7 @@ export default function MonitoringStation() {
   };
 
   const handleEdit = (station) => {
+    console.log("📌 Station được chọn để edit:", station); // ✅ Debug xem có id không
     setEditingStation({ ...station });
     setEditDialogOpen(true);
   };

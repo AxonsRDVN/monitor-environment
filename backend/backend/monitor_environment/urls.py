@@ -117,4 +117,5 @@ urlpatterns = [
         name="clone-sensor",
     ),
     path("export-pdf-email/", ExportPdfEmailAPIView.as_view()),
+    path('station-all/<int:station_id>/', StationSensorAndParameterAPIView.as_view(), name='station-sensor-parameter'),
 ]
