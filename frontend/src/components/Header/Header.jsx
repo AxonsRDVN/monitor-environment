@@ -1,5 +1,6 @@
 import logoIcon from "../../assets/logo.png";
 import logoAxon from "../../assets/logoAxons.png";
+import logoIconNew from "../../assets/Logo-MEI-2.png";
 import {
   Box,
   IconButton,
@@ -76,7 +77,7 @@ const Header = (props) => {
     <div className="header-container-0" style={{ display: displayHeader }}>
       <div className="d-flex flex-row align-items-center justify-items-start">
         <img
-          src={logoIcon}
+          src={logoIconNew}
           alt="logo icon"
           className="header-container-1-logo-img"
           onClick={navigateToHome}
