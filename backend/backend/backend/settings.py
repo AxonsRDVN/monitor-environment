@@ -1,6 +1,7 @@
 from pathlib import Path
 from decouple import config, Csv
 import os
+from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 MEDIA_URL = "/media/"
@@ -114,3 +115,7 @@ EMAIL_HOST_PASSWORD = (
 )
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 AUTH_USER_MODEL = "monitor_environment.User"
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=100),     # Mặc định: 5 phút
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),       # Mặc định: 1 ngày
+}
