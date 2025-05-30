@@ -26,6 +26,7 @@ import ExportButton from "../Button/ExportButton";
 import axios from "axios";
 import ExportPDFLineChart from "../ExportPdf/ExportPdfLineChart";
 import "./StationStatus.css";
+import { differenceInMinutes, parseISO } from "date-fns";
 
 const API_BASE = process.env.REACT_APP_API_URL;
 
@@ -90,7 +91,6 @@ export default function StationStatus() {
     }
     fetch24hAverage();
   }, []);
-  console.log(lineData);
 
   const filteredStations = stations
     .map((master) => {
@@ -207,165 +207,246 @@ export default function StationStatus() {
                   />
                 </ListItem>
               ) : (
-                filteredStations.map((master) => (
-                  <React.Fragment key={master.id}>
-                    {/* Master item */}
-                    <ListItem disablePadding>
-                      <Box
-                        onClick={() =>
-                          navigate(
-                            `/home/plant/${plantId}/stations/${master.id}/detail-index-lastest`
-                          )
-                        }
-                        sx={{
-                          background: "white",
-                          borderRadius: 2,
-                          p: 2.5,
-                          m: "8px",
-                          cursor: "pointer",
-                          width: "100%",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 2,
-                          boxShadow: "0 2px 4px rgba(0,0,0,0.06)",
-                          transition: "0.2s",
-                          "&:hover": {
-                            boxShadow: "0px 4px 12px rgba(7, 78, 159, 0.3)",
-                            transform: "translateY(-2px)", // tạo cảm giác nổi lên
-                          },
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            backgroundColor: statusColors[master.status]?.bg,
-                            color: statusColors[master.status]?.text,
-                            p: 1,
-                            borderRadius: "8px",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            width: 40,
-                            height: 40,
-                          }}
-                        >
-                          <Router
-                            sx={{
-                              fontSize: 24,
-                              color: statusColors[master.status]?.text,
-                            }}
-                          />
-                        </Box>
+                filteredStations.map((master, index) => {
+                  const isInactive =
+                    master.last_transaction_time &&
+                    differenceInMinutes(
+                      new Date(),
+                      parseISO(master.last_transaction_time)
+                    ) > 30;
 
-                        <ListItemText
-                          primaryTypographyProps={{
-                            fontSize: 16,
-                            fontWeight: 600,
-                            color: "#344054",
-                          }}
-                          secondaryTypographyProps={{
-                            fontSize: 13,
-                            color: "#6B7280", // xám nhẹ
-                          }}
-                          primary={master.name}
-                          secondary={`Node : ${master.stations?.length || 0}`}
-                        />
-                        <Box sx={{ display: "flex", gap: "6px" }}>
-                          <Box
-                            sx={{
-                              color: statusColors[master.status]?.text,
-                              borderRadius: "10px",
-                              fontWeight: 500,
-                              background:
-                                master.status === "normal"
-                                  ? "transparent"
-                                  : statusColors[master.status]?.bg,
-                              p: "5px",
-                            }}
-                          >
-                            {master.count > 0 && `${master.count}`}
-                          </Box>
-                          <Box>{statusColors[master.status]?.icon}</Box>
-                        </Box>
-                      </Box>
-                    </ListItem>
-
-                    {/* Station dưới master */}
-                    {master.stations?.map((station) => (
-                      <ListItem key={station.id} sx={{ pl: 6 }}>
+                  return (
+                    <React.Fragment key={master.id}>
+                      {/* Master item */}
+                      <ListItem disablePadding>
                         <Box
                           onClick={() =>
                             navigate(
-                              `/home/plant/${plantId}/stations/${station.id}/detail-index-lastest`
+                              `/home/plant/${plantId}/stations/${master.id}/detail-index-lastest`
                             )
                           }
                           sx={{
-                            background: "white",
+                            backgroundColor: isInactive ? "#f3f3f3" : "white",
                             borderRadius: 2,
-                            p: 2,
+                            p: 2.5,
+                            m: "8px",
                             cursor: "pointer",
                             width: "100%",
                             display: "flex",
                             alignItems: "center",
                             gap: 2,
-                            boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                            boxShadow: "0 2px 4px rgba(0,0,0,0.06)",
                             transition: "0.2s",
                             "&:hover": {
                               boxShadow: "0px 4px 12px rgba(7, 78, 159, 0.3)",
-                              transform: "translateY(-2px)", // tạo cảm giác nổi lên
+                              transform: "translateY(-2px)",
                             },
                           }}
                         >
                           <Box
                             sx={{
-                              backgroundColor: statusColors[station.status]?.bg,
+                              backgroundColor: isInactive
+                                ? "#d3d3d3"
+                                : statusColors[master.status]?.bg,
+                              color: isInactive
+                                ? "#d3d3d3"
+                                : statusColors[master.status]?.text,
                               p: 1,
-                              borderRadius: "5px",
+                              borderRadius: "8px",
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
-                              width: 32,
-                              height: 32,
+                              width: 40,
+                              height: 40,
                             }}
                           >
-                            <Sensors
+                            <Router
                               sx={{
-                                fontSize: 20,
-                                color: statusColors[station.status]?.text,
+                                fontSize: 24,
+                                color: isInactive
+                                  ? "grey"
+                                  : statusColors[master.status]?.text,
                               }}
                             />
-                            {statusColors[station.status]?.icon}
                           </Box>
 
                           <ListItemText
                             primaryTypographyProps={{
-                              fontSize: 14,
-                              fontWeight: 500,
+                              fontSize: 16,
+                              fontWeight: 600,
                               color: "#344054",
                             }}
-                            primary={station.name}
+                            secondaryTypographyProps={{
+                              fontSize: 13,
+                              color: "#6B7280",
+                            }}
+                            primary={
+                              <Box>
+                                <Box
+                                  sx={{
+                                    fontSize: 16,
+                                    fontWeight: 600,
+                                    color: "#344054",
+                                  }}
+                                >
+                                  {index + 1}. {master.name}
+                                </Box>
+                                {isInactive && (
+                                  <Box
+                                    sx={{
+                                      fontSize: 12,
+                                      color: "grey",
+                                      mt: 0.5,
+                                    }}
+                                  >
+                                    ⚠️ {t("no_new_data_over_30_min")}
+                                  </Box>
+                                )}
+                              </Box>
+                            }
+                            secondary={`Node : ${master.stations?.length || 0}`}
                           />
                           <Box sx={{ display: "flex", gap: "6px" }}>
                             <Box
                               sx={{
-                                color: statusColors[station.status]?.text,
+                                color: statusColors[master.status]?.text,
                                 borderRadius: "10px",
                                 fontWeight: 500,
                                 background:
-                                  station.status === "normal"
+                                  master.status === "normal"
                                     ? "transparent"
-                                    : statusColors[station.status]?.bg,
+                                    : statusColors[master.status]?.bg,
                                 p: "5px",
                               }}
                             >
-                              {station.count > 0 && `${station.count}`}
+                              {!isInactive &&
+                                master.count > 0 &&
+                                `${master.count}`}
                             </Box>
-                            <Box>{statusColors[station.status]?.icon}</Box>
+                            <Box>
+                              {isInactive
+                                ? statusColors.unknown?.icon
+                                : statusColors[master.status]?.icon}
+                            </Box>
                           </Box>
                         </Box>
                       </ListItem>
-                    ))}
-                  </React.Fragment>
-                ))
+
+                      {/* Sub stations */}
+                      {master.stations?.map((station) => (
+                        <ListItem key={station.id} sx={{ pl: 6 }}>
+                          <Box
+                            onClick={() =>
+                              navigate(
+                                `/home/plant/${plantId}/stations/${station.id}/detail-index-lastest`
+                              )
+                            }
+                            sx={{
+                              backgroundColor: isInactive ? "#f3f3f3" : "white",
+                              borderRadius: 2,
+                              p: 2,
+                              cursor: "pointer",
+                              width: "100%",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 2,
+                              boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                              transition: "0.2s",
+                              "&:hover": {
+                                boxShadow: "0px 4px 12px rgba(7, 78, 159, 0.3)",
+                                transform: "translateY(-2px)", // tạo cảm giác nổi lên
+                              },
+                            }}
+                          >
+                            <Box
+                              sx={{
+                                backgroundColor: isInactive
+                                  ? "#d3d3d3"
+                                  : statusColors[station.status]?.bg,
+                                p: 1,
+                                borderRadius: "5px",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                width: 32,
+                                height: 32,
+                              }}
+                            >
+                              <Sensors
+                                sx={{
+                                  fontSize: 20,
+                                  color: isInactive
+                                    ? "grey"
+                                    : statusColors[station.status]?.text,
+                                }}
+                              />
+                              {statusColors[station.status]?.icon}
+                            </Box>
+
+                            <ListItemText
+                              primaryTypographyProps={{
+                                fontSize: 14,
+                                fontWeight: 500,
+                                color: "#344054",
+                              }}
+                              primary={
+                                <Box>
+                                  <Box
+                                    sx={{
+                                      fontSize: 16,
+                                      fontWeight: 600,
+                                      color: "#344054",
+                                    }}
+                                  >
+                                    {station.name}
+                                  </Box>
+
+                                  {differenceInMinutes(
+                                    new Date(),
+                                    parseISO(station.last_transaction_time)
+                                  ) > 30 && (
+                                    <Box
+                                      sx={{
+                                        fontSize: 12,
+                                        color: "grey",
+                                        mt: 0.5,
+                                      }}
+                                    >
+                                      ⚠️ {t("no_new_data_over_30_min")}
+                                    </Box>
+                                  )}
+                                </Box>
+                              }
+                            />
+                            <Box sx={{ display: "flex", gap: "6px" }}>
+                              <Box
+                                sx={{
+                                  color: statusColors[station.status]?.text,
+                                  borderRadius: "10px",
+                                  fontWeight: 500,
+                                  background:
+                                    station.status === "normal"
+                                      ? "transparent"
+                                      : statusColors[station.status]?.bg,
+                                  p: "5px",
+                                }}
+                              >
+                                {!isInactive &&
+                                  station.count > 0 &&
+                                  `${station.count}`}
+                              </Box>
+                              <Box>
+                                {isInactive
+                                  ? statusColors.unknown?.icon
+                                  : statusColors[station.status]?.icon}
+                              </Box>
+                            </Box>
+                          </Box>
+                        </ListItem>
+                      ))}
+                    </React.Fragment>
+                  );
+                })
               )}
             </List>
           </Box>

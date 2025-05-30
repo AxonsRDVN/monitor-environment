@@ -125,19 +125,19 @@ export const statusColors = {
     iconColor: "#0A6EE1",
     icon: (
       <svg
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
+        width="28"
+        height="28"
+        viewBox="0 0 28 28"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
-        <circle cx="12" cy="12" r="11.6667" fill="#70DF00" />
-        <circle cx="8.5" cy="9.1" r="1.5" fill="#4E3C0C" />
-        <circle cx="15.5" cy="9.1" r="1.5" fill="#4E3C0C" />
+        <circle cx="13.8333" cy="14" r="13.3333" fill="#D1D5DB" />
+        <circle cx="9.8333" cy="10.6665" r="1.5" fill="#4B5563" />
+        <circle cx="17.8333" cy="10.6665" r="1.5" fill="#4B5563" />
         <path
-          d="M7 14.3C8.1 15.8 9.9 16.7 12 16.7C14.1 16.7 15.9 15.8 17 14.3"
+          d="M7.5 18.5C9.1 16.5 11.3 15.3 13.8333 15.3C16.3667 15.3 18.5667 16.5 20.1667 18.5"
           stroke="#4E3C0C"
-          strokeWidth="1.8"
+          strokeWidth="2"
           strokeLinecap="round"
         />
       </svg>

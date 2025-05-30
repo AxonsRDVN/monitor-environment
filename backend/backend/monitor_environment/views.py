@@ -27,6 +27,7 @@ from xhtml2pdf import pisa
 from django.core.mail import EmailMessage
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
+from django.db.models import Max
 
 
 def get_wind_direction_label(degree):
@@ -311,11 +312,17 @@ class PlantListAPIView(APIView):
 
 
 class StationListView(APIView):
+    def get_last_transaction_time(self, station_id):
+        return (
+            Transaction.objects
+            .filter(station_id=station_id)
+            .aggregate(latest=Max("time"))["latest"]
+        )
+        
     def get(self, request, plant_id):
         try:
             plant = Plant.objects.get(id=plant_id)
             masters = Station.objects.filter(plant_id=plant_id, type=2)
-
             result = []
 
             for master in masters:
@@ -326,9 +333,7 @@ class StationListView(APIView):
 
                 station_children = []
                 for child_station in child_stations:
-                    child_status, child_count = self.calculate_station_status(
-                        child_station
-                    )
+                    child_status, child_count = self.calculate_station_status(child_station)
 
                     station_children.append(
                         {
@@ -343,6 +348,7 @@ class StationListView(APIView):
                             "address": child_station.address,
                             "status": child_status,
                             "count": child_count,
+                            "last_transaction_time": self.get_last_transaction_time(child_station.id),
                         }
                     )
 
@@ -359,13 +365,15 @@ class StationListView(APIView):
                         "address": master.address,
                         "status": master_status,
                         "count": master_count,
+                        "last_transaction_time": self.get_last_transaction_time(master.id),
                         "stations": station_children,
                     }
                 )
 
+
             # ✅ Phải có RETURN Response ở đây
             return Response(
-                {"plant_name": plant.name, "plant_id": plant.id, "stations": result},
+                {"plant_name": plant.name, "plant_id": plant.id, "stations": result, },
                 status=status.HTTP_200_OK,
             )
 
@@ -1847,3 +1855,31 @@ class StationSensorAndParameterAPIView(APIView):
             return Response({
                 'error': str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class LatestTransactionPerPlantAPIView(APIView):
+    def get(self, request):
+        try:
+            # Lấy thời gian giao dịch gần nhất của từng nhà máy
+            latest_times = (
+                Transaction.objects
+                .values('plant_id')
+                .annotate(latest_time=Max('time'))
+            )
+            # Chuyển thành dict {plant_id: latest_time}
+            latest_map = {item['plant_id']: item['latest_time'] for item in latest_times}
+
+            # Lấy danh sách nhà máy
+            plants = Plant.objects.all()
+
+            result = []
+            for plant in plants:
+                result.append({
+                    "plant_id": plant.id,
+                    "plant_name": plant.name,
+                    "last_transaction_time": latest_map.get(plant.id)
+                })
+
+            return Response(result, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
