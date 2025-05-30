@@ -130,17 +130,7 @@ export const statusColors = {
         viewBox="0 0 28 28"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-      >
-        <circle cx="13.8333" cy="14" r="13.3333" fill="#D1D5DB" />
-        <circle cx="9.8333" cy="10.6665" r="1.5" fill="#4B5563" />
-        <circle cx="17.8333" cy="10.6665" r="1.5" fill="#4B5563" />
-        <path
-          d="M7.5 18.5C9.1 16.5 11.3 15.3 13.8333 15.3C16.3667 15.3 18.5667 16.5 20.1667 18.5"
-          stroke="#4E3C0C"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-      </svg>
+      ></svg>
     ),
   },
   // Thêm style cho dữ liệu cũ (màu xám)
